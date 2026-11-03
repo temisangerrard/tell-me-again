@@ -26,6 +26,11 @@ const REMOTE = !/localhost|127\.0\.0\.1/.test(BASE);
 const settle = () => sleep(REMOTE ? 1000 : 120); // real latency needs patience
 const until = async (fn, ms = 4000) => { const t = Date.now(); while (Date.now() - t < ms) { if (fn()) return true; await sleep(15); } return false; };
 
+// ---- call relay: without a TURN key the server still answers with STUN, and only GET is allowed
+{ const r = await fetch(`${BASE}/api/ice`); const j = await r.json();
+  ok(r.status === 200 && Array.isArray(j.iceServers) && j.iceServers.length >= 1 && /^stun:/.test([].concat(j.iceServers[0].urls)[0]), "ice servers fall back to STUN");
+  ok((await fetch(`${BASE}/api/ice`, { method: "POST" })).status === 405, "ice is GET only"); }
+
 // ---- create room
 const created = await (await fetch(`${BASE}/api/rooms`, { method: "POST" })).json();
 ok(/^[A-Z2-9]{6}$/.test(created.code), "room code shape " + created.code);

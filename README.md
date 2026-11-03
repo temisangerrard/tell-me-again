@@ -85,7 +85,7 @@ Roughly in priority order.
 - [ ] Host identity for sittings and any paid features.
 
 **Voice sitting**
-- [ ] Relay for networks that block direct calls (Cloudflare Realtime TURN key). Today it only uses public STUN and can fail on strict networks.
+- [ ] Switch on the call relay. The code is done (`/api/ice` in `src/worker.js`, `getIce` in `js/call.js`) and falls back to STUN. To enable: in the Cloudflare dashboard create a Realtime TURN key (Realtime > TURN), then run `npx wrangler secret put TURN_KEY_API_TOKEN` and add `"vars": { "TURN_KEY_ID": "<key id>" }` to `wrangler.jsonc`, and deploy. `/api/ice` then answers `relay: true`.
 - [ ] Group calls (currently one to one). The call is a floating widget (`callDock`, `voiceSitting`) that persists across tabs; the host steers questions from Sit.
 - [x] Save captured audio on hangup, peer-channel closure, call failure or a sustained disconnection; show recording state on both phones.
 - [ ] Reconnect handling and keeping the call alive when the phone locks (requires real-device testing).
