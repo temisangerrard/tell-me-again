@@ -149,7 +149,7 @@ function renderSitting(box, msg) {
     if (!permitted || !box.isConnected || box.hidden || restoring) { rec.disabled = false; return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch (e) { rec.disabled = false; rs.textContent = micMessage(e); return; }
+    catch (e) { rec.disabled = false; let state = null; if (e && e.name === "NotAllowedError") { try { state = (await navigator.permissions.query({ name: "microphone" })).state; } catch {} } rs.textContent = micMessage(e, state); return; }
     if (!box.isConnected || box.hidden || restoring) { stream.getTracks().forEach(t => t.stop()); rec.disabled = false; return; }
     const ov = await countdown();
     if (!ov) { stream.getTracks().forEach((t) => t.stop()); rec.disabled = false; return; }

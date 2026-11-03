@@ -22,3 +22,6 @@
 
 .botrow { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; } .botrow .btn { flex:1; min-width:84px; }
 .rmbot { border:0; background:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:0 0 0 6px; min-height:32px; }
+
+.takeover { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:12px 0; padding:12px 14px; border:1px solid var(--line); border-radius:var(--r-md); }
+.takeover .cta { width:auto; padding:0 20px; min-height:44px; }

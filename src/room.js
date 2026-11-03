@@ -49,7 +49,7 @@ export class Room extends DurableObject {
       t: "state", code: s.code,
       me: me ? { seat: me.seat, host: s.members[0].pid === pid, name: me.name } : null,
       members: s.members.map((m, i) => ({ name: m.name, seat: m.seat, host: i === 0, bot: !!m.bot, online: !!m.bot || this.online(m.pid), wins: m.wins || 0, you: m.pid === pid })),
-      game: g ? { id: g.id, kind: g.kind, seat, names: g.s.names, v: E[g.kind].view(g.s, seat) } : null
+      game: g ? { id: g.id, kind: g.kind, seat, names: g.s.names, bots: g.pids.map((p, i) => (this.isBot(p) ? { i, name: g.s.names[i] } : null)).filter(Boolean), v: E[g.kind].view(g.s, seat) } : null
     };
   }
   broadcast() { for (const ws of this.ctx.getWebSockets()) { const pid = this.pidOf(ws); if (pid) { try { ws.send(JSON.stringify(this.view(pid))); } catch {} } } }
@@ -121,6 +121,17 @@ export class Room extends DurableObject {
       const used = new Set(s.members.map((x) => x.name)), name = BOT_NAMES.find((n) => !used.has(n)) || `Bot ${s.members.length}`;
       const taken = new Set(s.members.map((x) => x.seat)); let seat = -1; for (let i = 0; i < MAX_SEATS; i++) if (!taken.has(i)) { seat = i; break; }
       s.members.push({ pid: "bot-" + crypto.randomUUID().slice(0, 12), name, seat, wins: 0, bot: true }); await this.save(); this.broadcast(); return;
+    }
+    // Someone who joins a game that's already running can take a bot's seat. The bot leaves the table and plays on as that person.
+    if (m.t === "takeover") {
+      const g = s.game; if (!g || g.s.over !== null) return this.err(ws, "There's no game to join right now.");
+      if (g.pids.includes(pid)) return this.err(ws, "You're already playing.");
+      const i = g.pids.findIndex((p) => this.isBot(p)); if (i < 0) return this.err(ws, "Every seat in this game is taken by a person.");
+      const me = s.members.find((x) => x.pid === pid), bot = s.members.find((x) => x.pid === g.pids[i]);
+      if (!me) return;
+      g.pids[i] = pid; g.s.names[i] = me.name;
+      if (bot) { me.seat = bot.seat; s.members.splice(s.members.indexOf(bot), 1); }
+      await this.save(); this.broadcast(); this.botKick(); return;
     }
     if (m.t === "rmbot") {
       if (!isHost) return this.err(ws, "Only the host can remove a bot.");
