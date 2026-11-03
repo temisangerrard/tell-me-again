@@ -61,7 +61,8 @@ select.inp { appearance:none; padding-right:28px; background:transparent; border
 .sitrow .sitopen { flex:1; min-width:0; display:flex; align-items:center; gap:12px; padding:12px 0; background:none; border:0; text-align:left; color:var(--text); cursor:pointer; min-height:56px; font:inherit; }
 .sitrow .who { flex:1; min-width:0; display:grid; } .sitrow .who b { font-weight:600; overflow-wrap:anywhere; } .sitrow .who em { color:var(--muted); font-style:normal; font-size:.85rem; }
 .sitrow .ring { flex:none; }
-.sitrow .sitgo { flex:none; min-width:56px; }
+.sitrow .sitgo { flex:none; width:auto; min-width:56px; display:inline-flex; align-items:center; justify-content:center; }
+.sitrow .sitopen { width:auto; }
 .pmeta { color:var(--muted); margin-top:4px; }
 .covs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 .cov { padding:7px 12px; border-radius:999px; background:var(--soft); color:var(--muted); font-size:.85rem; }
