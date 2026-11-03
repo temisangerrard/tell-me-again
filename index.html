@@ -185,6 +185,10 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .plist .x { width:44px; height:44px; border:0; background:none; color:var(--muted); font-size:1.4rem; cursor:pointer; }
 .padd { display:flex; gap:10px; align-items:flex-end; margin-top:16px; } .padd .inp { flex:1; min-width:0; }
 .plist2 { margin-top:16px; }
+.calldock { position:fixed; left:12px; right:12px; bottom:calc(var(--tabh,0px) + 12px + env(safe-area-inset-bottom)); z-index:60; max-width:520px; margin:0 auto; }
+.calldock .voice { margin:0; background:var(--surface); border:1px solid var(--line); box-shadow:0 10px 36px rgba(0,0,0,.2); }
+.calldock .voice h2 { font-size:1rem; }
+.calldock .vq { font-size:1.25rem; }
 /* sign in */
 .authwrap { flex:1; display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
 .authwrap h1 { font:800 clamp(2.2rem,9vw,3rem)/1 var(--display); letter-spacing:-.025em; margin-top:28px; }
@@ -1119,7 +1123,6 @@ function home() {
   const draw = { sit: renderSitting, play: renderPlay, make: renderMake, family: renderFamily };
   const show = async (t, focus) => {
     if (t.getAttribute("aria-selected") === "true") return;
-    if (currentRoom && t.dataset.t !== "play") await currentRoom.close(false);
     tabs.forEach((x) => { x.setAttribute("aria-selected", x === t); x.tabIndex = x === t ? 0 : -1; });
     TABS.forEach(([id]) => el.querySelector("#" + id).hidden = id !== t.dataset.t);
     draw[t.dataset.t](el.querySelector("#" + t.dataset.t)); window.scrollTo(0, 0);
@@ -1341,8 +1344,14 @@ function renderSitting(box, msg) {
   // The ring means "someone is speaking", so it follows the recording.
   const setLive = (on) => { seatEls[1].classList.toggle("speaking", on); role.textContent = on ? "Speaking" : ROLES[1]; rec.textContent = on ? "Stop" : "Record the answer"; skip.disabled = on || !q; };
   if (live) { setLive(true); rs.textContent = "Recording…"; }
+  // While a call is live, Record goes through the call (both voices) and the current question is pushed to the other phone.
+  onClipSaved = () => { if (box.isConnected && !box.hidden) renderSitting(box); };
+  onCallSkip = () => { if (!skip.disabled) skip.click(); };
+  onCallChange = () => { if (!rec.isConnected) return; const c = activeCall && activeCall.live(); if (c) { activeCall.setQuestion(q ? q.q : null); const on = activeCall.recording(); rec.textContent = on ? "Stop and save" : "Record the answer"; skip.disabled = on || !q; } };
+  if (activeCall && activeCall.live()) { activeCall.setQuestion(q ? q.q : null); onCallChange(); }
   rec.onclick = async () => {
     if (live) { live.mr.stop(); return; }
+    if (activeCall && activeCall.live()) { activeCall.toggleRec(); return; }
     if (!sitting) { if (!(await chooseSitting())) return; renderSitting(box); box.querySelector("#rec").click(); return; }
     if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") { rs.textContent = "This browser can't record yet. Try the latest Chrome or Safari."; return; }
     if (restoring) return;
@@ -1351,7 +1360,7 @@ function renderSitting(box, msg) {
     if (!permitted || !box.isConnected || box.hidden || restoring) { rec.disabled = false; return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { rec.disabled = false; rs.textContent = "We couldn't reach the microphone. Allow it in your browser settings and try again."; return; }
+    catch (e) { rec.disabled = false; rs.textContent = micMessage(e); return; }
     if (!box.isConnected || box.hidden || restoring) { stream.getTracks().forEach(t => t.stop()); rec.disabled = false; return; }
     const ov = await countdown();
     if (!ov) { stream.getTracks().forEach((t) => t.stop()); rec.disabled = false; return; }
@@ -1581,7 +1590,7 @@ function askStrip(c) {
 let lastGame = null; // which game screen the Play tab reopens on
 const backGames = (box) => { const b = $(`<button class="btn gback" type="button">‹ All games</button>`); b.onclick = () => { lastGame = null; renderPlay(box); }; return b; };
 function renderPlay(box) {
-  if (pendingRoom) { const pr = pendingRoom; pendingRoom = null; enterRoom(box, pr.code, pr.name); return; }
+  if (currentRoom && currentRoom.el) { box.replaceChildren(currentRoom.el); return; }
   box.replaceChildren($(`<h1 class="title">Play together</h1>`), );
   const list = $(`<div class="games">
     <button class="game" id="ludo" type="button"><span class="g">6</span><span><b>Ludo</b><span class="d">2 to 4 players</span></span></button>
@@ -1943,7 +1952,13 @@ const parseCode = (t) => { const m = String(t || "").toUpperCase().match(/ROOM=(
 const E = globalThis.Engines;
 const wcardEl = (c, cls = "", tag = "button") => $(`<${tag} class="wc ${c.s} ${cls}" ${tag === "button" ? 'type="button"' : ""} aria-label="${E.whot.wname(c)}">${c.s === "whot" ? `<span class="n">20</span><b>WHOT</b><span class="n b">20</span>` : `<span class="n">${c.n}</span>${wsvg(c.s)}<span class="n b">${c.n}</span>`}</${tag}>`);
 let sitting = null, pendingRoom = null; // who's in this sitting; a room to open on the Play tab
-function enterRoom(box, code, n) { lsSet("sitting-room", code); box.replaceChildren(backGames(box)); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box)); }
+function enterRoom(box, code, n) { lsSet("sitting-room", code); box.replaceChildren(); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box)); }
+// Start a sitting call from anywhere: the room connects in the background and the call widget floats above the tabs.
+function startCall(code, name) {
+  lsSet("sitting-room", code); const w = $(`<div></div>`);
+  mountRoom(w, code, name, () => { const pl = document.querySelector("#play"); if (pl && !pl.hidden) renderPlay(pl); });
+  currentRoom.voice.start();
+}
 const shareTo = async (code, who) => {
   const url = `${location.origin}${location.pathname}?room=${code}`, text = `${who}, join our sitting`;
   try { if (navigator.share) { await navigator.share({ title: "Tell Me Again", text, url }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
@@ -1972,8 +1987,8 @@ function chooseSitting() {
         const j = await r.json(); if (!j.code) throw 0; apply(); done = true;
         const host = lsGet("sitting-name") || S.me.name || "Host";
         b.replaceChildren($(`<h2>Send links</h2>`), ...picked.map((n) => { const x = $(`<button class="btn" type="button" style="width:100%;margin-top:8px">Send to ${esc(n)}</button>`); x.onclick = async () => { const m = await shareTo(j.code, n); if (m) x.textContent = m; }; return x; }));
-        const go2 = $(`<button class="cta" type="button" style="margin-top:20px">Open the room</button>`);
-        go2.onclick = () => { pendingRoom = { code: j.code, name: host }; close(); res(false); const t = document.querySelector("#t-play"); if (t) t.click(); };
+        const go2 = $(`<button class="cta" type="button" style="margin-top:20px">Start the call</button>`);
+        go2.onclick = () => { startCall(j.code, host); close(); res(false); };
         b.append(go2);
       } catch { ce.textContent = "Couldn't make a room. Check your connection."; }
     };
@@ -1990,7 +2005,23 @@ const shareRoom = async (code) => {
 // Open a live connection to a room and draw it into box. Returns { close }.
 // A one-to-one voice sitting. Audio goes straight between the two phones; the room only relays setup notes.
 // The host's phone records both voices on the device and nothing is uploaded anywhere.
+// Say what actually went wrong with the microphone, not just that something did.
+function micMessage(e) {
+  const n = e && e.name;
+  if (!window.isSecureContext || !navigator.mediaDevices) return "This page can't use the microphone here. Open it in Safari or Chrome.";
+  if (n === "NotAllowedError" || n === "SecurityError") return "The microphone is blocked for this site. Turn it on in your browser or phone settings, then try again.";
+  if (n === "NotFoundError" || n === "OverconstrainedError") return "No microphone found on this device.";
+  if (n === "NotReadableError" || n === "AbortError") return "Another app is using the microphone. End any phone or video call, then try again.";
+  return "We couldn't start the microphone. Try again.";
+}
+let activeCall = null, onCallChange = null, onClipSaved = null, onCallSkip = null;
+function callDock() {
+  let d = document.getElementById("calldock"); if (!d) { d = document.createElement("div"); d.id = "calldock"; d.className = "calldock"; d.hidden = true; d.setAttribute("aria-live", "polite"); document.body.append(d); }
+  const tb = document.querySelector(".tabbar"); document.documentElement.style.setProperty("--tabh", (tb ? tb.offsetHeight : 0) + "px");
+  return d;
+}
 function voiceSitting(box, relay, myName, note) {
+  const dockEl = callDock();
   let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
   let control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, recordingQuestion = null, ending = false;
   const sendControl = data => { if (control && control.readyState === "open") { control.send(JSON.stringify(data)); return true; } return false; };
@@ -2015,23 +2046,26 @@ function voiceSitting(box, relay, myName, note) {
   const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
 
   function render() {
-    if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
-    if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
+    const paint = (el) => { if (mode === "idle") { dockEl.hidden = true; dockEl.replaceChildren(); box.replaceChildren(el); } else { box.replaceChildren(); dockEl.hidden = false; dockEl.replaceChildren(el); } };
+    const root = () => (mode === "idle" ? box : dockEl);
+    if (mode === "idle") { paint($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; if (onCallChange) onCallChange(); return; }
+    if (mode === "ringing") { paint($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); dockEl.querySelector("#vj").onclick = join; dockEl.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
     const rec = !!mr;
     const recording = rec || peerRecording;
-    box.replaceChildren($(`<div class="voice"><h2>${mode === "calling" ? "Calling…" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
+    paint($(`<div class="voice"><h2>${mode === "calling" ? "Waiting for them to join" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
       ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "" : "Listening"}</p>`}
       ${recording ? `<p class="hint" role="status"><i class="live"></i>Recording on the caller's device</p>` : ""}
       <div class="vrow">
-        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Stop and save" : requesting ? "Waiting for permission…" : "Record the answer"}</button>` : ""}
+        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>Skip question</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Stop and save" : requesting ? "Waiting for permission…" : "Record the answer"}</button>` : ""}
         ${!isCaller && peerRecording ? `<button class="btn" id="stop-peer" type="button">Stop recording</button>` : ""}
         <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
-    const g = (i) => box.querySelector(i);
-    if (g("#vq")) g("#vq").onclick = () => { const n = nextQuestion(); if (!n) return; q = n.q; sig({ k: "q", q }); render(); };
+    const g = (i) => root().querySelector(i);
+    if (g("#vq")) g("#vq").onclick = () => { if (onCallSkip) onCallSkip(); };
     if (g("#vr")) g("#vr").onclick = rec ? stopRec : startRec;
     if (g("#stop-peer")) g("#stop-peer").onclick = () => sendControl({ k: "record-stop" });
     g("#vm").onclick = () => { muted = !muted; if (local) local.getAudioTracks().forEach((t) => t.enabled = !muted); render(); };
     g("#vh").onclick = () => { sig({ k: "bye" }); end(); };
+    if (onCallChange) onCallChange();
   }
   function mkPc() {
     pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }] });
@@ -2047,8 +2081,12 @@ function voiceSitting(box, relay, myName, note) {
     };
   }
   async function mic() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { note(micMessage()); return false; }
     try { local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); return true; }
-    catch { note("We couldn't reach the microphone. Allow it in your browser settings and try again."); return false; }
+    catch (e) {
+      if (e && (e.name === "OverconstrainedError" || e.name === "TypeError")) { try { local = await navigator.mediaDevices.getUserMedia({ audio: true }); return true; } catch (e2) { e = e2; } }
+      note(micMessage(e), 8000); return false;
+    }
   }
   async function start() {
     if (!navigator.mediaDevices || typeof RTCPeerConnection === "undefined") return note("This browser can't make voice calls yet. Try the latest Chrome or Safari.");
@@ -2113,7 +2151,7 @@ function voiceSitting(box, relay, myName, note) {
     if (!DEV.has("data")) { try { await idbDo("readwrite", st => st.put(clip)); } catch { kept = false; } }
     clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept }); S.told++; if (recordingQuestion !== "Free story") S.asked.push(recordingQuestion); save(); q = null;
     activeVoiceRecording = false;
-    const finish = resolveSaving; resolveSaving = null; saving = null; if (finish) finish();
+    const finish = resolveSaving; resolveSaving = null; saving = null; if (finish) finish(); if (onClipSaved) onClipSaved();
     note(kept ? "Saved on this device." : "Storage is full or unavailable. Keep this page open and download a backup to save the recording.", 0); render();
   }
   async function end() {
@@ -2125,10 +2163,20 @@ function voiceSitting(box, relay, myName, note) {
     try { control && control.close(); } catch {} control = null;
     try { pc && pc.close(); } catch {} pc = null;
     if (local) local.getTracks().forEach(t => t.stop()); local = null;
-    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; peerRecording = false; requesting = false; ending = false; render();
+    audio.srcObject = null; announced = -1; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; peerRecording = false; requesting = false; ending = false; render();
   }
+  // The caller's Sit screen steers the call: the current question is pushed to the other phone.
+  let announced = -1;
+  const api = {
+    onSig, end, start, join,
+    mode: () => mode, live: () => mode === "live" && isCaller, calling: () => mode === "calling", recording: () => !!mr || requesting,
+    toggleRec: () => (mr ? stopRec() : startRec()),
+    setQuestion: (t) => { if (!isCaller || mode === "idle") return; const v = t || null; if (v === q) return; q = v; sig({ k: "q", q: v || "" }); render(); },
+    announce: (n) => { if (mode === "calling" && n !== announced) { announced = n; sig({ k: "call", n: myName() }); } }
+  };
+  activeCall = api;
   render();
-  return { onSig, end };
+  return api;
 }
 
 function mountRoom(box, code, name, onLeave) {
@@ -2146,7 +2194,7 @@ function mountRoom(box, code, name, onLeave) {
     leaving = (async () => {
       dead = true; clearTimeout(errT);
       send({ t: "sig", d: JSON.stringify({ k: "bye" }) });
-      try { await voice.end(); } catch {} try { ws && ws.close(); } catch {}
+      try { await voice.end(); } catch {} try { ws && ws.close(); } catch {} if (activeCall === voice) activeCall = null;
       if (currentRoom === session) currentRoom = null;
       if (forget) { lsSet("sitting-room", ""); onLeave(); }
     })();
@@ -2159,7 +2207,7 @@ function mountRoom(box, code, name, onLeave) {
     if (dead) return;
     ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${code}/ws`);
     ws.onopen = () => { tries = 0; send({ t: "join", pid, name }); };
-    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "err") note(m.m); };
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); voice.announce(st.members.length); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "err") note(m.m); };
     ws.onclose = () => { if (dead) return; note("Reconnecting…", 0); setTimeout(connect, Math.min(1000 * 2 ** tries++, 8000)); };
   }
   function paintRoom() {
@@ -2189,7 +2237,7 @@ function mountRoom(box, code, name, onLeave) {
     }
     stg.replaceChildren(el);
   }
-  const session = { close: leave };
+  const session = { close: leave, el: box, voice };
   currentRoom = session;
   connect();
   return session;
