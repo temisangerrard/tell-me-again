@@ -1,0 +1,13 @@
+# Everything in this folder is served as the website except the items below.
+.agents
+.claude
+.assetsignore
+.wrangler
+node_modules
+src
+test
+wrangler.jsonc
+skills-lock.json
+package.json
+package-lock.json
+.gitignore

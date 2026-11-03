@@ -1,0 +1,8 @@
+# local tooling and build output, not part of the app
+.wrangler/
+node_modules/
+.DS_Store
+# editor/agent skill files installed for local design work
+.agents/
+.claude/
+skills-lock.json

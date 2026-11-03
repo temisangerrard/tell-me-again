@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "family-sitting",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": ".",
+    "run_worker_first": ["/api/*"]
+  },
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }, { "name": "LIMITER", "class_name": "Limiter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }, { "tag": "v2", "new_sqlite_classes": ["Limiter"] }],
+  "ratelimits": [
+    { "name": "ROOM_JOIN", "namespace_id": "7732", "simple": { "limit": 120, "period": 60 } }
+  ],
+  "observability": { "enabled": true }
+}
