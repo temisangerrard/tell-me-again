@@ -34,19 +34,24 @@ const shareTo = async (code, who) => {
   try { await navigator.clipboard.writeText(`${text}: ${url}`); return "Link copied"; } catch { return url; }
 };
 // Asked when you press Record: pick who's sitting, then record here or send links. Resolves true to record now.
+// Seat the chosen people for this sitting: the first is the storyteller.
+function applySitting(names) {
+  const pr = S.people.find((x) => x.n === names[0]);
+  S.elder = { name: names[0] || "", born: (pr && pr.born) || "" }; S.seats = [meName(), names[0] || "Storyteller", ...names.slice(1, 3)]; sitting = names; save();
+}
 function chooseSitting() {
   return new Promise((res) => {
     let picked = sitting ? [...sitting] : [], done = false;
     const b = $(`<div><h2>Who's joining?</h2><div class="chips plist2" role="group" aria-label="Who's joining"></div>
       <div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" id="pa" type="button">Add</button></div>
-      <button class="cta" id="here" type="button" style="margin-top:20px">Record here</button>
+      <button class="cta" id="here" type="button" style="margin-top:20px">Start here</button>
       <button class="btn" id="links" type="button" style="width:100%;margin-top:8px">Send links</button><p class="err" id="ce" role="status"></p></div>`);
     const chips = b.querySelector(".chips"), inp = b.querySelector("input"), ce = b.querySelector("#ce");
     const draw = () => { chips.replaceChildren(...S.people.map((p) => { const i = picked.indexOf(p.n), c = $(`<button class="chip" type="button" aria-pressed="${i >= 0}">${esc(p.n)}${i === 0 ? " · storyteller" : ""}</button>`);
       c.onclick = () => { picked = i >= 0 ? picked.filter((x) => x !== p.n) : [...picked, p.n].slice(0, 3); draw(); }; return c; })); b.querySelector("#links").disabled = !picked.length; };
     const add = () => { const n = inp.value.trim(); if (!n) return; if (!S.people.some((p) => p.n.toLowerCase() === n.toLowerCase())) S.people.push({ n, born: "" }); if (picked.length < 3 && !picked.includes(n)) picked.push(n); inp.value = ""; save(); draw(); inp.focus(); };
     b.querySelector("#pa").onclick = add; inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } };
-    const apply = () => { const pr = S.people.find((x) => x.n === picked[0]); S.elder = { name: picked[0] || "", born: (pr && pr.born) || "" }; S.seats = [meName(), picked[0] || "Storyteller", ...picked.slice(1, 3)]; sitting = picked; save(); };
+    const apply = () => applySitting(picked);
     const close = sheet("Who's joining?", b);
     b.querySelector("#here").onclick = () => { apply(); done = true; close(); res(true); };
     b.querySelector("#links").onclick = async () => {

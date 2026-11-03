@@ -42,3 +42,13 @@ select.inp { appearance:none; padding-right:28px; background:transparent; border
 .para { color:var(--muted); font-size:.95rem; margin-top:10px; max-width:52ch; }
 .btn.danger { color:var(--danger); }
 
+
+/* the Sit tab at rest */
+.sitlist, .feed { list-style:none; margin:12px 0 0; padding:0; }
+.sitlist li { border-top:1px solid var(--line); }
+.sitlist button { width:100%; display:flex; align-items:center; gap:14px; padding:12px 0; background:none; border:0; text-align:left; color:var(--text); cursor:pointer; min-height:56px; font:inherit; }
+.sitlist .av { width:40px; height:40px; flex:none; border-radius:50%; display:grid; place-items:center; font-weight:700; background:var(--tint, var(--soft)); color:#1d1d1f; }
+.sitlist .nm { flex:1; font-weight:600; min-width:0; overflow-wrap:anywhere; }
+.sitlist em { color:var(--muted); font-style:normal; font-size:.85rem; text-align:right; }
+.feed li { border-top:1px solid var(--line); padding:12px 0; display:grid; gap:2px; }
+.feed b { font-weight:600; overflow-wrap:anywhere; } .feed span { color:var(--muted); font-size:.85rem; }

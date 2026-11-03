@@ -16,7 +16,7 @@ async function createBackup() {
     if (bytes > BACKUP_LIMIT * .7) throw new Error("This archive is too large for one backup. Save the audio files individually.");
     const data = new Uint8Array(await c.blob.arrayBuffer()); let binary = "";
     for (let i = 0; i < data.length; i += 32768) binary += String.fromCharCode(...data.subarray(i, i + 32768));
-    recordings.push({ id: c.id, q: c.q, at: c.at, dur: c.dur, type: c.blob.type, size: c.blob.size, audio: btoa(binary),
+    recordings.push({ id: c.id, q: c.q, ...(c.who ? { who: c.who } : {}), at: c.at, dur: c.dur, type: c.blob.type, size: c.blob.size, audio: btoa(binary),
       ...(c.text !== undefined ? { text: c.text, tx: c.tx || "typed", txAt: c.txAt } : {}), ...(c.recordingConsent ? { recordingConsent: c.recordingConsent } : {}) });
   }
   return JSON.stringify({ app: "Tell Me Again", version: 1, exportedAt: new Date().toISOString(), family, theme: getTheme(), recordings });
@@ -58,6 +58,7 @@ function parseBackup(text) {
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const out = { id: c.id, q: c.q, at: c.at, dur: c.dur, blob: new Blob([bytes], { type: c.type }) };
+    if (c.who !== undefined) { if (!string(c.who, 80)) return bad(); out.who = c.who; } // older archives have no speaker
     if (c.text !== undefined) {
       if (!string(c.text, 1000000) || !["ai", "edited", "typed"].includes(c.tx)) return bad();
       out.text = c.text; out.tx = c.tx;

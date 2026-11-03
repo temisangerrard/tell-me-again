@@ -25,7 +25,7 @@ function home() {
   const bar = $(`<nav class="tabbar" role="tablist" aria-label="Sitting, games, things to make, your family">${TABS.map(([id, l, ic], i) => `<button class="tabbtn" role="tab" id="t-${id}" aria-controls="${id}" aria-selected="${i === 0}" tabindex="${i ? -1 : 0}" data-t="${id}">${ic}${l}</button>`).join("")}</nav>`);
   host.append(el, bar);
   const tabs = [...bar.querySelectorAll(".tabbtn")];
-  const draw = { sit: renderSitting, play: renderPlay, make: renderMake, family: renderFamily };
+  const draw = { sit: renderSit, play: renderPlay, make: renderMake, family: renderFamily };
   const show = async (t, focus) => {
     if (t.getAttribute("aria-selected") === "true") return;
     tabs.forEach((x) => { x.setAttribute("aria-selected", x === t); x.tabIndex = x === t ? 0 : -1; });
@@ -37,6 +37,6 @@ function home() {
     t.onclick = () => show(t);
     t.onkeydown = (e) => { const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key]; if (j !== undefined) { e.preventDefault(); show(tabs[(j + tabs.length) % tabs.length], true); } };
   });
-  renderSitting(el.querySelector("#sit"));
+  renderSit(el.querySelector("#sit"));
 }
 

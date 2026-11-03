@@ -160,7 +160,7 @@ function voiceSitting(box, relay, myName, note) {
   }
   async function saveRec() {
     const recorder = mr;
-    const blob = new Blob(chunks, { type: recorder.mimeType }), clip = { id: crypto.randomUUID(), q: recordingQuestion, at: t0, dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "remote", at: t0 } };
+    const blob = new Blob(chunks, { type: recorder.mimeType }), clip = { id: crypto.randomUUID(), q: recordingQuestion, who: S.seats[1] || "", at: t0, dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "remote", at: t0 } };
     mr = null; try { await ctx.close(); } catch {} ctx = null;
     let kept = true;
     if (!DEV.has("data")) { try { await idbDo("readwrite", st => st.put(clip)); } catch { kept = false; } }
