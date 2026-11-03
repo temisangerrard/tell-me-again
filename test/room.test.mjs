@@ -153,6 +153,28 @@ if (!FULL) { const before = b.errs.length; await sleep(10500); for (let i = 0; i
 
 [a, b, c2, d, e].forEach((x) => x.close());
 
+// ---- bots: a lone host can add one, it takes a seat and plays on its own, only the host controls bots, nobody can pose as one
+{
+  const room2 = (await (await fetch(`${BASE}/api/rooms`, { method: "POST" })).json()).code;
+  const h = new Client(room2, "Solo"); await h.connect();
+  h.send({ t: "start", game: "ludo" }); await settle(); ok(h.errs.some((m) => /two players/i.test(m)), "can't start a game alone");
+  h.send({ t: "addbot" }); ok(await until(() => h.st.members.length === 2), "a bot sits down");
+  ok(h.st.members[1].bot === true && h.st.members[1].online === true && h.st.members[1].seat >= 0, "the bot is online and seated");
+  const gst = new Client(room2, "Guest"); await gst.connect();
+  gst.send({ t: "addbot" }); await settle(); ok(gst.errs.some((m) => /only the host/i.test(m)), "guests can't add bots");
+  const fake = new Client(room2, "Fake", "bot-" + "a".repeat(16)); await Promise.race([fake.connect().catch(() => {}), sleep(400)]); ok(!fake.st && fake.errs.some((m) => /id/i.test(m)), "a bot id can't be claimed by a person"); fake.close();
+  h.send({ t: "start", game: "ludo" }); ok(await until(() => h.st.game), "game starts with a bot at the table");
+  const botMoved = () => h.st.game.v.last && h.st.game.v.last.seat === 1, t0 = Date.now();
+  while (Date.now() - t0 < 30000 && !botMoved()) {
+    const v = h.st.game.v;
+    if (v.over === null && v.turn === 0) { if (v.dice === null) await h.act({ a: "roll" }); else await h.act({ a: "move", i: v.movable[0] }); } else await sleep(250);
+  }
+  ok(botMoved(), "the bot rolls and plays by itself");
+  h.send({ t: "addbot" }); await settle(); ok(h.errs.some((m) => /between games/i.test(m)), "no adding a bot mid-game");
+  h.send({ t: "stop" }); await settle(); h.send({ t: "rmbot", name: h.st.members[1].name }); ok(await until(() => !h.st.members.some((m) => m.bot)), "the host can remove a bot between games");
+  h.close(); gst.close();
+}
+
 // ---- bursts of room creation hit the rate limit (generous: 20 a minute per address)
 if (!process.env.SKIP_RATE) {
   const codes = await Promise.all(Array.from({ length: 40 }, () => fetch(`${BASE}/api/rooms`, { method: "POST" }).then((r) => r.status)));

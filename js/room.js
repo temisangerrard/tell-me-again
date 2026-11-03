@@ -1,6 +1,6 @@
 "use strict";
 // A live room connection
-function mountRoom(box, code, name, onLeave) {
+function mountRoom(box, code, name, onLeave, opts = {}) {
   const pid = roomPid(code); claimRoom(code, pid); const beat = setInterval(() => claimRoom(code, pid), 5000); let ws, st = null, dead = false, tries = 0, errT, stage = null;
   box.replaceChildren($(`<div class="room2"><div class="rtop2"><div class="rcode"><small>Room</small><b>${esc(code)}</b></div>
     <button class="btn" id="sh" type="button">Share</button><button class="btn" id="sd" type="button" aria-pressed="false"></button><button class="btn" id="al" type="button" aria-pressed="false" hidden></button><button class="btn" id="lv" type="button">Leave</button></div>
@@ -15,6 +15,7 @@ function mountRoom(box, code, name, onLeave) {
   const onVisible = () => { if (!document.hidden) nudge.back(box.querySelector("#stage2"), wasMyTurn); };
   document.addEventListener("visibilitychange", onVisible);
   REACTIONS.forEach((e) => { const b = $(`<button class="rx" type="button" aria-label="React ${e}">${e}</button>`); b.onclick = () => { send({ t: "react", e }); floatReaction(box, e, "You"); feel.react(); }; box.querySelector(".reacts").append(b); });
+  let botAsked = false, autoBot = opts.autoBot || null; // "Play a bot": add one, then start the chosen game
   let wasMyTurn = false, wasOver = true, lastMsg = "";
   const feelGame = (g) => {
     const mine = g.seat >= 0 && g.v.turn === g.seat && g.v.over === null, over = g.v.over !== null;
@@ -43,12 +44,16 @@ function mountRoom(box, code, name, onLeave) {
     if (dead) return;
     ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${code}/ws`);
     ws.onopen = () => { tries = 0; send({ t: "join", pid, name }); };
-    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); voice.announce(st.members.length); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "react" && REACTIONS.includes(m.e)) { floatReaction(box, m.e, m.n); feel.react(); } else if (m.t === "err") note(m.m); };
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); voice.announce(st.members.length); autoStart(); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "react" && REACTIONS.includes(m.e)) { floatReaction(box, m.e, m.n); feel.react(); } else if (m.t === "err") note(m.m); };
     ws.onclose = () => { if (dead) return; note("Reconnecting…", 0); setTimeout(connect, Math.min(1000 * 2 ** tries++, 8000)); };
   }
   function paintRoom() {
     if (er.textContent === "Reconnecting…") er.textContent = "";
-    box.querySelector("#mem").replaceChildren(...st.members.map((m) => $(`<span class="member ${m.you ? "you" : ""}"><i class="dot ${m.online ? "on" : ""}"></i><span>${esc(m.name)}</span><em>${m.host ? "host" : m.seat < 0 ? "watching" : ""}${m.wins ? ` · ${m.wins} ${m.wins === 1 ? "win" : "wins"}` : ""}</em></span>`)));
+    box.querySelector("#mem").replaceChildren(...st.members.map((m) => {
+      const el = $(`<span class="member ${m.you ? "you" : ""}"><i class="dot ${m.online ? "on" : ""}"></i><span>${esc(m.name)}</span><em>${m.host ? "host" : m.bot ? "bot" : m.seat < 0 ? "watching" : ""}${m.wins ? ` · ${m.wins} ${m.wins === 1 ? "win" : "wins"}` : ""}</em></span>`);
+      if (m.bot && st.me && st.me.host && (!st.game || st.game.v.over !== null)) { const x = $(`<button class="rmbot" type="button" aria-label="Remove ${esc(m.name)}">×</button>`); x.onclick = () => send({ t: "rmbot", name: m.name }); el.append(x); }
+      return el;
+    }));
     const g = st.game;
     if (!g) { stage = null; wasMyTurn = false; wasOver = true; lastMsg = ""; return lobby(); }
     if (!stage || stage.id !== g.id) { stg.replaceChildren(); stage = { id: g.id, ...mountOnlineGame(g.kind, stg, send, st, note) }; wasOver = false; wasMyTurn = false; lastMsg = ""; }
@@ -62,8 +67,9 @@ function mountRoom(box, code, name, onLeave) {
   function lobby() {
     const seated = st.members.filter((m) => m.seat >= 0).length, host = st.me && st.me.host;
     const el = $(`<div class="onl"><h2 class="sec" style="margin-top:8px">${host ? "Pick a game" : "Waiting for the host"}</h2>
-      <p class="hint">${seated} ${seated === 1 ? "person" : "people"} at the table</p><div class="games"></div></div>`);
+      <p class="hint">${seated < 2 ? "Add a bot or invite someone to start" : `${seated} at the table`}</p><div class="games"></div></div>`);
     if (host) {
+      const bot = $(`<button class="btn" type="button" style="margin-bottom:12px">Add a bot</button>`); bot.disabled = seated >= 4; bot.onclick = () => send({ t: "addbot" }); el.insertBefore(bot, el.querySelector(".games"));
       const games = [["ludo", "6", "Ludo", "2 to 4 players"], ["ayo", "12", "Ayo", "2 play, the rest watch"], ["whot", "20", "Whot", "2 to 4 players"]];
       games.forEach(([k, g, t, d]) => { const b = $(`<button class="game" type="button"><span class="g">${g}</span><span><b>${t}</b><span class="d">${d}</span></span></button>`);
         b.disabled = seated < 2; b.onclick = () => send({ t: "start", game: k, rules: k === "whot" ? S.whotRules : undefined }); el.querySelector(".games").append(b); });
@@ -72,6 +78,13 @@ function mountRoom(box, code, name, onLeave) {
       el.append(hr);
     }
     stg.replaceChildren(el);
+  }
+  // "Play a bot": once we're in as host, add a bot, then start the chosen game.
+  function autoStart() {
+    if (!autoBot || !st || !st.me || !st.me.host) return;
+    const seated = st.members.filter((m) => m.seat >= 0).length;
+    if (seated < 2 && !botAsked) { botAsked = true; send({ t: "addbot" }); }
+    else if (seated >= 2 && !st.game) { const k = autoBot; autoBot = null; send({ t: "start", game: k, rules: k === "whot" ? S.whotRules : undefined }); }
   }
   const session = { close: leave, el: box, voice };
   currentRoom = session;
