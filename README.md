@@ -24,7 +24,8 @@ Test fixtures (`?data=worst`, `?data=empty`, ...) only work on localhost.
 ## Test
 
 ```bash
-node test/engines.test.mjs                 # rules: Ludo, Ayo, Whot with every house-rule combination
+npm install                              # development-only UI test dependency
+npm test                                 # game engines and UI regressions
 BASE=http://localhost:8787 node test/room.test.mjs   # live rooms over WebSockets (add FULL=1 for full games)
 ```
 
@@ -59,8 +60,8 @@ npx wrangler deploy
 Roughly in priority order.
 
 **Privacy and consent (do before real use)**
-- [ ] Consent prompt for the person being recorded in a voice sitting ("You're being recorded", they can refuse). Today the host just taps record.
-- [ ] Under-16 confirmation before recording.
+- [x] The connected person must allow recording before capture starts; either participant can stop it. Consent travels through the actual WebRTC peer data channel.
+- [x] Age/guardian confirmation before in-person and remote recording.
 - [ ] Reading-aloud consent fallback for guests who can't use the screen.
 - [ ] Draft a record of processing, a DPIA (voice, older people) and a breach procedure. Needs the owner's review; not legal advice.
 - [ ] Sign and file Cloudflare's data processing addendum; confirm Workers AI retention wording is still accurate.
@@ -73,7 +74,8 @@ Roughly in priority order.
 **Voice sitting**
 - [ ] Relay for networks that block direct calls (Cloudflare Realtime TURN key). Today it only uses public STUN and can fail on strict networks.
 - [ ] Group calls (currently one to one).
-- [ ] Reconnect handling and keeping the call alive when the phone locks.
+- [x] Save captured audio on hangup, peer-channel closure, call failure or a sustained disconnection; show recording state on both phones.
+- [ ] Reconnect handling and keeping the call alive when the phone locks (requires real-device testing).
 - [ ] Test on real iPhone and Android devices.
 - [ ] Optional: "Start a call" buttons that open WhatsApp or FaceTime to invite someone (links only; those calls can't be recorded).
 
@@ -83,8 +85,8 @@ Roughly in priority order.
 - [ ] Offer more languages and a language hint per recording.
 
 **Make tab**
-- [ ] Real magazine, storybook and short-film generation from the recordings and transcripts (today these are previews).
-- [ ] Export as PDF / video.
+- [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
+- [ ] Storybook and short-film generation; video export.
 
 **Paid tier (later)**
 - [ ] Encrypted cloud backup and sync of audio and transcripts (R2, EU jurisdiction), shared family library, longer exports. Payments via Stripe or Paddle.
@@ -93,3 +95,32 @@ Roughly in priority order.
 - [ ] Pick and attach a domain (nothing bought; `again.family` was the favourite).
 - [ ] Optional real photo avatars.
 - [ ] Licence.
+
+## Landing and state cleanup (2026-11-03)
+
+- [x] Explain recording, optional transcripts, and the publication roadmap on the landing page with interactive examples. Fictional stories and publication concepts are labelled.
+- [x] Group Family controls into profile, activity, preferences, and information sections; clear stale online display names when a profile name is cleared.
+- [x] Treat Ayo winner seat zero as a completed game; restore results when returning to a finished board without counting another win.
+- [x] Add UI regression tests for landing startup, profile name clearing, and Ayo result restoration. `jsdom` is development-only; the shipped app still has no build step.
+
+## Preservation work list
+
+- [x] Full local backup: family details, audio bytes, transcripts, games won and preferences in one versioned JSON file.
+- [x] Restore from the welcome page or Family, with validation, replacement confirmation and a single IndexedDB recording transaction. Transcription permission is reset on restore.
+- [x] Recording permission and age/guardian confirmation; explicit refusal, remote stop and saving on hangup/interruption.
+- [x] Magazine story selection, review confirmation, standalone download and Print / Save PDF.
+- [ ] Pick the lasting product and email-sending domains.
+- [ ] Organiser email OTP and sessions on Cloudflare, then optional passkeys.
+- [ ] Opt-in cloud backup and shared libraries.
+
+Backups contain unencrypted family audio/text. Imports are limited to 128 MB (exported audio roughly 89 MB because JSON uses base64); larger archives can save recordings individually. No backup or magazine content is uploaded. A phone/browser being killed can still lose an unfinished recording; background calls, TURN relay and real iPhone/Android testing remain outstanding.
+
+Browser regression journeys (synthetic fixtures only):
+
+```bash
+npx playwright install chromium
+# Start npx wrangler dev in another terminal, then:
+npm run test:browser
+```
+
+PDF export uses the browser's print dialog. The standalone magazine file also opens offline and can be printed later.

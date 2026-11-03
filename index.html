@@ -20,7 +20,7 @@
   --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --num:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --sans:-apple-system,"SF Pro Text","Inter",system-ui,sans-serif;
-  --ease-out:cubic-bezier(.23,1,.32,1); --t-fast:80ms; --t-mid:var(--t-mid); --t-slow:var(--t-slow); /* three speeds only: small moves, panels, large surfaces */
+  --ease-out:cubic-bezier(.23,1,.32,1); --t-fast:80ms; --t-mid:240ms; --t-slow:360ms; /* three speeds only: small moves, panels, large surfaces */
   --r-md:14px; --r-lg:20px; --shell:520px;
   --shadow:0 0 #0000; --scrim:#1d1d1f8c; --soft:#0000000f;
 }
@@ -92,72 +92,92 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .preview .nm { font:800 1.9rem/1 var(--display);  overflow-wrap:anywhere; }
 .preview .sg { color:var(--muted); font-size:.92rem; margin-top:6px; overflow-wrap:anywhere; }
 
-/* welcome */
-.app.landing { --shell:1040px; }
-.welcome { flex:1; display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 24px max(40px,env(safe-area-inset-bottom)); }
-.wtop { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; grid-column:1/-1; }
-.mark { font:800 1.2rem var(--display); letter-spacing:-.01em; }
-.themebtn { min-height:44px; padding:8px 14px; border-radius:999px; border:0; background:var(--soft); color:var(--text); font-weight:500; font-size:.9rem; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
-.themebtn i { width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--bg) 0 50%,var(--text) 0); box-shadow:0 0 0 1.5px var(--text); }
-.hero2 h1 { font-size:clamp(3rem,15vw,5.6rem); line-height:.95; margin-top:36px; letter-spacing:-.03em; }
-.hero2 .sub { font-size:1.12rem; max-width:34ch; margin-top:20px; color:var(--text); }
-.hero2 .row { margin-top:28px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
-.hero2 .row .cta { width:auto; padding:0 32px; }
-.hero2 .fine { text-align:left; margin:0; max-width:24ch; }
-.fine { color:var(--muted); font-size:.85rem; }
-.pieces { display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding-inline:24px; margin:40px -24px 0; padding:0 24px 8px; scrollbar-width:none; align-items:flex-end; }
-.pieces::-webkit-scrollbar { display:none; }
-.pc { flex:none; scroll-snap-align:start; position:relative; overflow:hidden; border-radius:var(--r-md); padding:16px; display:flex; flex-direction:column; justify-content:flex-end; }
-.pc small { font:600 .8rem var(--sans); opacity:.75; margin-bottom:auto; }
-.pc b { font:800 1.9rem/.98 var(--display); letter-spacing:-.02em; }
-.pc span, .pc p { font-size:.85rem; line-height:1.3; margin-top:8px; }
-.pc.mag { width:58vw; max-width:230px; aspect-ratio:3/4; background:var(--accent); color:var(--on-accent); }
-.pc.book { width:48vw; max-width:190px; aspect-ratio:1; background:var(--surface); box-shadow:0 0 0 1px var(--line); color:var(--text); }
-.pc.book p { font:600 1rem/1.25 var(--sans); margin:0 0 8px; }
-.pc.book i { font-size:.8rem; color:var(--muted); font-style:normal; }
-.pc.film { width:76vw; max-width:300px; aspect-ratio:16/9; background:#1d1d1f; color:#fff7ea; }
-.pc.film::before { content:""; position:absolute; left:16px; top:16px; width:34px; height:34px; border-radius:50%; background:#fff7ea; }
-.pc.film::after { content:""; position:absolute; left:28px; top:25px; border-left:11px solid #1d1d1f; border-top:8px solid transparent; border-bottom:8px solid transparent; }
-.pieces + .fine { margin-top:10px; }
-.how { margin:56px 0 0; padding:0; list-style:none; display:grid; gap:0; counter-reset:s; }
-.how li { counter-increment:s; display:grid; grid-template-columns:44px 1fr; gap:4px 12px; padding:18px 0; border-top:1px solid var(--line); }
-.how li::before { content:counter(s); font:800 1.8rem/1 var(--num); color:var(--accent-text); grid-row:1/3; }
-.how b { font:700 1.1rem var(--sans); }
-.how span { color:var(--muted); font-size:.95rem; }
-.how + .fine { margin-top:24px; }
-@media (min-width:860px){
-  .welcome { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto 1fr auto; grid-template-areas:"top top" "hero side" "how side" "more more"; column-gap:72px; padding:28px 56px 72px; }
-  .wtop { grid-area:top; } .hero2 { grid-area:hero; } .rside { grid-area:side; padding-top:72px; } .how { grid-area:how; margin-top:56px; align-self:start; } .more { grid-area:more; }
-  .hero2 h1 { font-size:clamp(4rem,6.4vw,6.2rem); margin-top:56px; }
-  .pieces { margin:0; padding:0; overflow:visible; flex-wrap:wrap; align-content:center; gap:18px; }
-  .pc.mag { width:240px; } .pc.book { width:200px; } .pc.film { width:100%; max-width:none; }
-}
-
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4
+ * Nike reference: generous spacing, oversized type, flat surfaces. Existing app tokens retained. */
+.app.landing { --shell:1200px; }
+.welcome { flex:1; padding:20px 24px 40px; }
+.wtop { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; }
+.mark { font:800 1.15rem var(--display); letter-spacing:-.04em; }
 .wtop .acts { display:flex; align-items:center; gap:8px; }
-.signin { min-height:44px; padding:8px 16px; border-radius:999px; border:0; background:var(--ink); color:var(--bg); font:600 .9rem var(--sans); cursor:pointer; }
-.hero2 .alt { background:none; border:0; padding:0; font:600 1rem var(--sans); color:var(--text); text-decoration:underline; text-underline-offset:4px; cursor:pointer; min-height:44px; }
-.more { grid-column:1/-1; margin-top:72px; }
-.more h2 { font:800 clamp(1.9rem,5vw,3rem)/1.02 var(--display); letter-spacing:-.025em; max-width:18ch; }
-.more .lead { color:var(--muted); max-width:46ch; margin-top:14px; font-size:1.05rem; }
-.blk { margin-top:64px; }
-.trio { display:grid; gap:0; margin-top:24px; }
-.trio > div { padding:22px 0; border-top:1px solid var(--line); }
-.trio b { font:800 1.5rem var(--display); letter-spacing:-.015em; display:block; }
-.trio p { color:var(--muted); margin-top:8px; max-width:42ch; }
-.promise { margin-top:20px; padding:0; list-style:none; display:grid; gap:0; }
-.promise li { padding:16px 0 16px 0; border-top:1px solid var(--line); display:grid; gap:2px; }
-.promise b { font-weight:700; } .promise span { color:var(--muted); }
-.faq { margin-top:20px; border-bottom:1px solid var(--line); }
-.faq details { border-top:1px solid var(--line); padding:4px 0; }
-.faq summary { cursor:pointer; list-style:none; padding:16px 0; font-weight:700; min-height:44px; display:flex; justify-content:space-between; gap:12px; }
-.faq summary::-webkit-details-marker { display:none; } .faq summary::after { content:"+"; font-weight:400; color:var(--muted); }
-.faq details[open] summary::after { content:"\2212"; }
-.faq p { color:var(--muted); padding:0 0 18px; max-width:56ch; }
-.endcta { margin-top:72px; padding:40px 0; border-top:1px solid var(--line); display:flex; flex-direction:column; align-items:flex-start; gap:18px; }
-.endcta .cta { width:auto; padding:0 32px; }
-.foot { display:flex; flex-wrap:wrap; gap:8px 20px; padding:20px 0 0; color:var(--muted); font-size:.9rem; }
-.foot button { background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:32px; }
-@media (min-width:860px){ .trio { grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; } .trio > div { border-top:0; padding:0; } .promise { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:40px; } }
+.themebtn { min-height:44px; padding:8px 12px; border-radius:999px; border:0; background:var(--soft); color:var(--text); font:500 .85rem var(--sans); cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
+.themebtn i { width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--bg) 0 50%,var(--text) 0); box-shadow:0 0 0 1.5px var(--text); }
+.signin { min-height:44px; padding:8px 12px; border:0; background:transparent; color:var(--text); font:600 .85rem var(--sans); cursor:pointer; }
+.landing-hero { display:grid; gap:36px; padding:60px 0 48px; }
+.hero2 h1 { font:800 clamp(3.5rem,12vw,6.4rem)/.94 var(--display); letter-spacing:-.035em; margin:18px 0 24px; max-width:11ch; overflow-wrap:anywhere; }
+.hero2 .sub { font-size:1.05rem; line-height:1.6; max-width:36ch; color:var(--muted); }
+.hero2 .row { margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 24px; }
+.welcome .cta { width:auto; padding:0 28px; background:var(--text); color:var(--bg); white-space:nowrap; }
+.welcome .cta:hover, .signin:hover { opacity:.8; }
+.textlink { display:inline-flex; align-items:center; min-height:44px; color:var(--text); font:600 .9rem var(--sans); text-underline-offset:5px; }
+.fine { font:400 .8rem/1.5 var(--sans); color:var(--muted); }
+.hero2 > .fine { margin-top:16px; }
+.example { min-width:0; align-self:center; }
+.example-nav { display:flex; border-bottom:1px solid var(--line); gap:18px; }
+.example-nav button { padding:12px 0; min-height:44px; border:0; border-bottom:2px solid transparent; margin-bottom:-1px; background:transparent; color:var(--muted); cursor:pointer; font:600 .86rem var(--sans); white-space:nowrap; }
+.example-nav button[aria-pressed=true] { color:var(--text); border-bottom-color:var(--text); }
+.example-stage { margin-top:18px; min-height:360px; background:var(--surface2); position:relative; padding:24px; display:flex; flex-direction:column; justify-content:center; overflow:hidden; }
+.example-stage .sample-label { color:var(--muted); font:600 .7rem var(--sans); text-transform:uppercase; letter-spacing:.12em; }
+.sample-question { font:800 clamp(1.8rem,5vw,2.7rem)/1.12 var(--display); letter-spacing:-.035em; margin:28px 0 20px; text-wrap:balance; }
+.sample-seats { display:flex; gap:8px; align-items:center; margin-top:22px; color:var(--muted); font-size:.78rem; flex-wrap:wrap; }
+.sample-seats i { width:30px; height:30px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; background:var(--surface); color:var(--text); font:600 .7rem var(--sans); font-style:normal; }
+.example-stage .btn { align-self:flex-start; background:var(--surface); margin-top:12px; }
+.sample-wave { width:100%; height:72px; color:var(--accent-text); margin:16px 0; }
+.sample-quote { font:500 clamp(1.15rem,3vw,1.45rem)/1.5 var(--sans); margin:20px 0; }
+.sample-transcript { background:var(--surface); border-left:3px solid var(--accent); padding:16px; font-size:.9rem; color:var(--text); }
+.sample-transcript small { display:block; font-size:.7rem; color:var(--muted); margin-bottom:8px; }
+.sample-spread { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); border:1px solid var(--line); margin-top:18px; background:var(--surface); min-height:270px; }
+.sample-spread > div { padding:18px 14px; min-width:0; display:flex; flex-direction:column; }
+.sample-spread > div + div { border-left:1px solid var(--line); }
+.sample-spread h3 { font:800 clamp(1.5rem,4vw,2.2rem)/1 var(--display); letter-spacing:-.045em; margin:12px 0; overflow-wrap:anywhere; }
+.sample-spread p { font:400 .7rem/1.7 var(--sans); }
+.sample-spread .page-no { margin-top:auto; padding-top:16px; color:var(--muted); font-size:.6rem; }
+.sample-spread .recipe { background:var(--accent); color:var(--on-accent); padding:14px; margin:12px 0; }
+.sample-spread .recipe b { display:block; font:800 1.25rem/1 var(--display); margin-bottom:12px; }
+.landing-how { display:grid; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.landing-how > div { padding:24px 0; }
+.landing-how > div + div { border-top:1px solid var(--line); }
+.landing-how .number { font:800 2.5rem/1 var(--num); color:var(--accent-text); }
+.landing-how h2 { font:700 1.2rem var(--display); margin:12px 0 6px; letter-spacing:-.02em; }
+.landing-how p { font-size:.92rem; color:var(--muted); max-width:32ch; }
+.landing-games { display:grid; gap:28px; padding:60px 0; align-items:center; }
+.welcome h2.section-title { font:800 clamp(2.2rem,6vw,3.7rem)/1.02 var(--display); letter-spacing:-.045em; max-width:15ch; margin:14px 0; overflow-wrap:anywhere; }
+.landing-games p { color:var(--muted); max-width:38ch; }
+.game-sample { padding:24px; background:var(--surface2); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:20px; }
+.game-sample svg { width:100%; height:auto; background:var(--surface); }
+.game-sample b { font:800 1.5rem var(--display); display:block; }
+.game-sample p { font-size:.8rem; margin:8px 0; }
+.game-sample .fine { margin-top:16px; }
+.future-note { border-top:1px solid var(--line); display:grid; gap:12px; padding:32px 0; }
+.future-note h2 { font:700 1.3rem var(--display); letter-spacing:-.02em; }
+.future-note p { color:var(--muted); font-size:.94rem; max-width:60ch; }
+.faq { border-bottom:1px solid var(--line); margin-top:24px; }
+.faq details { border-top:1px solid var(--line); }
+.faq summary { cursor:pointer; list-style:none; padding:20px 0; font-weight:600; min-height:44px; display:flex; justify-content:space-between; gap:20px; }
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary::after { content:"+"; color:var(--muted); }
+.faq details[open] summary::after { content:"−"; }
+.faq p { color:var(--muted); padding:0 0 20px; max-width:60ch; font-size:.92rem; }
+.endcta { padding:60px 0; display:grid; gap:24px; justify-items:start; }
+.foot { border-top:1px solid var(--line); display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px; padding:20px 0 0; color:var(--muted); font-size:.8rem; }
+.foot button, .foot a { background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:44px; display:inline-flex; align-items:center; }
+@media (min-width:768px) {
+  .welcome { padding:28px 48px 36px; }
+  .landing-hero { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:56px; padding:80px 0 64px; }
+  .hero2 h1 { font-size:clamp(3.5rem,6.5vw,6.4rem); }
+  .landing-how { grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; }
+  .landing-how > div + div { border-top:0; }
+  .landing-games { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:56px; padding:80px 0; }
+  .future-note { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:56px; }
+}
+@media (max-width:400px) { .game-sample { grid-template-columns:1fr; } .game-sample svg { width:180px; max-width:100%; } }
+/* Profile settings: native disclosures keep personal details, preferences and data separate. */
+.profile-settings { border-bottom:1px solid var(--line); }
+.profile-settings > summary { min-height:64px; padding:20px 0; cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:16px; font:700 1.1rem var(--display); }
+.profile-settings > summary::-webkit-details-marker { display:none; }
+.profile-settings > summary::after { content:"+"; font:400 1.2rem var(--sans); color:var(--muted); }
+.profile-settings[open] > summary::after { content:"−"; }
+.profile-settings .fam { margin:0 0 28px; padding-top:0; border:0; }
+.profile-settings .sec { font-size:1rem; }
 .plist { list-style:none; margin:20px 0 0; padding:0; }
 .plist li { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); min-height:52px; }
 .plist .pn { flex:1; font-weight:600; font-size:1.05rem; min-width:0; overflow-wrap:anywhere; }
@@ -660,56 +680,64 @@ function screen(n, title, sub, body, next = "Continue") {
 
 /* ---------- onboarding ---------- */
 function welcome() {
-  const f = pick(SUR), q = (QUESTIONS.filter((x) => x.d <= 2).find((x) => /left|carry/i.test(x.q)) || QUESTIONS[0]).q;
   const el = $(`<section class="welcome">
-    <div class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></div>
-    <div class="hero2">
-      <h1 class="display">Tell me again.</h1>
-      <p class="sub">Record your family's stories, one question at a time.</p>
-      <div class="row"><button class="cta" id="go" type="button">Start a family</button></div>
-    </div>
-    <div class="rside">
-      <div class="pieces" aria-hidden="true">
-        <div class="pc mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>
-        <div class="pc book"><small>Page 3</small><p>${esc(q)}</p></div>
-        <div class="pc film"><small style="margin-left:46px;margin-top:6px">A short film</small><b>The ${esc(f)} short</b></div>
+    <header class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
+    <div class="landing-hero">
+      <div class="hero2">
+        <h1>Keep the stories only your family can tell.</h1>
+        <p class="sub">Ask a good question. Record their voice. Save the names, recipes and memories you want the next generation to know.</p>
+        <div class="row"><button class="cta" id="go" type="button">Start your family</button><a class="textlink" href="#product-example">See an example ↓</a></div>
+        <p class="fine">Free to start. Your family can join by link.</p>
       </div>
-      
+      <section class="example" id="product-example" aria-label="Explore a product example">
+        <div class="example-nav" role="group" aria-label="Steps in a family story">
+          <button type="button" data-example="ask" aria-pressed="true" aria-controls="example-stage">01 Ask</button>
+          <button type="button" data-example="keep" aria-pressed="false" aria-controls="example-stage">02 Keep</button>
+          <button type="button" data-example="make" aria-pressed="false" aria-controls="example-stage">03 Make</button>
+        </div>
+        <div class="example-stage" id="example-stage"></div>
+      </section>
     </div>
-    <ol class="how">
-      <li><b>Send a link</b></li>
-      <li><b>Ask a question</b></li>
-      <li><b>Play a game</b></li>
-      <li><b>Keep it</b></li>
-    </ol><div class="more">
-      <div class="blk" style="margin-top:0">
-        <div class="trio">
-          <div><b>Sit</b><p>Record one question at a time.</p></div>
-          <div><b>Play</b><p>Ludo, Ayo and Whot together.</p></div>
-          <div><b>Make</b><p>A magazine, storybook or short film.</p></div>
-        </div></div>
-      <div class="blk"><h2>Sit from anywhere</h2><p class="lead">Voice call in the app. Your phone records.</p></div>
-      <div class="blk"><h2>Private</h2>
-        <ul class="promise">
-          <li><b>Recordings stay on your phone</b></li>
-          <li><b>Speech to text only if you ask</b></li>
-          <li><b>No ads, no tracking</b></li>
-          <li><b>Delete everything in one tap</b></li>
-        </ul></div>
-      <div class="blk"><h2>Questions people ask</h2>
-        <div class="faq">
-          <details><summary>Do they need an app or account?</summary><p>No. She taps your link.</p></details>
-          <details><summary>What if they don't speak English?</summary><p>Record in any language. Text works for English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili.</p></details>
-          <details><summary>What does it cost?</summary><p>Free. Cloud backup will be a paid extra later.</p></details>
-          <details><summary>Who makes this?</summary><p>Settley Studio. ${PRIVACY_MAIL}</p></details>
-        </div></div>
-      <div class="endcta"><button class="cta" id="go2" type="button">Start a family</button></div>
-      <div class="foot"><span>Made by Settley Studio</span><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}" style="color:inherit">Contact</a></div>
-    </div></section>`);
+    <section class="landing-how" aria-label="How Tell Me Again works">
+      <div><span class="number">01</span><h2>Bring someone you love.</h2><p>Sit together, or send a link for a one-to-one voice call.</p></div>
+      <div><span class="number">02</span><h2>Follow a good question.</h2><p>Choose a topic. Use the follow-ups to find the story behind the first answer.</p></div>
+      <div><span class="number">03</span><h2>Keep their own words.</h2><p>Save the recording. Turn it into text if you choose, then check and edit the words.</p></div>
+    </section>
+    <section class="landing-games"><div><h2 class="section-title">Play together</h2><p>Play Ludo, Ayo or Whot between questions. Invite family to an online game, or pass one phone around the table.</p></div>
+      <div class="game-sample"><svg viewBox="0 0 15 15" role="img" aria-label="Ludo board from Tell Me Again">${boardSVG()}</svg><div><b>Your family table</b><p>Ludo & Whot · 2–4 players<br>Ayo · 2 players</p><p class="fine">Voice calls currently support two people.</p></div></div>
+    </section>
+    <section class="future-note"><div><h2>Your family magazine</h2></div><p>Personalised magazine covers and book previews are here to try. Make a magazine from selected transcripts and save it as a PDF. Storybooks and films are still in development.</p></section>
+    <section aria-label="Common questions"><div class="faq">
+      <details><summary>Does my family need an account?</summary><p>No. Start your family on this device and share a room link. Guests enter their name to join. Account sign-in is still in development.</p></details>
+      <details><summary>Where do the recordings go?</summary><p>Recordings and transcripts stay on the device that saves them. Download a copy to keep a backup. If you choose transcription, that recording is sent to the speech service for processing.</p></details>
+      <details><summary>Can we speak our own language?</summary><p>You can record in any language. Transcription offers English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili; accuracy varies. Igbo and Nigerian Pidgin aren't supported yet.</p></details>
+      <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, back up your family archive, and make a magazine to print or save as PDF. Storybooks and films are previews.</p></details>
+    </div></section>
+    <div class="endcta"><button class="cta" id="go2" type="button">Start your family</button></div>
+    <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="restore-welcome">Restore backup</button><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
+  </section>`);
   host.append(el);
+  let questionIndex = 0;
+  const questions = QUESTIONS.filter(x => x.c === "food" && x.d <= 2);
+  const stage = el.querySelector("#example-stage");
+  const showExample = kind => {
+    el.querySelectorAll("[data-example]").forEach(b => b.setAttribute("aria-pressed", b.dataset.example === kind));
+    if (kind === "ask") {
+      const q = questions[questionIndex % questions.length];
+      stage.innerHTML = `<span class="sample-label">Food & the table</span><h2 class="sample-question">${esc(q.q)}</h2><p class="fine">${esc(q.f[0])}</p><button class="btn" type="button">Try another question ↗</button><div class="sample-seats"><i>You</i><i>P</i></div>`;
+      stage.querySelector("button").onclick = () => { questionIndex++; showExample("ask"); };
+    } else if (kind === "keep") {
+      stage.innerHTML = `<span class="sample-label">Fictional story example</span><p class="sample-quote">“On Sundays, we all ended up in my mother's kitchen.”</p><svg class="sample-wave" viewBox="0 0 320 64" aria-hidden="true">${Array.from({length:48},(_,i) => { const h = 6 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * .31)) * 48; return `<rect x="${i*6.7}" y="${32-h/2}" width="3" height="${h}" rx="1.5" fill="currentColor"/>`; }).join("")}</svg><div class="sample-transcript"><small>EXAMPLE TRANSCRIPT</small>She never wrote the recipe down. She would just say, “Come and watch.”</div>`;
+    } else {
+      stage.innerHTML = `<span class="sample-label">Fictional magazine example</span><div class="sample-spread"><div><span class="sample-label">The family table</span><h3>Sunday in her kitchen.</h3><p>Everyone had a job. Someone washed the rice. Someone set the table. And everyone waited for a taste.</p><span class="page-no">04 · A FAMILY STORY</span></div><div><p>Some things were measured by the handful. Others, by watching.</p><div class="recipe"><b>“Come and watch.”</b><p>A recipe remembered, in her own words.</p></div><span class="page-no">05 · FOOD & MEMORIES</span></div></div>`;
+    }
+  };
+  el.querySelectorAll("[data-example]").forEach(b => b.onclick = () => showExample(b.dataset.example));
+  showExample("ask");
+  el.querySelector("#restore-welcome").onclick = () => { const b = $(`<div><h2>Restore backup</h2></div>`); backupControls(b, false); const close = sheet("Restore backup", b); b.append(closeBtn(close)); };
   el.querySelector("#pvl").onclick = privacySheet;
   el.querySelector("#go").onclick = () => go(1); el.querySelector("#go2").onclick = () => go(1);
-  el.querySelector("#si").onclick = () => authScreen("in"); el.querySelector("#si2").onclick = () => authScreen("in");
+  el.querySelector("#si").onclick = () => authScreen("in");
   el.querySelector("#th").onclick = themePicker;
 }
 
@@ -851,7 +879,16 @@ function peopleEditor(parent, o = {}) {
 /* ---------- the room: Sit / Play / Make ---------- */
 let clips = []; // {id, q, at, dur, blob, url}. Kept on this device in IndexedDB so they survive a refresh. Nothing is uploaded.
 const idbOpen = () => new Promise((res, rej) => { const r = indexedDB.open("tellmeagain", 1); r.onupgradeneeded = () => r.result.createObjectStore("clips", { keyPath: "id" }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-const idbDo = async (mode, fn) => { const db = await idbOpen(); return new Promise((res, rej) => { const tx = db.transaction("clips", mode), rq = fn(tx.objectStore("clips")); tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); }); };
+const idbDo = async (mode, fn) => {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("clips", mode); let rq;
+    tx.oncomplete = () => { db.close(); resolve(rq && rq.result); };
+    tx.onabort = () => { db.close(); reject(tx.error || new Error("Recording storage was interrupted.")); };
+    tx.onerror = () => {};
+    try { rq = fn(tx.objectStore("clips")); } catch (error) { tx.abort(); reject(error); }
+  });
+};
 async function loadClips() {
   if (DEV.has("data")) return;
   try { const all = await idbDo("readonly", (st) => st.getAll()); clips = all.sort((a, b) => b.at - a.at).map((c) => ({ ...c, url: URL.createObjectURL(c.blob) })); } catch {}
@@ -864,7 +901,21 @@ const fmtDur = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).
 const TX_LANGS = [["", "Detect automatically"], ["en", "English"], ["fr", "French"], ["pt", "Portuguese"], ["ar", "Arabic"], ["yo", "Yoruba"], ["ha", "Hausa"], ["sw", "Swahili"]];
 const txBusy = new Set(); // clip ids being transcribed right now
 const clipRecord = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "url" && k[0] !== "_")); // what gets stored: no blob URL, no UI flags
-const saveClip = async (c) => { if (DEV.has("data")) return; try { await idbDo("readwrite", (st) => st.put(clipRecord(c))); } catch {} };
+const pendingClipEdits = new Map(), clipWrites = new Set();
+const saveClip = c => {
+  if (DEV.has("data")) return Promise.resolve();
+  const write = idbDo("readwrite", st => st.put(clipRecord(c)));
+  clipWrites.add(write); write.then(() => { c._unsaved = false; clipWrites.delete(write); }, () => clipWrites.delete(write));
+  return write;
+};
+async function flushClipEdits() {
+  const queued = [...pendingClipEdits.values()].map(save => save());
+  await Promise.all([...queued, ...clipWrites]);
+}
+async function cancelClipEdits() {
+  for (const save of pendingClipEdits.values()) save.cancel();
+  pendingClipEdits.clear(); await Promise.allSettled([...clipWrites]);
+}
 const txNames = () => [...new Set([...String(S.hints || "").split(","), famName(S.name), S.elder.name, ...S.seats.slice(2), ...(S.people || []).map((x) => x.n), S.me.name, S.town].map((x) => String(x || "").trim()).filter(Boolean))].join(", ").slice(0, 170);
 async function transcribeClip(c) {
   if (c.dur > 720) throw new Error("That recording is longer than 12 minutes, which is too long to turn into text in one go.");
@@ -873,6 +924,124 @@ async function transcribeClip(c) {
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Couldn't turn that into text. Please try again.");
   c.text = j.text || ""; c.tx = "ai"; c.txAt = Date.now(); await saveClip(c);
 }
+/* ---------- Complete local backups ---------- */
+const BACKUP_LIMIT = 128 * 1024 * 1024;
+let restoring = false;
+function downloadFile(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function createBackup() {
+  if (live || activeVoiceRecording || restoring || txBusy.size) throw new Error("Finish recording or transcription before making a backup.");
+  const family = structuredClone(S), recordings = [], snapshot = clips.map(c => ({ ...c }));
+  let bytes = 0;
+  for (const c of snapshot) {
+    bytes += c.blob.size;
+    if (bytes > BACKUP_LIMIT * .7) throw new Error("This archive is too large for one backup. Save the audio files individually.");
+    const data = new Uint8Array(await c.blob.arrayBuffer()); let binary = "";
+    for (let i = 0; i < data.length; i += 32768) binary += String.fromCharCode(...data.subarray(i, i + 32768));
+    recordings.push({ id: c.id, q: c.q, at: c.at, dur: c.dur, type: c.blob.type, size: c.blob.size, audio: btoa(binary),
+      ...(c.text !== undefined ? { text: c.text, tx: c.tx || "typed", txAt: c.txAt } : {}), ...(c.recordingConsent ? { recordingConsent: c.recordingConsent } : {}) });
+  }
+  return JSON.stringify({ app: "Tell Me Again", version: 1, exportedAt: new Date().toISOString(), family, theme: getTheme(), recordings });
+}
+function parseBackup(text) {
+  const bad = () => { throw new Error("This isn't a valid Tell Me Again backup."); };
+  if (typeof text !== "string" || text.length > BACKUP_LIMIT) throw new Error("Choose a backup smaller than 128 MB.");
+  let b; try { b = JSON.parse(text); } catch { return bad(); }
+  const object = v => v && typeof v === "object" && !Array.isArray(v);
+  const string = (v, max = 1000) => typeof v === "string" && v.length <= max;
+  const strings = (v, count, length) => Array.isArray(v) && v.length <= count && v.every(x => string(x, length));
+  const number = (v, max) => Number.isFinite(v) && v >= 0 && v <= max;
+  const forbidden = v => object(v) ? Object.keys(v).some(k => ["__proto__", "constructor", "prototype"].includes(k) || forbidden(v[k])) : Array.isArray(v) && v.some(forbidden);
+  if (!object(b) || b.app !== "Tell Me Again" || b.version !== 1 || forbidden(b) || !object(b.family) || !Array.isArray(b.recordings) || b.recordings.length > 1000) return bad();
+  const f = b.family, family = fresh();
+  if (!object(f.me) || !string(f.me.name, 120) || !object(f.elder) || !string(f.elder.name, 120) || !string(f.elder.born, 4)) return bad();
+  for (const key of ["name", "saying", "color", "town", "lang", "hints"]) {
+    if (!string(f[key], 1000)) return bad(); family[key] = f[key];
+  }
+  if (!/^#[0-9a-f]{6}$/i.test(f.color) || !strings(f.seats, 4, 120) || !strings(f.heritage, 100, 120) || !strings(f.asked, 10000, 4000) || !strings(f.chapters, 20, 30) || !strings(f.makes, 10, 30)) return bad();
+  if (!f.chapters.every(k => CHAPTERS.some(c => c.id === k)) || !f.makes.every(k => MAKES.some(([id]) => id === k))) return bad();
+  if (!Number.isInteger(f.told) || !number(f.told, 10000000) || !Number.isInteger(f.step) || !number(f.step, 7)) return bad();
+  if (!Array.isArray(f.wins) || f.wins.length > 1000 || !f.wins.every(w => object(w) && string(w.n, 120) && Number.isInteger(w.c) && number(w.c, 10000000))) return bad();
+  if (!Array.isArray(f.sittings) || f.sittings.length > 10000 || !f.sittings.every(s => object(s) && string(s.d, 40) && Number.isFinite(Date.parse(s.d)) && ["up", "down"].includes(s.r) && strings(s.t, 30, 120))) return bad();
+  if (!object(f.whotRules)) return bad();
+  for (const key of Object.keys(family.whotRules)) {
+    if (key === "hand" ? ![0,4,5,6,7].includes(f.whotRules[key]) : typeof f.whotRules[key] !== "boolean") return bad();
+    family.whotRules[key] = f.whotRules[key];
+  }
+  Object.assign(family, { me: { name: f.me.name }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings, told: f.told, step: f.step });
+  // A restored archive never grants permission to send audio from this device.
+  family.consent = { transcribe: false }; family.autoTx = false;
+  if (b.theme !== undefined && !THEMES.some(([k]) => k === b.theme)) return bad();
+  const ids = new Set(), recordings = b.recordings.map(c => {
+    if (!object(c) || !string(c.id, 160) || !c.id || ids.has(c.id) || !string(c.q, 4000) || !number(c.at, 8640000000000000) || !number(c.dur, 86400) || !string(c.type, 120) || !/^(audio\/[a-z0-9.+-]+|video\/webm)(;[a-z0-9= .,+-]+)?$/i.test(c.type) || !Number.isInteger(c.size) || !number(c.size, BACKUP_LIMIT) || typeof c.audio !== "string") return bad();
+    if (c.audio.length !== 4 * Math.ceil(c.size / 3) || !/^[A-Za-z0-9+/]*={0,2}$/.test(c.audio)) return bad();
+    ids.add(c.id); let binary; try { binary = atob(c.audio); } catch { return bad(); }
+    if (binary.length !== c.size) return bad();
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const out = { id: c.id, q: c.q, at: c.at, dur: c.dur, blob: new Blob([bytes], { type: c.type }) };
+    if (c.text !== undefined) {
+      if (!string(c.text, 1000000) || !["ai", "edited", "typed"].includes(c.tx)) return bad();
+      out.text = c.text; out.tx = c.tx;
+      if (c.txAt !== undefined) { if (!number(c.txAt, 8640000000000000)) return bad(); out.txAt = c.txAt; }
+    }
+    if (c.recordingConsent !== undefined) {
+      if (!object(c.recordingConsent) || !["in-person", "remote"].includes(c.recordingConsent.method) || !number(c.recordingConsent.at, 8640000000000000)) return bad();
+      out.recordingConsent = { method: c.recordingConsent.method, at: c.recordingConsent.at };
+    }
+    return out;
+  });
+  return { family, recordings, theme: b.theme || "white" };
+}
+async function restoreBackup(backup) {
+  if (restoring || live || activeVoiceRecording || txBusy.size) throw new Error("Finish recording or transcription before restoring a backup.");
+  if (currentRoom) throw new Error("Leave the online room before restoring a backup.");
+  restoring = true;
+  const keys = [KEY, "sitting-theme", "sitting-name", "sitting-room"], previous = new Map();
+  try {
+    await flushClipEdits();
+    for (const k of keys) previous.set(k, localStorage.getItem(k));
+    localStorage.setItem(KEY, JSON.stringify(backup.family)); localStorage.setItem("sitting-theme", backup.theme);
+    localStorage.setItem("sitting-name", backup.family.me.name); localStorage.removeItem("sitting-room");
+    await idbDo("readwrite", st => { st.clear(); for (const c of backup.recordings) st.put(c); });
+  } catch (e) {
+    for (const [k, v] of previous) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch {} }
+    throw new Error("The backup couldn't be restored. Your existing recordings were kept.", { cause: e });
+  } finally { restoring = false; }
+  clips.forEach(c => URL.revokeObjectURL(c.url));
+  clips = backup.recordings.map(c => ({ ...c, url: URL.createObjectURL(c.blob) })).sort((a,b) => b.at-a.at);
+  S = backup.family; game = null; ayo = null; whot = null; lastGame = null;
+  render();
+}
+function backupControls(parent, allowDownload = true) {
+  const download = $(`<button class="btn" type="button">Download full backup</button>`);
+  const restore = $(`<label class="field"><span class="lbl">Restore backup</span><input type="file" accept=".json,application/json" style="display:block;max-width:100%;margin-top:12px"></label>`);
+  const status = $(`<p class="err" role="status"></p>`);
+  download.onclick = async () => {
+    download.disabled = true; status.textContent = "Preparing backup…";
+    try { const text = await createBackup(); downloadFile(new Blob([text], { type: "application/json" }), "tell-me-again-backup.json"); status.textContent = "Backup downloaded."; }
+    catch (e) { status.textContent = e.message; } finally { download.disabled = false; }
+  };
+  restore.querySelector("input").onchange = async e => {
+    const file = e.target.files[0]; if (!file) return; e.target.value = ""; status.textContent = "";
+    try {
+      if (file.size > BACKUP_LIMIT) throw new Error("Choose a backup smaller than 128 MB.");
+      const backup = parseBackup(await file.text());
+      const b = $(`<div><h2>Restore ${esc(backup.family.name || "family")}?</h2><p class="para" style="margin:16px 0">${backup.recordings.length} recordings. Replaces the family details and recordings on this device. Download a backup first if you want to keep them.</p><button class="cta" type="button">Replace and restore</button><p role="status" class="err"></p></div>`);
+      const close = sheet("Restore family backup", b); b.append(closeBtn(close));
+      b.querySelector(".cta").onclick = async e => {
+        e.currentTarget.disabled = true;
+        try { await restoreBackup(backup); close(); }
+        catch (error) { b.querySelector(".err").textContent = error.message; b.querySelector(".cta").disabled = false; }
+      };
+    } catch (error) { status.textContent = error.message || "This backup couldn't be read."; }
+  };
+  if (allowDownload) parent.append(download);
+  parent.append(restore, status);
+}
+
 const PRIVACY_V = "2026-11-03", PRIVACY_MAIL = "temisan@settley.co";
 function grantConsent(k) { S.consent[k] = true; S.consent[k + "At"] = Date.now(); S.consent.v = PRIVACY_V; delete S.consent[k + "Off"]; save(); }
 function withdrawConsent(k) { S.consent[k] = false; S.consent[k + "Off"] = Date.now(); save(); }
@@ -902,13 +1071,34 @@ function askTxConsent() {
   });
 }
 
+// Recording permission belongs to the person speaking, separately from transcription permission.
+function recordingPermission(consequence) {
+  return new Promise(resolve => {
+    const body = $(`<div><h2>Allow this recording?</h2><p class="para" style="margin:16px 0">${esc(consequence)}</p><label style="display:flex;gap:12px;align-items:flex-start;margin:20px 0"><input type="checkbox" style="margin-top:5px"><span>Everyone being recorded is 16 or older, or has a parent or guardian present and agreeing.</span></label><button class="cta" type="button" disabled>Allow recording</button><button class="btn" type="button" style="width:100%;margin-top:12px">Not now</button></div>`);
+    let settled = false;
+    const close = sheet("Recording permission", body);
+    const finish = value => { if (settled) return; settled = true; close(); resolve(value); };
+    const allow = body.querySelector(".cta");
+    body.querySelector("input").onchange = e => { allow.disabled = !e.target.checked; };
+    allow.onclick = () => { if (!allow.disabled) finish(true); };
+    body.querySelector(".btn").onclick = () => finish(false);
+    const observer = new MutationObserver(() => { if (!body.isConnected) { observer.disconnect(); finish(false); } });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
+window.addEventListener("beforeunload", e => {
+  if (live || activeVoiceRecording || restoring) { e.preventDefault(); e.returnValue = ""; }
+});
+
 // Wipe everything this app keeps on the device: family details, recordings, wins. Used by "Delete everything".
 async function wipeAll() {
-  stopLive(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; game = null; ayo = null; whot = null;
+  stopLive(); await cancelClipEdits(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; game = null; ayo = null; whot = null;
   try { await idbDo("readwrite", (st) => st.clear()); } catch {}
   try { localStorage.removeItem(KEY); localStorage.removeItem("sitting-room"); localStorage.removeItem("sitting-name"); } catch {}
   S = fresh(); render(); window.scrollTo(0, 0);
 }
+let currentRoom = null;
+let activeVoiceRecording = false;
 let live = null; // the recording in progress, if any: {mr, stream}
 let game = null; // the Ludo game in progress
 const paintHead = () => { const f = famName(S.name), h = document.querySelector(".rhead"); if (!h) return; h.querySelector(".tile").textContent = initial(f); h.querySelector(".who b").textContent = `The ${f} family`; h.querySelector(".who span").textContent = S.town || "Season one"; };
@@ -927,7 +1117,9 @@ function home() {
   host.append(el, bar);
   const tabs = [...bar.querySelectorAll(".tabbtn")];
   const draw = { sit: renderSitting, play: renderPlay, make: renderMake, family: renderFamily };
-  const show = (t, focus) => {
+  const show = async (t, focus) => {
+    if (t.getAttribute("aria-selected") === "true") return;
+    if (currentRoom && t.dataset.t !== "play") await currentRoom.close(false);
     tabs.forEach((x) => { x.setAttribute("aria-selected", x === t); x.tabIndex = x === t ? 0 : -1; });
     TABS.forEach(([id]) => el.querySelector("#" + id).hidden = id !== t.dataset.t);
     draw[t.dataset.t](el.querySelector("#" + t.dataset.t)); window.scrollTo(0, 0);
@@ -943,7 +1135,17 @@ function home() {
 /* ---------- Family: profile, family details, season, recordings, look, data ---------- */
 function renderFamily(box) {
   box.replaceChildren($(`<h1 class="title">Family</h1>`));
-  const sec = (title, sub) => { const d = $(`<section class="fam"><h2 class="sec">${title}</h2>${sub ? `<p class="hint" style="margin:4px 0 0">${sub}</p>` : ""}</section>`); box.append(d); return d; };
+  const groups = new Map();
+  const groupFor = title => ["You", "The family", "At the table"].includes(title) ? "Family profile" : ["This season", "Recordings"].includes(title) ? "Activity & recordings" : ["Turning recordings into text", "Look"].includes(title) ? "Preferences" : "Your information";
+  const sec = title => {
+    const group = groupFor(title);
+    if (!groups.has(group)) {
+      const details = $(`<details class="profile-settings" ${group === "Family profile" ? "open" : ""}><summary>${group}</summary></details>`);
+      groups.set(group, details); box.append(details);
+    }
+    const section = $(`<section class="fam">${title === group ? "" : `<h2 class="sec">${title}</h2>`}</section>`);
+    groups.get(group).append(section); return section;
+  };
   const field = (parent, label, value, o) => {
     const l = $(`<label class="field"><span class="lbl">${label}</span><input class="inp sm" type="text" maxlength="${o.max || 60}" autocomplete="off" value="${esc(value)}" placeholder="${esc(o.ph || "")}"></label>`);
     parent.append(l); const i = l.querySelector("input"); i.oninput = () => { o.on(i.value.trim(), i); save(); paintHead(); }; return i;
@@ -955,7 +1157,7 @@ function renderFamily(box) {
   };
 
   const you = sec("You");
-  field(you, "Your name", S.me.name, { max: 30, ph: "What do they call you?", on: (v) => { S.me.name = v; reseat(); if (v) lsSet("sitting-name", v); } });
+  field(you, "Your name", S.me.name, { max: 30, ph: "What do they call you?", on: (v) => { S.me.name = v; reseat(); lsSet("sitting-name", v); } });
 
   const fam = sec("The family");
   field(fam, "Family name", S.name, { max: 40, ph: "e.g. " + pick(SUR), on: (v) => { S.name = v; } });
@@ -980,7 +1182,7 @@ function renderFamily(box) {
   const recs = sec("Recordings");
   recs.append($(`<ul class="facts"><li><span>On this device</span><b>${clips.length} · ${fmtDur(clipTotal())}</b></li></ul>`));
   if (clips.length) { const d = $(`<button class="btn" type="button" style="margin-top:12px">Delete all recordings</button>`);
-    d.onclick = async () => { if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
+    d.onclick = async () => { if (txBusy.size) return; if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; await cancelClipEdits(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
     recs.append(d); }
 
   const trs = sec("Turning recordings into text");
@@ -1000,15 +1202,11 @@ function renderFamily(box) {
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
 
   const data = sec("Your information");
-    const dl = $(`<button class="btn" type="button" style="margin-top:12px">Download my information</button>`);
-  dl.onclick = () => {
-    const out = { app: "Tell Me Again", exportedAt: new Date().toISOString(), family: S, recordings: clips.map((c) => ({ question: c.q, recordedAt: new Date(c.at).toISOString(), seconds: c.dur, words: c.text || null, wordsBy: c.text ? c.tx : null })), note: "Audio files can be saved one by one from the Recorded list on the Sit tab." };
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" })); a.download = "tell-me-again-my-information.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
-  };
+  backupControls(data);
   const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete everything</button>`);
   del.onclick = () => { if (confirm("Delete everything? This removes your family, your recordings and your wins from this device. It can't be undone.")) wipeAll(); };
   const pv = $(`<button class="btn" type="button" style="margin-top:8px">Read the privacy notice</button>`); pv.onclick = privacySheet;
-  data.append(dl, $(`<br>`), pv, $(`<br>`), del);
+  data.append(pv, $(`<br>`), del);
 
   const about = sec("About");
   about.append($(`<p class="para">Tell Me Again by Settley Studio</p>`));
@@ -1067,11 +1265,13 @@ function runScreen(ov, who, q, onStop) {
 
 // One recording: the audio, then its words (or the way to get them), then Save and Delete.
 function clipRow(c, box) {
-  const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio><div class="tx"></div>
+  const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio>${c._unsaved ? `<p class="err save-warning">Not saved to this device. Save the audio or download a backup before leaving.</p>` : ""}<div class="tx"></div>
     <div class="cm"><span>${new Date(c.at).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${fmtDur(c.dur || 0)}</span><a href="${c.url}" download="tell-me-again-${new Date(c.at).toISOString().slice(0, 10)}.webm">Save audio</a><button class="lnk" type="button">Delete</button></div></li>`);
   const tx = li.querySelector(".tx"); let saveT;
   const paint = () => {
     tx.replaceChildren();
+    if (!c._unsaved) li.querySelector(".save-warning")?.remove();
+    li.querySelector(".lnk").disabled = txBusy.has(c.id);
     if (txBusy.has(c.id)) { tx.append($(`<p class="txs" role="status">Turning it into text. A short answer takes under half a minute; a long one can take a couple of minutes.</p>`)); tx.setAttribute("aria-busy", "true"); return; }
     tx.removeAttribute("aria-busy");
     if (c.text === undefined) {
@@ -1084,7 +1284,11 @@ function clipRow(c, box) {
     } else {
       const ta = $(`<textarea class="txt" rows="3" aria-label="What they said. You can edit it."></textarea>`); ta.value = c.text; ta.placeholder = "Type what they said";
       const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; };
-      ta.oninput = () => { c.text = ta.value; c.tx = c._typing ? "typed" : c.tx === "ai" ? "edited" : c.tx; fit(); note.textContent = c.tx === "edited" ? "Edited by you." : "Written by you."; clearTimeout(saveT); saveT = setTimeout(() => saveClip(c), 500); };
+      ta.oninput = () => { c.text = ta.value; c.tx = c._typing ? "typed" : c.tx === "ai" ? "edited" : c.tx; fit(); note.textContent = c.tx === "edited" ? "Edited by you." : "Written by you."; clearTimeout(saveT);
+        const persist = () => { clearTimeout(saveT); pendingClipEdits.delete(c.id); return saveClip(c); };
+        persist.cancel = () => { clearTimeout(saveT); pendingClipEdits.delete(c.id); };
+        pendingClipEdits.set(c.id, persist);
+        saveT = setTimeout(() => persist().then(() => li.querySelector(".save-warning")?.remove()).catch(() => { note.textContent = "Changes couldn't be saved. Download a backup before leaving."; }), 500); };
       const note = $(`<p class="txs">${c.tx === "edited" ? "Edited by you." : c.tx === "typed" || c._typing ? "Written by you." : "Written by AI. Check the names and places."}</p>`);
       tx.append(ta, note); requestAnimationFrame(fit);
     }
@@ -1096,8 +1300,11 @@ function clipRow(c, box) {
     catch (e) { txBusy.delete(c.id); paint(); const m = $(`<p class="txs err">${esc(e.message)}</p>`); tx.prepend(m); }
   };
   li.querySelector(".lnk").onclick = async () => {
+    if (txBusy.has(c.id)) return;
     if (!confirm("Delete this recording" + (c.text ? " and its words" : "") + "? This can't be undone.")) return;
-    try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch {}
+    if (pendingClipEdits.has(c.id)) pendingClipEdits.get(c.id).cancel();
+    await Promise.allSettled([...clipWrites]);
+    try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch { tx.append($(`<p class="err">The recording couldn't be deleted.</p>`)); return; }
     URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSitting(box, "Recording deleted.");
   };
   paint(); li._run = run; return li;
@@ -1138,26 +1345,31 @@ function renderSitting(box, msg) {
     if (live) { live.mr.stop(); return; }
     if (!sitting) { if (!(await chooseSitting())) return; renderSitting(box); box.querySelector("#rec").click(); return; }
     if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") { rs.textContent = "This browser can't record yet. Try the latest Chrome or Safari."; return; }
+    if (restoring) return;
+    rec.disabled = true;
+    const permitted = await recordingPermission("Ask everyone present first. Their voices will be saved on this device.");
+    if (!permitted || !box.isConnected || box.hidden || restoring) { rec.disabled = false; return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { rs.textContent = "We couldn't reach the microphone. Allow it in your browser settings and try again."; return; }
+    catch { rec.disabled = false; rs.textContent = "We couldn't reach the microphone. Allow it in your browser settings and try again."; return; }
+    if (!box.isConnected || box.hidden || restoring) { stream.getTracks().forEach(t => t.stop()); rec.disabled = false; return; }
     const ov = await countdown();
-    if (!ov) { stream.getTracks().forEach((t) => t.stop()); return; }
+    if (!ov) { stream.getTracks().forEach((t) => t.stop()); rec.disabled = false; return; }
     const mr = new MediaRecorder(stream), chunks = [], who = S.seats[1] || "Storyteller";
     mr.ondataavailable = (e) => chunks.push(e.data);
     const closeRun = runScreen(ov, who, q && q.q, () => mr.stop());
     let t0 = Date.now();
     mr.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop()); live = null; closeRun();
-      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob };
+      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "in-person", at: t0 } };
       let kept = true;
       if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
-      clips.unshift({ ...clip, url: URL.createObjectURL(blob) });
+      clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept });
       S.told++; if (q) S.asked.push(q.q); save();
       if (box.isConnected) renderSitting(box, kept ? "Saved on this device. You'll find it under Recorded." : "Recorded, but this browser wouldn't keep it. It's here until you leave the page.");
       if (S.consent.transcribe && S.autoTx) { const li = [...document.querySelectorAll(".clips li")].find((x) => x.querySelector(".cq") && x.querySelector("audio").src === clips[0].url); if (li && li._run) li._run(); }
     };
-    t0 = Date.now(); live = { mr, stream }; mr.start(); setLive(true);
+    t0 = Date.now(); live = { mr, stream }; mr.start(1000); rec.disabled = false; setLive(true);
     rs.textContent = `Recording. Let ${who} take their time.`;
   };
 
@@ -1186,15 +1398,15 @@ const BADGES = [
   ["Half a season", () => S.sittings.length >= SEASON / 2], ["Season done", () => S.sittings.length >= SEASON], ["Games night", () => totalWins() >= 5]
 ];
 function renderMake(box) {
-  const done = S.told, f = famName(S.name), NEED = 5, got = Math.min(done, NEED);
+  const f = famName(S.name);
   const kinds = {
     magazine: { thumb: `<div class="thumb mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>`, d: "" },
     storybook: { thumb: `<div class="thumb book"><small>Storybook</small><b>${esc(f)} family tales</b><i></i><i></i></div>`, d: "" },
     short: { thumb: `<div class="thumb film"><b style="margin-top:auto">The ${esc(f)} short</b></div>`, d: "" }
   };
-  box.replaceChildren($(`<h1 class="title">Make something</h1>`),
-    $(`<div><p class="lede"><b>${done}</b>${done === 1 ? "story" : "stories"} told. ${done >= NEED ? "That's enough for a first issue." : `${NEED - done} more makes a first issue.`}</p>
-      <div class="ticks" role="img" aria-label="${got} of ${NEED} stories">${[...Array(NEED)].map((_, i) => `<i class="${i < got ? "on" : ""}"></i>`).join("")}</div></div>`));
+  box.replaceChildren($(`<h1 class="title">Make something</h1>`));
+  const makeMagazine = $(`<button class="cta" type="button" style="margin-top:24px">Make a magazine</button>`);
+  makeMagazine.onclick = magazineSheet; box.append(makeMagazine);
   const list = $(`<ul class="works"></ul>`);
   MAKES.forEach(([id, label]) => {
     const k = kinds[id], mine = S.makes.includes(id);
@@ -1208,6 +1420,63 @@ function renderMake(box) {
     $(`<ul class="miles">${BADGES.map(([n, ok]) => `<li class="${ok() ? "on" : ""}">${esc(n)}<span style="position:absolute;left:-9999px">${ok() ? ", done" : ", not yet"}</span></li>`).join("")}</ul>`));
 }
 const closeBtn = (close) => { const b = $(`<button class="btn" type="button" style="width:100%;margin-top:16px">Close</button>`); b.onclick = close; return b; };
+/* ---------- A publication made from the family's selected words ---------- */
+function buildMagazine(ids) {
+  if (!Array.isArray(ids) || !ids.length) throw new Error("Choose at least one story with a transcript.");
+  const selected = ids.map(id => clips.find(c => c.id === id));
+  if (new Set(ids).size !== ids.length || selected.some(c => !c || !c.text || !c.text.trim())) throw new Error("Every selected story needs a transcript.");
+  const family = famName(S.name) || "Our family", color = /^#[0-9a-f]{6}$/i.test(S.color) ? S.color : "#e26b3f";
+  const paragraphs = text => text.split(/\n\s*\n/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; base-uri 'none'; form-action 'none'"><title>${esc(family)} — Family stories</title><style>
+  :root { --accent:${color}; --accent-ink:${onAccent(color)}; --paper:#fffdf8; --ink:#29241f; --muted:#71665c; --rule:#ded7cc; --body:Georgia,'Times New Roman',serif; --label:Arial,sans-serif; }
+  *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.75 var(--body)}
+  .page,article{max-width:780px;margin:auto;padding:64px 44px;overflow-wrap:anywhere} .cover{min-height:960px;display:flex;flex-direction:column;justify-content:space-between;border-top:18px solid var(--accent)}
+  .label{font:600 11px/1.5 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  h1{font:normal clamp(54px,10vw,100px)/1 var(--body);letter-spacing:-.04em;margin:24px 0}h2{font:normal 40px/1.15 var(--body);margin:20px 0 32px}p{margin:0 0 24px}
+  .seal{display:grid;place-items:center;width:88px;height:88px;border:1px solid var(--ink);border-radius:50%;font:normal 46px/1 var(--body);margin-bottom:36px}
+  .saying{font-style:italic;font-size:24px;max-width:30ch}.cover-bottom{border-top:1px solid var(--ink);padding-top:20px;display:flex;justify-content:space-between;gap:20px;font:12px var(--label)}
+  .contents{border-top:1px solid var(--rule)}.contents ol{padding:0;list-style:none}.contents li{border-top:1px solid var(--rule);padding:16px 0;display:flex;gap:24px}.contents li span{font:600 13px var(--label);padding-top:7px}
+  article{border-top:1px solid var(--rule)}article .recorded{font:12px var(--label);color:var(--muted);margin:28px 0}.story-text{white-space:normal}.story-text p:first-child::first-letter{font-size:2.8em;float:left;line-height:1;margin:4px 8px 0 0}
+  .end{font:12px/1.6 var(--label);color:var(--muted);border-top:1px solid var(--rule);padding-top:24px;margin-top:44px}
+  @media(max-width:500px){.page,article{padding:36px 24px}.cover{min-height:740px}h2{font-size:30px}}
+  @page{size:A4;margin:18mm} @media print{body{background:var(--paper);print-color-adjust:exact;-webkit-print-color-adjust:exact}.page,article{max-width:none;padding:0}.cover{min-height:245mm;border-top:10px solid var(--accent);padding-top:14mm;break-after:page}.contents{border:0;break-after:page}article{border:0;break-before:page}h2{break-after:avoid}p{orphans:3;widows:3}.end{break-inside:avoid}}
+  </style></head><body>
+  <section class="page cover"><div><span class="label">Family stories · Volume 01</span></div><div><div class="seal" aria-hidden="true">${esc(initial(family))}</div><h1>${esc(family)}</h1>${S.saying ? `<p class="saying">${esc(S.saying)}</p>` : ""}${S.town ? `<p>${esc(S.town)}</p>` : ""}</div><div class="cover-bottom"><span>${selected.length} ${selected.length === 1 ? "story" : "stories"}, in our own words</span><span>Tell Me Again</span></div></section>
+  <section class="page contents"><span class="label">In this volume</span><h2>Our stories</h2><ol>${selected.map((c,i) => `<li><span>${String(i+1).padStart(2,"0")}</span><div>${esc(c.q)}</div></li>`).join("")}</ol></section>
+  ${selected.map((c,i) => `<article><span class="label">${esc(family)} · Story ${String(i+1).padStart(2,"0")}</span><h2>${esc(c.q)}</h2><div class="story-text">${paragraphs(c.text)}</div><p class="recorded">Recorded ${esc(new Date(c.at).toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"}))}</p><div class="end">${esc(family)} · Family stories</div></article>`).join("")}
+  </body></html>`;
+}
+function magazineSheet() {
+  const available = clips.filter(c => c.text && c.text.trim());
+  const body = $(`<div><h2>Make a magazine</h2><div class="mag-stories"></div><label style="display:flex;gap:12px;align-items:flex-start;margin:24px 0"><input id="reviewed" type="checkbox" style="margin-top:5px"><span>I've reviewed these transcripts and have permission to include them.</span></label><button class="cta" type="button" disabled>Preview magazine</button><p class="err" role="status"></p></div>`);
+  const selected = new Set();
+  const go = body.querySelector(".cta"), reviewed = body.querySelector("#reviewed");
+  const sync = () => { go.disabled = !selected.size || !reviewed.checked; };
+  available.forEach(c => {
+    const row = $(`<label style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding:16px 0"><input type="checkbox" style="margin-top:5px"><span>${esc(c.q)}</span></label>`);
+    row.querySelector("input").onchange = e => { if (e.target.checked) selected.add(c.id); else selected.delete(c.id); reviewed.checked = false; sync(); };
+    body.querySelector(".mag-stories").append(row);
+  });
+  if (!available.length) body.querySelector(".mag-stories").append($(`<p class="para" style="margin-top:16px">No transcripts yet. Turn a recording into text under Sit, then review the words.</p>`));
+  reviewed.onchange = sync;
+  const close = sheet("Make a family magazine", body); body.append(closeBtn(close));
+  go.onclick = () => {
+    try {
+      const html = buildMagazine([...selected]);
+      const preview = $(`<div><h2>Family magazine</h2><iframe title="Family magazine preview" sandbox="" style="width:100%;height:55vh;border:1px solid var(--line);margin:20px 0"></iframe><button class="cta" type="button">Print / Save PDF</button><button class="btn" type="button" style="width:100%;margin-top:12px">Download magazine</button><p class="err" role="status"></p></div>`);
+      preview.querySelector("iframe").srcdoc = html;
+      const closePreview = sheet("Family magazine", preview); preview.append(closeBtn(closePreview));
+      preview.querySelector(".btn").onclick = () => downloadFile(new Blob([html], { type: "text/html" }), "family-magazine.html");
+      preview.querySelector(".cta").onclick = () => {
+        const publication = window.open("", "_blank");
+        if (!publication) { preview.querySelector(".err").textContent = "Allow pop-ups to print the magazine, or download it and print from your browser."; return; }
+        publication.opener = null; publication.document.write(html); publication.document.close();
+        publication.focus(); setTimeout(() => publication.print(), 150);
+      };
+    } catch (e) { body.querySelector(".err").textContent = e.message; }
+  };
+}
+
 async function previewMag() {
   const body = $(`<div><h2>Cover preview</h2><canvas class="cvs" role="img" aria-label="Magazine cover preview"></canvas>
     <button class="cta" type="button" id="dl" style="margin-top:16px">Save the cover</button></div>`);
@@ -1321,7 +1590,7 @@ function renderPlay(box) {
   box.append(onlineCard(box), $(`<h2 class="sec" style="margin-top:28px">On one screen</h2>`), list);
   const lb = leaderboard(); if (lb) box.append(lb);
   list.querySelector("#ludo").onclick = () => { if (!game) newGame(); renderLudo(box); };
-  list.querySelector("#ayo").onclick = () => ayo && !ayo.over ? renderAyo(box) : ayoSetup(box);
+  list.querySelector("#ayo").onclick = () => ayo && ayo.over === null ? renderAyo(box) : ayoSetup(box);
   list.querySelector("#whot").onclick = () => whot && !whot.over ? renderWhot(box) : whotSetup(box);
   if (lastGame === "ludo" && game) renderLudo(box); else if (lastGame === "ayo" && ayo) renderAyo(box); else if (lastGame === "whot" && whot) renderWhot(box);
 }
@@ -1621,12 +1890,12 @@ function renderAyo(box) {
   ap.append(rb);
   const showLb = () => { const l = leaderboard(), b = el.querySelector("#lbbox"); b.replaceChildren(...(l ? [l] : [])); }; showLb();
   function paint(hit) {
-    const mv = !g.busy && !g.over ? ayoMoves(g) : [];
+    const mv = !g.busy && g.over === null ? ayoMoves(g) : [];
     pits.forEach(([i, b]) => { const n = g.p[i], can = mv.includes(i);
       b.innerHTML = seedsHTML(n); b.disabled = !can; b.classList.toggle("can", can); b.classList.toggle("hit", i === hit); b.classList.toggle("zero", n === 0);
       b.setAttribute("aria-label", `${g.names[i > 5 ? 1 : 0]}, pit ${(i % 6) + 1}, ${n} ${n === 1 ? "seed" : "seeds"}`); });
-    [0, 1].forEach((t) => { const sc = el.querySelector("#s" + t); sc.innerHTML = `<b>${g.sc[t]}</b><span>${esc(g.names[t])}</span>`; sc.classList.toggle("on", g.turn === t && !g.over); });
-    rt.textContent = g.names[1]; rb.textContent = g.names[0]; rt.classList.toggle("on", g.turn === 1 && !g.over); rb.classList.toggle("on", g.turn === 0 && !g.over);
+    [0, 1].forEach((t) => { const sc = el.querySelector("#s" + t); sc.innerHTML = `<b>${g.sc[t]}</b><span>${esc(g.names[t])}</span>`; sc.classList.toggle("on", g.turn === t && g.over === null); });
+    rt.textContent = g.names[1]; rb.textContent = g.names[0]; rt.classList.toggle("on", g.turn === 1 && g.over === null); rb.classList.toggle("on", g.turn === 0 && g.over === null);
   }
   function finish() {
     const t = g.turn;
@@ -1639,11 +1908,15 @@ function renderAyo(box) {
     g.busy = false; const w = g.sc[0] === g.sc[1] ? null : g.sc[0] > g.sc[1] ? 0 : 1; g.over = w === null ? "draw" : w; paint();
     say(w === null ? "A draw." : `${g.names[w]} wins, ${g.sc[w]} to ${g.sc[1 - w]}.`);
     if (w !== null) recordWin(g.names[w]); showLb();
-    el.querySelector("#winbox").innerHTML = `<div class="win"><b>${w === null ? "A draw" : esc(g.names[w]) + " wins"}</b><button class="btn" type="button">Play again</button></div>`;
+    showResult();
+  }
+  function showResult() {
+    const title = g.over === "draw" ? "A draw" : esc(g.names[g.over]) + " wins";
+    el.querySelector("#winbox").innerHTML = `<div class="win"><b>${title}</b><button class="btn" type="button">Play again</button></div>`;
     el.querySelector("#winbox .btn").onclick = () => ayoSetup(box);
   }
   function move(i) {
-    if (g.busy || g.over || !ayoMoves(g).includes(i)) return;
+    if (g.busy || g.over !== null || !ayoMoves(g).includes(i)) return;
     g.busy = true; let n = g.p[i], c = i; const steps = []; g.p[i] = 0;
     while (n > 0) { c = (c + 1) % 12; if (c === i) continue; steps.push(c); n--; }
     paint(); let k = 0;
@@ -1657,7 +1930,7 @@ function renderAyo(box) {
     };
     tick();
   }
-  paint(); say(`${g.names[g.turn]}, your move.`);
+  paint(); if (g.over !== null) showResult(); else say(`${g.names[g.turn]}, your move.`);
 }
 
 /* ---------- Online rooms ---------- */
@@ -1719,6 +1992,25 @@ const shareRoom = async (code) => {
 // The host's phone records both voices on the device and nothing is uploaded anywhere.
 function voiceSitting(box, relay, myName, note) {
   let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
+  let control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, recordingQuestion = null, ending = false;
+  const sendControl = data => { if (control && control.readyState === "open") { control.send(JSON.stringify(data)); return true; } return false; };
+  function bindControl(channel) {
+    control = channel;
+    channel.onopen = render;
+    channel.onclose = () => { if (permissionReply) permissionReply(false); if (mr) stopRec(); peerRecording = false; render(); };
+    channel.onmessage = async e => {
+      let m; try { m = JSON.parse(e.data); } catch { return; }
+      if (m.k === "record-request" && !isCaller && !requesting && mode === "live" && typeof m.id === "string") {
+        requesting = true;
+        const samePeer = pc;
+        const allowed = await recordingPermission("Both voices will be saved on the caller's device. You can stop recording at any time.");
+        requesting = false;
+        if (pc === samePeer && channel === control && mode === "live") sendControl({ k: "record-answer", id: m.id, allowed });
+      } else if (m.k === "record-answer" && isCaller && m.id === requestId && permissionReply) permissionReply(m.allowed === true);
+      else if (m.k === "record-state" && !isCaller) { peerRecording = m.recording === true; render(); }
+      else if (m.k === "record-stop" && isCaller && mr) stopRec();
+    };
+  }
   const sig = (o) => relay({ t: "sig", d: JSON.stringify(o) });
   const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
 
@@ -1726,26 +2018,32 @@ function voiceSitting(box, relay, myName, note) {
     if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
     if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
     const rec = !!mr;
+    const recording = rec || peerRecording;
     box.replaceChildren($(`<div class="voice"><h2>${mode === "calling" ? "Calling…" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
       ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "" : "Listening"}</p>`}
-      ${rec ? `<p class="hint"><i class="live"></i>Recording</p>` : ""}
+      ${recording ? `<p class="hint" role="status"><i class="live"></i>Recording on the caller's device</p>` : ""}
       <div class="vrow">
-        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto">${rec ? "Stop and save" : "Record the answer"}</button>` : ""}
+        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Stop and save" : requesting ? "Waiting for permission…" : "Record the answer"}</button>` : ""}
+        ${!isCaller && peerRecording ? `<button class="btn" id="stop-peer" type="button">Stop recording</button>` : ""}
         <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
     const g = (i) => box.querySelector(i);
     if (g("#vq")) g("#vq").onclick = () => { const n = nextQuestion(); if (!n) return; q = n.q; sig({ k: "q", q }); render(); };
     if (g("#vr")) g("#vr").onclick = rec ? stopRec : startRec;
+    if (g("#stop-peer")) g("#stop-peer").onclick = () => sendControl({ k: "record-stop" });
     g("#vm").onclick = () => { muted = !muted; if (local) local.getAudioTracks().forEach((t) => t.enabled = !muted); render(); };
     g("#vh").onclick = () => { sig({ k: "bye" }); end(); };
   }
   function mkPc() {
     pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }] });
+    if (isCaller) bindControl(pc.createDataChannel("recording-permission"));
+    else pc.ondatachannel = e => { if (e.channel.label === "recording-permission") bindControl(e.channel); };
     local.getTracks().forEach((t) => pc.addTrack(t, local));
     pc.onicecandidate = (e) => { if (e.candidate) sig({ k: "ice", c: e.candidate }); };
     pc.ontrack = (e) => { audio.srcObject = e.streams[0]; audio.play().catch(() => {}); };
     pc.onconnectionstatechange = () => {
-      if (pc && pc.connectionState === "connected") { mode = "live"; render(); }
-      if (pc && (pc.connectionState === "failed")) { note("The call couldn't connect. Some networks block voice calls; try Wi-Fi or mobile data."); end(); }
+      if (pc && pc.connectionState === "connected") { clearTimeout(disconnectTimer); mode = "live"; render(); }
+      if (pc && pc.connectionState === "disconnected") { clearTimeout(disconnectTimer); disconnectTimer = setTimeout(() => { if (pc && pc.connectionState === "disconnected") { note("Connection lost. Saving the recorded part."); end(); } }, 5000); }
+      if (pc && pc.connectionState === "failed") { note("The call couldn't connect. Try Wi-Fi or mobile data."); end(); }
     };
   }
   async function mic() {
@@ -1776,27 +2074,58 @@ function voiceSitting(box, relay, myName, note) {
     else if (m.k === "q") { q = String(m.q || "").slice(0, 400); if (mode === "live") render(); }
     else if (m.k === "bye") { if (mode === "ringing" || mode === "idle") { mode = "idle"; render(); } else { note("The call ended."); end(); } }
   }
-  function startRec() {
-    const remote = audio.srcObject; if (!remote || typeof MediaRecorder === "undefined") return note("Can't record on this browser.");
-    ctx = new (window.AudioContext || window.webkitAudioContext)(); mix = ctx.createMediaStreamDestination();
-    ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
-    chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = (e) => chunks.push(e.data);
-    mr.onstop = saveRec; t0 = Date.now(); mr.start(); render();
+  async function startRec() {
+    if (requesting || saving || mode !== "live" || restoring || !control || control.readyState !== "open") return;
+    const samePeer = pc;
+    requesting = true; render();
+    const hostAllowed = await recordingPermission("Both voices will be saved on this device. The other person will also be asked for permission.");
+    if (!hostAllowed || pc !== samePeer || ending || mode !== "live") { requesting = false; render(); return; }
+    const allowed = await new Promise(resolve => {
+      requestId = crypto.randomUUID();
+      permissionReply = value => { clearTimeout(requestTimer); permissionReply = null; requestId = null; resolve(value); };
+      requestTimer = setTimeout(() => { if (permissionReply) permissionReply(false); }, 60000);
+      if (!sendControl({ k: "record-request", id: requestId })) permissionReply(false);
+    });
+    requesting = false;
+    if (!allowed || pc !== samePeer || mode !== "live" || ending) { note("Recording wasn't allowed. You can keep talking."); render(); return; }
+    const remote = audio.srcObject;
+    if (!remote || typeof MediaRecorder === "undefined") { note("Can't record on this browser."); render(); return; }
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume(); mix = ctx.createMediaStreamDestination();
+      if (pc !== samePeer || mode !== "live" || ending || control?.readyState !== "open") { await ctx.close(); ctx = null; return; }
+      ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
+      chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      mr.onstop = saveRec; mr.onerror = () => { note("Recording was interrupted. Saving what was captured."); stopRec(); };
+      recordingQuestion = q || "Free story"; t0 = Date.now(); activeVoiceRecording = true;
+      saving = new Promise(resolve => { resolveSaving = resolve; });
+      mr.start(1000); sendControl({ k: "record-state", recording: true }); render();
+    } catch { mr = null; activeVoiceRecording = false; try { ctx && ctx.close(); } catch {} ctx = null; saving = null; note("Recording couldn't start. Your call is still connected."); render(); }
   }
-  function stopRec() { try { mr.stop(); } catch {} }
+  function stopRec() {
+    if (mr && mr.state !== "inactive") { mr.stop(); sendControl({ k: "record-state", recording: false }); }
+    return saving;
+  }
   async function saveRec() {
-    const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q || "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob };
-    mr = null; try { ctx.close(); } catch {} ctx = null;
-    let kept = true; if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
-    clips.unshift({ ...clip, url: URL.createObjectURL(blob) }); S.told++; if (q) S.asked.push(q); save(); q = null;
-    note(kept ? "Saved on this phone. Find it under Sit, in Recorded." : "Recorded, but this browser wouldn't keep it.", 5000); render();
+    const recorder = mr;
+    const blob = new Blob(chunks, { type: recorder.mimeType }), clip = { id: crypto.randomUUID(), q: recordingQuestion, at: t0, dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "remote", at: t0 } };
+    mr = null; try { await ctx.close(); } catch {} ctx = null;
+    let kept = true;
+    if (!DEV.has("data")) { try { await idbDo("readwrite", st => st.put(clip)); } catch { kept = false; } }
+    clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept }); S.told++; if (recordingQuestion !== "Free story") S.asked.push(recordingQuestion); save(); q = null;
+    activeVoiceRecording = false;
+    const finish = resolveSaving; resolveSaving = null; saving = null; if (finish) finish();
+    note(kept ? "Saved on this device." : "Storage is full or unavailable. Keep this page open and download a backup to save the recording.", 0); render();
   }
-  function end() {
-    if (mr) { mr.onstop = null; try { mr.stop(); } catch {} mr = null; }
+  async function end() {
+    if (ending) return;
+    ending = true; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
+    if (permissionReply) permissionReply(false);
+    if (mr || saving) await stopRec();
     try { ctx && ctx.close(); } catch {} ctx = null;
+    try { control && control.close(); } catch {} control = null;
     try { pc && pc.close(); } catch {} pc = null;
-    if (local) local.getTracks().forEach((t) => t.stop()); local = null;
-    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; render();
+    if (local) local.getTracks().forEach(t => t.stop()); local = null;
+    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; peerRecording = false; requesting = false; ending = false; render();
   }
   render();
   return { onSig, end };
@@ -1811,11 +2140,23 @@ function mountRoom(box, code, name, onLeave) {
   const note = (m, ms = 3500) => { er.textContent = m; clearTimeout(errT); if (ms) errT = setTimeout(() => er.textContent = "", ms); };
   const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   box.querySelector("#sh").onclick = async () => { const m = await shareRoom(code); if (m) note(m); };
-  const leave = () => { try { voice.end(); } catch {} dead = true; clearTimeout(errT); try { ws && ws.close(); } catch {} lsSet("sitting-room", ""); onLeave(); };
+  let leaving = null;
+  const leave = (forget = true) => {
+    if (leaving) return leaving;
+    leaving = (async () => {
+      dead = true; clearTimeout(errT);
+      send({ t: "sig", d: JSON.stringify({ k: "bye" }) });
+      try { await voice.end(); } catch {} try { ws && ws.close(); } catch {}
+      if (currentRoom === session) currentRoom = null;
+      if (forget) { lsSet("sitting-room", ""); onLeave(); }
+    })();
+    return leaving;
+  };
   const voice = voiceSitting(box.querySelector("#voice2"), send, () => (st && st.me && st.me.name) || name, note);
-  box.querySelector("#lv").onclick = () => { voice.end(); leave(); };
+  box.querySelector("#lv").onclick = () => leave();
 
   function connect() {
+    if (dead) return;
     ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${code}/ws`);
     ws.onopen = () => { tries = 0; send({ t: "join", pid, name }); };
     ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "err") note(m.m); };
@@ -1848,8 +2189,10 @@ function mountRoom(box, code, name, onLeave) {
     }
     stg.replaceChildren(el);
   }
+  const session = { close: leave };
+  currentRoom = session;
   connect();
-  return { close: leave };
+  return session;
 }
 
 function mountOnlineGame(kind, box, send, st, note) {
