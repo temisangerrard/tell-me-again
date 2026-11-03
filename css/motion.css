@@ -26,3 +26,13 @@
 .voice .vq { font-size: 19px; line-height: 1.3; margin: 10px 0; }
 .voice .vrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .voice .live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d33; margin-right: 6px; }
+
+/* reactions and game feel */
+.reacts { display:flex; justify-content:center; gap:6px; margin-top:20px; }
+.reacts .rx { width:44px; height:44px; border:0; border-radius:50%; background:var(--soft); font-size:1.3rem; cursor:pointer; }
+.reacts .rx:active { transform:scale(.9); }
+.room2 { position:relative; }
+.float-react { position:absolute; bottom:60px; pointer-events:none; display:flex; flex-direction:column; align-items:center; animation:floatup 2.1s ease-out forwards; z-index:20; }
+.float-react span { font-size:2rem; } .float-react small { font-size:.7rem; color:var(--muted); }
+@keyframes floatup { from { transform:translateY(0); opacity:1; } to { transform:translateY(-180px); opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .float-react { animation:none; opacity:0; } }

@@ -93,6 +93,14 @@ export class Room extends DurableObject {
       return;
     }
 
+    // Emoji reactions are passed on to everyone else and never stored.
+    if (m.t === "react") {
+      if (!["😂", "👏", "😮", "❤️", "🔥"].includes(m.e)) return;
+      const me = s.members.find((x) => x.pid === pid), out = JSON.stringify({ t: "react", e: m.e, n: me ? me.name : "" });
+      for (const o of this.ctx.getWebSockets()) if (o !== ws && this.pidOf(o)) { try { o.send(out); } catch {} }
+      return;
+    }
+
     if (m.t === "start") {
       if (!isHost) return this.err(ws, "Only the host can start a game.");
       if (!["ludo", "ayo", "whot"].includes(m.game)) return this.err(ws, "Unknown game.");

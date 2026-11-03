@@ -5,9 +5,13 @@ function mountOnlineGame(kind, box, send, st, note) {
   const over = (g, again) => { // winner card; the host can pick the next game
     const w = g.v.over === "draw" ? "A draw" : `${esc(g.names[g.v.over])} wins`;
     const host = st.me && st.me.host;
-    return $(`<div class="win"><b>${w}</b>${host ? `<button class="btn" type="button">Pick another game</button>` : `<p style="margin-top:10px">Waiting for the host…</p>`}</div>`);
+    const el = $(`<div class="win"><b>${w}</b>${host ? `<button class="btn" data-a="again" type="button">Play again</button><button class="btn" data-a="pick" type="button">Pick another game</button>` : `<p style="margin-top:10px">Waiting for the host…</p>`}</div>`);
+    const redo = el.querySelector("[data-a=again]"), pick = el.querySelector("[data-a=pick]");
+    if (redo) redo.onclick = () => send({ t: "start", game: kind, rules: kind === "whot" ? S.whotRules : undefined });
+    if (pick) pick.onclick = () => send({ t: "stop" });
+    return el;
   };
-  const wire = (el, fn) => { const b = el.querySelector(".btn"); if (b) b.onclick = fn; return el; };
+  const wire = (el) => el; // the winner card wires its own buttons
 
   if (kind === "ludo") {
     const el = $(`<div class="ludo"><div class="bar2"><div class="turn"><i></i><b></b></div></div><div class="boardwrap"><svg viewBox="0 0 15 15" role="group" aria-label="Ludo board">${boardSVG()}<g class="toks"></g></svg></div>

@@ -97,6 +97,12 @@ Roughly in priority order.
 - [ ] A `test/transcribe.test.mjs` for `/api/transcribe` validation and limits.
 - [ ] Offer more languages and a language hint per recording.
 
+**Game feel**
+- [x] Each tab is its own player in a room (`roomPid`, `claimRoom` in `js/online.js`), so two tabs on one device are two people.
+- [x] Soft sound and a buzz on your turn, a fanfare on a win, emoji reactions between phones, Play again, and a Sound on/off toggle (`js/feel.js`).
+- [ ] Dice and token animations, per-game victory moments, and a "Your turn" nudge for backgrounded phones.
+- [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
+
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
 - [ ] Storybook and short-film generation; video export.

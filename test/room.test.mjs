@@ -134,6 +134,11 @@ ok(a.st.game.v.p.reduce((x, y) => x + y, 0) + a.st.game.v.sc[0] + a.st.game.v.sc
   a.send({ t: "sig", d: '{"k":"call"}' }); a.send({ t: "sig", d: "x".repeat(4000) }); await settle();
   ok(got.length === 1 && got[0] === '{"k":"call"}', "voice setup notes reach the other phone, oversize dropped"); }
 
+// ---- reactions reach the other phone with the sender's name, and unknown emoji are dropped
+{ const got = []; const sniff = b.ws.onmessage; b.ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.t === "react") got.push(m); sniff(e); };
+  a.send({ t: "react", e: "🔥" }); a.send({ t: "react", e: "<script>" }); await settle();
+  ok(got.length === 1 && got[0].e === "🔥" && got[0].n === a.name, "reaction relayed once with the sender's name"); }
+
 // ---- host ends game
 a.send({ t: "stop" }); await settle(); ok(a.st.game === null && b.st.game === null, "host ends the game for everyone");
 
