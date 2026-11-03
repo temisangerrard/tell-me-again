@@ -27,7 +27,7 @@
   - Add story selection and a locally generated cover, contents, and transcript pages.
   - Offer standalone HTML download and browser Print / Save PDF.
   - Verify a generated PDF visually and confirm source transcripts are preserved; commit.
-- [ ] 4. Review and release preparation.
+- [x] 4. Review and release preparation.
   - Run `npm test`, `BASE=http://localhost:8787 node test/room.test.mjs`, and browser journeys.
   - Update README and service-worker version; exclude plan files from static assets.
   - Push a stacked feature PR against `codex/landing-profile-game-cleanup`, review feedback, and resolve valid findings.
@@ -42,3 +42,5 @@
 ## Boundaries
 
 No purchase, email sending, cloud audio storage, or account implementation in this change. TURN relay and real iPhone/Android background-call testing remain explicit follow-ups. The browser's print dialog supplies PDF export; no server or generated historical narrative is involved.
+
+Review follow-up: reproduced the multi-megabyte base64 regex stack overflow at 4 MiB, replaced it with stack-safe validation, and added a 4 MiB round-trip regression.

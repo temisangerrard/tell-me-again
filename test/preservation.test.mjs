@@ -120,12 +120,12 @@ test("magazine rejects empty or missing transcripts", async () => {
   } finally {a.close();}
 });
 
-test("backup accepts a realistic-sized audio recording", async () => {
+test("backup accepts a multi-megabyte audio recording", async () => {
   const a=await fixture();
   try {
-    a.w.largeAudio=new Blob([new Uint8Array(256*1024)],{type:'audio/webm;codecs=opus'});
+    a.w.largeAudio=new Blob([new Uint8Array(4*1024*1024)],{type:'audio/webm;codecs=opus'});
     a.w.eval('clips[0].blob=largeAudio');a.w.backup=await a.w.eval('createBackup()');
-    assert.equal(a.w.eval('parseBackup(backup).recordings[0].blob.size'),256*1024);
+    assert.equal(a.w.eval('parseBackup(backup).recordings[0].blob.size'),4*1024*1024);
   } finally {a.close();}
 });
 

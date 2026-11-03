@@ -966,10 +966,12 @@ function parseBackup(text) {
   if (b.theme !== undefined && !THEMES.some(([k]) => k === b.theme)) return bad();
   const ids = new Set(), recordings = b.recordings.map(c => {
     if (!object(c) || !string(c.id, 160) || !c.id || ids.has(c.id) || !string(c.q, 4000) || !number(c.at, 8640000000000000) || !number(c.dur, 86400) || !string(c.type, 120) || !/^(audio\/[a-z0-9.+-]+|video\/webm)(;[a-z0-9= .,+-]+)?$/i.test(c.type) || !Number.isInteger(c.size) || !number(c.size, BACKUP_LIMIT) || typeof c.audio !== "string") return bad();
-    if (c.audio.length !== 4 * Math.ceil(c.size / 3) || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(c.audio)) return bad();
+    if (c.audio.length !== 4 * Math.ceil(c.size / 3) || !/^[A-Za-z0-9+/]*={0,2}$/.test(c.audio)) return bad();
     ids.add(c.id); let binary; try { binary = atob(c.audio); } catch { return bad(); }
     if (binary.length !== c.size) return bad();
-    const out = { id: c.id, q: c.q, at: c.at, dur: c.dur, blob: new Blob([Uint8Array.from(binary, x => x.charCodeAt(0))], { type: c.type }) };
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const out = { id: c.id, q: c.q, at: c.at, dur: c.dur, blob: new Blob([bytes], { type: c.type }) };
     if (c.text !== undefined) {
       if (!string(c.text, 1000000) || !["ai", "edited", "typed"].includes(c.tx)) return bad();
       out.text = c.text; out.tx = c.tx;
