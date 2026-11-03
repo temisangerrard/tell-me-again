@@ -85,6 +85,14 @@ export class Room extends DurableObject {
     const pid = this.pidOf(ws); if (!pid) return this.err(ws, "Join first.");
     const isHost = s.members[0] && s.members[0].pid === pid;
 
+    // Voice calls are peer to peer. The room only passes the setup notes between phones and keeps nothing.
+    if (m.t === "sig") {
+      if (typeof m.d !== "string" || m.d.length > 3500) return;
+      const out = JSON.stringify({ t: "sig", d: m.d });
+      for (const o of this.ctx.getWebSockets()) if (o !== ws && this.pidOf(o)) { try { o.send(out); } catch {} }
+      return;
+    }
+
     if (m.t === "start") {
       if (!isHost) return this.err(ws, "Only the host can start a game.");
       if (!["ludo", "ayo", "whot"].includes(m.game)) return this.err(ws, "Unknown game.");

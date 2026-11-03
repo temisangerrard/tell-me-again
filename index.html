@@ -470,6 +470,11 @@ button.wc:not(.big):not(.no):active { transform:scale(.96); }
 .ph { font-size: 15px; margin: 18px 0 4px; }
 .plink { grid-column: 1 / -1; margin-top: 24px; }
 .plink button { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.voice { margin: 16px 0 4px; padding: 16px; border: 1px solid var(--line, rgba(128,128,128,.25)); border-radius: 16px; }
+.voice h2 { font-size: 17px; margin: 0 0 4px; }
+.voice .vq { font-size: 19px; line-height: 1.3; margin: 10px 0; }
+.voice .vrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.voice .live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #d33; margin-right: 6px; }
 </style>
 </head>
 <body>
@@ -1561,22 +1566,110 @@ const shareRoom = async (code) => {
 };
 
 // Open a live connection to a room and draw it into box. Returns { close }.
+// A one-to-one voice sitting. Audio goes straight between the two phones; the room only relays setup notes.
+// The host's phone records both voices on the device and nothing is uploaded anywhere.
+function voiceSitting(box, relay, myName, note) {
+  let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
+  const sig = (o) => relay({ t: "sig", d: JSON.stringify(o) });
+  const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
+
+  function render() {
+    if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Talk it through</h2><p class="hint">A voice call right here, no other app. Then the host can record the answer on their phone.</p><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
+    if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><p class="hint">It's a voice call. Your microphone will turn on when you join.</p><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
+    const rec = !!mr;
+    box.replaceChildren($(`<div class="voice"><h2>${mode === "calling" ? "Calling…" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
+      ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "Pick a question when you're ready." : "Listening. The host will pick a question."}</p>`}
+      ${rec ? `<p class="hint"><i class="live"></i>Recording on the host's phone</p>` : ""}
+      <div class="vrow">
+        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto">${rec ? "Stop and save" : "Record the answer"}</button>` : ""}
+        <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
+    const g = (i) => box.querySelector(i);
+    if (g("#vq")) g("#vq").onclick = () => { const n = nextQuestion(); if (!n) return; q = n.q; sig({ k: "q", q }); render(); };
+    if (g("#vr")) g("#vr").onclick = rec ? stopRec : startRec;
+    g("#vm").onclick = () => { muted = !muted; if (local) local.getAudioTracks().forEach((t) => t.enabled = !muted); render(); };
+    g("#vh").onclick = () => { sig({ k: "bye" }); end(); };
+  }
+  function mkPc() {
+    pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }] });
+    local.getTracks().forEach((t) => pc.addTrack(t, local));
+    pc.onicecandidate = (e) => { if (e.candidate) sig({ k: "ice", c: e.candidate }); };
+    pc.ontrack = (e) => { audio.srcObject = e.streams[0]; audio.play().catch(() => {}); };
+    pc.onconnectionstatechange = () => {
+      if (pc && pc.connectionState === "connected") { mode = "live"; render(); }
+      if (pc && (pc.connectionState === "failed")) { note("The call couldn't connect. Some networks block voice calls; try Wi-Fi or mobile data."); end(); }
+    };
+  }
+  async function mic() {
+    try { local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); return true; }
+    catch { note("We couldn't reach the microphone. Allow it in your browser settings and try again."); return false; }
+  }
+  async function start() {
+    if (!navigator.mediaDevices || typeof RTCPeerConnection === "undefined") return note("This browser can't make voice calls yet. Try the latest Chrome or Safari.");
+    if (!(await mic())) return;
+    isCaller = true; mode = "calling"; sig({ k: "call", n: myName() }); render();
+  }
+  async function join() {
+    if (!(await mic())) { mode = "idle"; return render(); }
+    isCaller = false; mode = "connecting"; mkPc(); sig({ k: "join" }); render();
+  }
+  async function flush() { for (const c of pend.splice(0)) { try { await pc.addIceCandidate(c); } catch {} } }
+  async function onSig(raw) {
+    let m; try { m = JSON.parse(raw); } catch { return; }
+    if (m.k === "call" && mode === "idle") { from = String(m.n || "Someone").slice(0, 30); mode = "ringing"; render(); }
+    else if (m.k === "join" && isCaller && mode === "calling" && local) {
+      mode = "connecting"; mkPc(); render();
+      const o = await pc.createOffer(); await pc.setLocalDescription(o); sig({ k: "offer", s: pc.localDescription });
+    } else if (m.k === "offer" && pc && !isCaller) {
+      await pc.setRemoteDescription(m.s); await flush();
+      const a = await pc.createAnswer(); await pc.setLocalDescription(a); sig({ k: "answer", s: pc.localDescription });
+    } else if (m.k === "answer" && pc && isCaller) { await pc.setRemoteDescription(m.s); await flush(); }
+    else if (m.k === "ice" && m.c) { if (pc && pc.remoteDescription) { try { await pc.addIceCandidate(m.c); } catch {} } else pend.push(m.c); }
+    else if (m.k === "q") { q = String(m.q || "").slice(0, 400); if (mode === "live") render(); }
+    else if (m.k === "bye") { if (mode === "ringing" || mode === "idle") { mode = "idle"; render(); } else { note("The call ended."); end(); } }
+  }
+  function startRec() {
+    const remote = audio.srcObject; if (!remote || typeof MediaRecorder === "undefined") return note("Can't record on this browser.");
+    ctx = new (window.AudioContext || window.webkitAudioContext)(); mix = ctx.createMediaStreamDestination();
+    ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
+    chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = (e) => chunks.push(e.data);
+    mr.onstop = saveRec; t0 = Date.now(); mr.start(); render();
+  }
+  function stopRec() { try { mr.stop(); } catch {} }
+  async function saveRec() {
+    const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q || "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob };
+    mr = null; try { ctx.close(); } catch {} ctx = null;
+    let kept = true; if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
+    clips.unshift({ ...clip, url: URL.createObjectURL(blob) }); S.told++; if (q) S.asked.push(q); save(); q = null;
+    note(kept ? "Saved on this phone. Find it under Sit, in Recorded." : "Recorded, but this browser wouldn't keep it.", 5000); render();
+  }
+  function end() {
+    if (mr) { mr.onstop = null; try { mr.stop(); } catch {} mr = null; }
+    try { ctx && ctx.close(); } catch {} ctx = null;
+    try { pc && pc.close(); } catch {} pc = null;
+    if (local) local.getTracks().forEach((t) => t.stop()); local = null;
+    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; render();
+  }
+  render();
+  return { onSig, end };
+}
+
 function mountRoom(box, code, name, onLeave) {
   const pid = myPid(); let ws, st = null, dead = false, tries = 0, errT, stage = null;
   box.replaceChildren($(`<div class="room2"><div class="rtop2"><div class="rcode"><small>Room</small><b>${esc(code)}</b></div>
     <button class="btn" id="sh" type="button">Share</button><button class="btn" id="lv" type="button">Leave</button></div>
-    <div class="members" id="mem" aria-label="Who's here"></div><p class="err" id="er" role="status"></p><div id="stage2"></div></div>`));
+    <div class="members" id="mem" aria-label="Who's here"></div><p class="err" id="er" role="status"></p><div id="voice2"></div><div id="stage2"></div></div>`));
   const er = box.querySelector("#er"), stg = box.querySelector("#stage2");
   const note = (m, ms = 3500) => { er.textContent = m; clearTimeout(errT); if (ms) errT = setTimeout(() => er.textContent = "", ms); };
   const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   box.querySelector("#sh").onclick = async () => { const m = await shareRoom(code); if (m) note(m); };
-  const leave = () => { dead = true; clearTimeout(errT); try { ws && ws.close(); } catch {} lsSet("sitting-room", ""); onLeave(); };
-  box.querySelector("#lv").onclick = leave;
+  const leave = () => { try { voice.end(); } catch {} dead = true; clearTimeout(errT); try { ws && ws.close(); } catch {} lsSet("sitting-room", ""); onLeave(); };
+  const voice = voiceSitting(box.querySelector("#voice2"), send, () => (st && st.me && st.me.name) || name, note);
+  box.querySelector("#lv").onclick = () => { voice.end(); leave(); };
 
   function connect() {
     ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${code}/ws`);
     ws.onopen = () => { tries = 0; send({ t: "join", pid, name }); };
-    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); } else if (m.t === "err") note(m.m); };
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "err") note(m.m); };
     ws.onclose = () => { if (dead) return; note("Reconnecting…", 0); setTimeout(connect, Math.min(1000 * 2 ** tries++, 8000)); };
   }
   function paintRoom() {

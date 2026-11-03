@@ -129,6 +129,11 @@ while (a.st.game.v.over === null && ar++ < (FULL ? 3000 : 20) && Date.now() - y0
 if (FULL) ok(a.st.game.v.over !== null, "ayo finished over the wire");
 ok(a.st.game.v.p.reduce((x, y) => x + y, 0) + a.st.game.v.sc[0] + a.st.game.v.sc[1] === 48, "ayo seeds conserved");
 
+// ---- voice call setup notes are relayed to the other phone, not echoed back, and oversize ones are dropped
+{ const got = []; const sniff = b.ws.onmessage; b.ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.t === "sig") got.push(m.d); sniff(e); };
+  a.send({ t: "sig", d: '{"k":"call"}' }); a.send({ t: "sig", d: "x".repeat(4000) }); await settle();
+  ok(got.length === 1 && got[0] === '{"k":"call"}', "voice setup notes reach the other phone, oversize dropped"); }
+
 // ---- host ends game
 a.send({ t: "stop" }); await settle(); ok(a.st.game === null && b.st.game === null, "host ends the game for everyone");
 
