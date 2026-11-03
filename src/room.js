@@ -6,6 +6,7 @@ const MAX_SEATS = 4, MAX_MEMBERS = 12, KEEP_MS = 24 * 3600 * 1000; // rooms (and
 // A host sends house rules for Whot. Accept only known switches and a sane hand size, whatever the client claims.
 const RULE_KEYS = ["stack", "pickSkips", "marketAgain", "noPowerFinish", "whotBlock", "passSuspend", "lastCard"];
 const cleanRules = (r) => { const o = {}; if (r && typeof r === "object") { for (const k of RULE_KEYS) if (typeof r[k] === "boolean") o[k] = r[k]; if ([0, 4, 5, 6, 7].includes(r.hand)) o.hand = r.hand; } return o; };
+const BOT_NAMES = ["Pebble", "Comet", "Biscuit", "Maple", "Juniper", "Mango"];
 const clean = (s, n) => String(s ?? "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
 
 // One family room. The Durable Object is the single source of truth: it holds who is seated, runs the game engines,
@@ -47,7 +48,7 @@ export class Room extends DurableObject {
     return {
       t: "state", code: s.code,
       me: me ? { seat: me.seat, host: s.members[0].pid === pid, name: me.name } : null,
-      members: s.members.map((m, i) => ({ name: m.name, seat: m.seat, host: i === 0, online: this.online(m.pid), wins: m.wins || 0, you: m.pid === pid })),
+      members: s.members.map((m, i) => ({ name: m.name, seat: m.seat, host: i === 0, bot: !!m.bot, online: !!m.bot || this.online(m.pid), wins: m.wins || 0, you: m.pid === pid })),
       game: g ? { id: g.id, kind: g.kind, seat, names: g.s.names, v: E[g.kind].view(g.s, seat) } : null
     };
   }
@@ -70,7 +71,7 @@ export class Room extends DurableObject {
     const s = this.s; if (!s) return;
 
     if (m.t === "join") {
-      const pid = clean(m.pid, 64); if (pid.length < 16) return this.err(ws, "Bad id.");
+      const pid = clean(m.pid, 64); if (pid.length < 16 || this.isBot(pid)) return this.err(ws, "Bad id.");
       let mem = s.members.find((x) => x.pid === pid);
       const name = clean(m.name, 30) || "Guest";
       if (!mem) {
@@ -79,7 +80,7 @@ export class Room extends DurableObject {
         for (let i = 0; i < MAX_SEATS; i++) if (!used.has(i)) { seat = i; break; }
         mem = { pid, name, seat, wins: 0 }; s.members.push(mem);
       } else mem.name = name; // a rejoin keeps your seat
-      ws.serializeAttachment({ pid }); await this.save(); this.broadcast(); return;
+      ws.serializeAttachment({ pid }); await this.save(); this.broadcast(); this.botKick(); return;
     }
 
     const pid = this.pidOf(ws); if (!pid) return this.err(ws, "Join first.");
@@ -110,7 +111,22 @@ export class Room extends DurableObject {
       const names = seated.map((x) => x.name);
       const gs = m.game === "whot" ? E.whot.init(names, cleanRules(m.rules)) : E[m.game].init(names);
       s.game = { id: Date.now(), kind: m.game, pids: seated.map((x) => x.pid), s: gs, counted: false };
-      await this.save(); this.broadcast(); return;
+      await this.save(); this.broadcast(); this.botKick(); return;
+    }
+    // Bots: the host fills empty seats so a game can start without more people. They play on the server by the same rules.
+    if (m.t === "addbot") {
+      if (!isHost) return this.err(ws, "Only the host can add a bot.");
+      if (s.game && s.game.s.over === null) return this.err(ws, "Add a bot between games.");
+      if (s.members.filter((x) => x.seat >= 0).length >= MAX_SEATS || s.members.length >= MAX_MEMBERS) return this.err(ws, "The table is full.");
+      const used = new Set(s.members.map((x) => x.name)), name = BOT_NAMES.find((n) => !used.has(n)) || `Bot ${s.members.length}`;
+      const taken = new Set(s.members.map((x) => x.seat)); let seat = -1; for (let i = 0; i < MAX_SEATS; i++) if (!taken.has(i)) { seat = i; break; }
+      s.members.push({ pid: "bot-" + crypto.randomUUID().slice(0, 12), name, seat, wins: 0, bot: true }); await this.save(); this.broadcast(); return;
+    }
+    if (m.t === "rmbot") {
+      if (!isHost) return this.err(ws, "Only the host can remove a bot.");
+      if (s.game && s.game.s.over === null) return this.err(ws, "Remove a bot between games.");
+      const i = s.members.findIndex((x) => x.bot && x.name === clean(m.name, 30)); if (i < 0) return;
+      s.members.splice(i, 1); await this.save(); this.broadcast(); return;
     }
     if (m.t === "stop") { if (!isHost) return this.err(ws, "Only the host can end the game."); s.game = null; await this.save(); this.broadcast(); return; }
 
@@ -120,12 +136,33 @@ export class Room extends DurableObject {
       const a = m.a && typeof m.a === "object" ? { a: String(m.a.a || ""), i: Number.isInteger(m.a.i) ? m.a.i : undefined, s: typeof m.a.s === "string" ? m.a.s : undefined } : {};
       const e = E[g.kind].act(g.s, seat, a);
       if (e) return this.err(ws, e);
-      if (g.s.over !== null && !g.counted) { // tally the win once
-        g.counted = true;
-        if (g.s.over !== "draw") { const w = s.members.find((x) => x.pid === g.pids[g.s.over]); if (w) w.wins = (w.wins || 0) + 1; }
-      }
-      await this.save(); this.broadcast(); return;
+      this.tally(g);
+      await this.save(); this.broadcast(); this.botKick(); return;
     }
+  }
+  tally(g) { // tally the win once
+    if (g.s.over !== null && !g.counted) {
+      g.counted = true;
+      if (g.s.over !== "draw") { const w = this.s.members.find((x) => x.pid === g.pids[g.s.over]); if (w) w.wins = (w.wins || 0) + 1; }
+    }
+  }
+  isBot(pid) { return typeof pid === "string" && pid.startsWith("bot-"); }
+  // If a bot has something to do, do it after a beat so the table can follow what happened.
+  botKick() {
+    const g = this.s && this.s.game; if (!g || g.s.over !== null || this.botTimer) return;
+    if (!g.pids.some((pid, i) => this.isBot(pid) && E[g.kind].bot(g.s, i))) return;
+    this.botTimer = setTimeout(() => { this.botTimer = null; this.botStep().catch((e) => console.error("bot", e && e.message)); }, 900 + Math.floor(Math.random() * 700));
+  }
+  async botStep() {
+    const g = this.s && this.s.game; if (!g || g.s.over !== null) return;
+    for (let i = 0; i < g.pids.length; i++) {
+      if (!this.isBot(g.pids[i])) continue;
+      const a = E[g.kind].bot(g.s, i); if (!a) continue;
+      const e = E[g.kind].act(g.s, i, a);
+      if (e) { console.error("bot move refused:", e); this.botBad = (this.botBad || 0) + 1; if (this.botBad > 3) return; } else this.botBad = 0;
+      this.tally(g); await this.save(); this.broadcast(); break;
+    }
+    this.botKick();
   }
   async webSocketClose(ws) { this.closing = ws; try { ws.close(); } catch {} this.broadcast(); this.closing = null; } // the closing socket is still listed while this runs
   async webSocketError(ws) { this.closing = ws; this.broadcast(); this.closing = null; }
