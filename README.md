@@ -101,7 +101,8 @@ Roughly in priority order.
 - [x] Each tab is its own player in a room (`roomPid`, `claimRoom` in `js/online.js`), so two tabs on one device are two people.
 - [x] Soft sound and a buzz on your turn, a fanfare on a win, emoji reactions between phones, Play again, and a Sound on/off toggle (`js/feel.js`).
 - [x] Ludo dice tumble and tokens hop square by square, local and online (`js/ludo-motion.js`).
-- [ ] Per-game victory moments, Whot and Ayo motion, and a "Your turn" nudge for backgrounded phones.
+- [x] Online Whot (deal, play, pick, rule chip) and online Ayo (seed-by-seed sowing replay, capture) motion: `js/card-motion.js`, `js/online-game.js`.
+- [ ] Per-game victory moments, motion for local pass-the-phone Whot, and a "Your turn" nudge for backgrounded phones.
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
 
 **Make tab**
