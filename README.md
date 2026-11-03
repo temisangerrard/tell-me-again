@@ -108,6 +108,9 @@ Roughly in priority order.
 - [ ] Motion for local pass-the-phone Whot (the gate hides the table between turns).
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
 
+- [x] Sit tab as a family dashboard (`js/sit-home.js`): Next up (who most needs a story, with a question for a topic they haven't covered), the family ordered by need with a topic-coverage ring, a page per person (topics covered, their recordings, year born, remove), activity feed and library.
+- [ ] Relationship per person (grandmother, cousin) for grouping and question choice; search and pinning for large families; live status when someone is in a room; attribute older recordings that have no speaker.
+
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
 - [ ] Storybook and short-film generation; video export.

@@ -52,3 +52,17 @@ select.inp { appearance:none; padding-right:28px; background:transparent; border
 .sitlist em { color:var(--muted); font-style:normal; font-size:.85rem; text-align:right; }
 .feed li { border-top:1px solid var(--line); padding:12px 0; display:grid; gap:2px; }
 .feed b { font-weight:600; overflow-wrap:anywhere; } .feed span { color:var(--muted); font-size:.85rem; }
+/* dashboard */
+.nextup { margin-top:18px; padding:18px; border:1px solid var(--line); border-radius:var(--r-md); }
+.nextup small { color:var(--muted); font:600 .8rem var(--sans); }
+.nextup b { display:block; font:800 1.7rem/1.05 var(--display); letter-spacing:-.02em; margin-top:6px; overflow-wrap:anywhere; }
+.nextup p { margin:10px 0 14px; font-size:1.05rem; line-height:1.35; }
+.sitrow { display:flex; align-items:center; gap:8px; }
+.sitrow .sitopen { flex:1; min-width:0; display:flex; align-items:center; gap:12px; padding:12px 0; background:none; border:0; text-align:left; color:var(--text); cursor:pointer; min-height:56px; font:inherit; }
+.sitrow .who { flex:1; min-width:0; display:grid; } .sitrow .who b { font-weight:600; overflow-wrap:anywhere; } .sitrow .who em { color:var(--muted); font-style:normal; font-size:.85rem; }
+.sitrow .ring { flex:none; }
+.sitrow .sitgo { flex:none; min-width:56px; }
+.pmeta { color:var(--muted); margin-top:4px; }
+.covs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.cov { padding:7px 12px; border-radius:999px; background:var(--soft); color:var(--muted); font-size:.85rem; }
+.cov.on { background:var(--accent); color:var(--on-accent); font-weight:600; }
