@@ -77,6 +77,7 @@ function renderFamily(box) {
   data.append(pv, $(`<br>`), del);
 
   const about = sec("About");
-  about.append($(`<p class="para">Tell Me Again by Settley Studio</p>`));
+  const about_p = $(`<p class="para">Tell Me Again by Settley Studio</p>`); about.append(about_p);
+  if (window.caches) caches.keys().then((k) => { const v = (k.find((x) => /^sitting-v\d+$/.test(x)) || "").replace("sitting-", ""); if (v && about_p.isConnected) about_p.textContent += ` · ${v}`; }).catch(() => {});
 }
 

@@ -24,3 +24,15 @@ test("with no window open, tapping the notification opens the app", async () => 
   listeners.notificationclick({ notification: { close() {} }, waitUntil: (p) => { wait = p; } }); await wait;
   assert.equal(opened, "/");
 });
+
+test("the app only reloads itself for an update when nothing would be lost", async () => {
+  const { app } = await import("./app.mjs");
+  const a = app(); await a.ready; const { w } = a;
+  assert.equal(w.eval("idleForUpdate()"), true, "quiet app: safe to reload");
+  w.eval('sitting = ["Ese"]'); assert.equal(w.eval("idleForUpdate()"), false, "a sitting is open");
+  w.eval("sitting = null; activeCall = { mode: () => 'live' }"); assert.equal(w.eval("idleForUpdate()"), false, "a call is live");
+  w.eval("activeCall = null; currentRoom = { close() {} }"); assert.equal(w.eval("idleForUpdate()"), false, "in a room");
+  w.eval("currentRoom = null; restoring = true"); assert.equal(w.eval("idleForUpdate()"), false, "restoring a backup");
+  w.eval("restoring = false; activeVoiceRecording = true"); assert.equal(w.eval("idleForUpdate()"), false, "recording a call");
+  await a.close();
+});
