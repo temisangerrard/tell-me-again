@@ -90,15 +90,19 @@ function voiceSitting(box, relay, myName, note) {
       note(micMessage(e), 8000); return false;
     }
   }
+  let epoch = 0; // bumped when a call ends, so setup that was still waiting knows to stop
+  const release = () => { if (local) local.getTracks().forEach((t) => t.stop()); local = null; };
   async function start() {
     if (!navigator.mediaDevices || typeof RTCPeerConnection === "undefined") return note("This browser can't make voice calls yet. Try the latest Chrome or Safari.");
-    if (!(await mic())) return;
-    ice = await getIce();
+    const e = epoch; if (!(await mic())) return;
+    if (e !== epoch) return release();
+    ice = await getIce(); if (e !== epoch) return release(); // left the room while we were setting up
     isCaller = true; mode = "calling"; sig({ k: "call", n: myName() }); render();
   }
   async function join() {
-    if (!(await mic())) { mode = "idle"; return render(); }
-    ice = await getIce();
+    const e = epoch; if (!(await mic())) { mode = "idle"; return render(); }
+    if (e !== epoch) return release();
+    ice = await getIce(); if (e !== epoch) return release(); // left the room while we were setting up
     isCaller = false; mode = "connecting"; mkPc(); sig({ k: "join" }); render();
   }
   async function flush() { for (const c of pend.splice(0)) { try { await pc.addIceCandidate(c); } catch {} } }
@@ -160,7 +164,7 @@ function voiceSitting(box, relay, myName, note) {
   }
   async function end() {
     if (ending) return;
-    ending = true; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
+    ending = true; epoch++; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
     if (permissionReply) permissionReply(false);
     if (mr || saving) await stopRec();
     try { ctx && ctx.close(); } catch {} ctx = null;
