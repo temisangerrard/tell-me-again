@@ -1,0 +1,21 @@
+/* Online rooms */
+/* online rooms */
+.rtop2 { display:flex; align-items:center; gap:10px; margin-top:8px; }
+.rcode { flex:1; min-width:0; }
+.rcode small { display:block; font:600 .85rem var(--sans); color:var(--muted); }
+.rcode b { display:block; font:800 clamp(2.6rem,13vw,3.6rem)/.9 var(--num); letter-spacing:.1em; color:var(--accent-text); }
+.members { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+.member { display:inline-flex; align-items:center; gap:8px; max-width:100%; padding:8px 14px; border-radius:999px; background:var(--surface); font-size:.9rem; }
+.member.you { box-shadow:inset 0 0 0 1.5px var(--accent); }
+.member span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.member em { font-style:normal; color:var(--muted); font-size:.78rem; }
+.dot { width:8px; height:8px; flex:none; border-radius:50%; background:#cdbfae; }
+.dot.on { background:#2fb36b; }
+.onl { margin-top:20px; }
+.onl .row2 { display:flex; gap:10px; margin-top:12px; }
+.onl .row2 .inp { flex:1; min-width:0; text-transform:uppercase; letter-spacing:.14em; }
+.guest { padding:max(16px,env(safe-area-inset-top)) 22px 40px; }
+.guest .mark { margin-bottom:18px; }
+.err { color:var(--danger); font-size:.9rem; min-height:1.4em; margin-top:8px; }
+.pit.cap { box-shadow:inset 0 0 0 2px #fff; }
+

@@ -6,7 +6,10 @@ Early prototype. Everything personal stays on the device (family details, record
 
 ## What's in here
 
-- `index.html`, `questions.js`, `sw.js`, `manifest.json`: the app. Plain HTML, CSS and JavaScript, no build step.
+- `index.html`: a thin shell that loads `css/*.css` and `js/*.js` in order. No build step, no bundler.
+- `css/`: one file per area (base, landing, room, make, sit, games, motion...). Order matters; it is the cascade order.
+- `js/`: one file per feature (state, onboarding, sit, make, ludo, whot, ayo, call, room...). They are plain scripts sharing one scope, loaded in the order listed in `index.html`. Add a file by adding its `<script src>` tag there; `test/app.mjs` reads that list too.
+- `questions.js`, `sw.js`, `manifest.json`: the question bank, service worker and web manifest.
 - `engines.js`: the Ludo, Ayo and Whot rules, shared by the browser and the server so every move is checked server-side.
 - `src/`: a Cloudflare Worker (`worker.js`) and a Durable Object per room (`room.js`) for live play between phones.
 - `test/`: rule-engine tests and a WebSocket integration test.
@@ -43,7 +46,7 @@ npx wrangler deploy
 
 ## Rules for anyone working on this (human or agent)
 
-- No build step. Keep `index.html` (inline CSS and JS) plus `questions.js`, `engines.js`, `sw.js`, `manifest.json`. Don't add a framework or bundler.
+- No build step. The app is plain files under `css/` and `js/` loaded by `index.html`. Keep files small and single-purpose; put new code in the file for its feature, or add a new file. Don't add a framework or bundler.
 - Never use the word "motto" in the UI (the field is "A saying your family lives by"). Write "onchain" if it ever comes up, not "on-chain".
 - Don't localise the app: no `.ng`, no single-ethnicity art or copy. Heritage is optional and neutral.
 - Copy: if a string isn't needed, delete it. No taglines, helper text or captions that restate a label, defend a choice or calm a worry. Keep only a real consequence at the moment of choosing, a scope or compatibility fact, what an empty state means and what to do next, and units on bare values. If a screen needs explaining, fix the layout. Cut whole clauses, don't reword them. Target: Linear's site, Apple Notes.
@@ -58,7 +61,7 @@ npx wrangler deploy
 
 - `main` is the source of truth and always matches what is deployed. Don't commit to it directly: branch from the latest `main`, open a pull request **into `main`** (never into another feature branch), and merge it there.
 - Before starting, `git fetch` and rebase or merge the latest `main`. Before opening a PR, do it again. Resolve conflicts by keeping both sides' intent; never overwrite or revert someone else's work to make a conflict go away.
-- `index.html` holds almost everything, so keep changes small and focused, one concern per PR, to avoid conflicts.
+- Keep changes small and focused, one concern per PR. Files are per feature, so two people rarely touch the same one.
 - Tests must pass before a PR: `npm install` once, then `npm test`. For room and call changes also run `npx wrangler dev` and `BASE=http://localhost:8787 node test/room.test.mjs` (add `FULL=1` for full games; room creation is limited to 20 per minute per IP, so wait between runs). `npm run test:browser` needs `npx playwright install chromium`.
 - Add or update a test with every behaviour change, and verify UI changes in a real browser at phone width.
 - Bump the cache name in `sw.js` on every change that ships.
