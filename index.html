@@ -467,6 +467,9 @@ button.wc:not(.big):not(.no):active { transform:scale(.96); }
   .reel { display:grid; place-content:center; aspect-ratio:auto; padding:24px; }
   .thumb, .rov .stop, .pit, .tg::after { transition:none; }
 }
+.ph { font-size: 15px; margin: 18px 0 4px; }
+.plink { grid-column: 1 / -1; margin-top: 24px; }
+.plink button { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -627,8 +630,9 @@ function welcome() {
       <li><b>Ask one good question.</b><span>We hand you the question. You press record.</span></li>
       <li><b>Play something while it sinks in.</b><span>Ludo, Ayo or Whot, each on their own phone.</span></li>
       <li><b>Keep it.</b><span>By the end of the season: a magazine, a storybook, or a short film.</span></li>
-    </ol></section>`);
+    </ol><p class="fine plink"><button type="button" id="pvl">Privacy</button> · Made by Temisan Agbajoh</p></section>`);
   host.append(el);
+  el.querySelector("#pvl").onclick = privacySheet;
   el.querySelector("#go").onclick = () => go(1);
   el.querySelector("#th").onclick = themePicker;
 }
@@ -750,17 +754,32 @@ async function transcribeClip(c) {
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Couldn't turn that into text. Please try again.");
   c.text = j.text || ""; c.tx = "ai"; c.txAt = Date.now(); await saveClip(c);
 }
+const PRIVACY_V = "2026-11-03", PRIVACY_MAIL = "temisan@settley.co";
+function grantConsent(k) { S.consent[k] = true; S.consent[k + "At"] = Date.now(); S.consent.v = PRIVACY_V; delete S.consent[k + "Off"]; save(); }
+function withdrawConsent(k) { S.consent[k] = false; S.consent[k + "Off"] = Date.now(); save(); }
+function privacySheet() {
+  const b = $(`<div><h2>Privacy</h2><p class="hint" style="margin-top:6px">Version ${PRIVACY_V}. Plain words, not a wall of legal text.</p>
+    <h3 class="ph">Who's responsible</h3><p class="para">Temisan Agbajoh, an independent developer, runs Tell Me Again and is the controller of any information described here. Write to <a href="mailto:${PRIVACY_MAIL}">${PRIVACY_MAIL}</a> for anything below.</p>
+    <h3 class="ph">What we hold</h3><p class="para"><b>On your device:</b> your family details, recordings, written-out words and game wins. We never see these.<br><b>In a game room you create:</b> first names and game moves, erased after a day of quiet.<br><b>If you turn a recording into text:</b> that audio is sent to Cloudflare's speech-to-text service and the words come back. Cloudflare says it keeps no data from this service, and we don't keep the audio.</p>
+    <h3 class="ph">Why, and your say</h3><p class="para">Recordings of a person's voice and what they say about health, faith, family and history can be sensitive. So we only send audio anywhere after you say yes, and you can say no and still use everything else. Say yes again or withdraw any time under Family. Only record people who know and are happy about it.</p>
+    <h3 class="ph">Your rights</h3><p class="para">You can see and download what the app holds, fix any text it wrote, delete everything, and withdraw consent, all under Family, without asking us. You can also ask us by email, and you can complain to your data protection authority.</p>
+    <h3 class="ph">Cookies and tracking</h3><p class="para">None. The app stores your settings on your device only, which it needs to work.</p>
+    <h3 class="ph">Children</h3><p class="para">Don't record anyone under 16 unless a parent or guardian is happy with it and present.</p></div>`);
+  b.append(closeBtn(sheet("Privacy", b)));
+}
+
 // Ask once, plainly, before any audio leaves the device.
 function askTxConsent() {
   return new Promise((res) => {
     const b = $(`<div><h2>Turn recordings into text?</h2>
       <p class="para" style="margin-top:10px">We'll send the audio to Cloudflare's speech-to-text service, which sends back the words. Cloudflare says this service keeps no data, and we don't keep the audio either. The recording itself stays on this device.</p>
-      <p class="para">It gets names and places wrong sometimes, so you'll be able to fix the words. You can turn this off any time under Family.</p>
+      <p class="para">It gets names and places wrong sometimes, so you'll be able to fix the words. You can turn this off any time under Family. <a href="#" id="pv">How we handle your information</a></p>
       <button class="cta" id="ok" type="button" style="margin-top:20px">Yes, turn it into text</button>
       <button class="btn" id="no" type="button" style="width:100%;margin-top:8px;background:transparent;color:var(--muted)">Not now</button></div>`);
     let done = false; const close = sheet("Turn recordings into text?", b);
-    b.querySelector("#ok").onclick = () => { done = true; S.consent.transcribe = true; save(); close(); res(true); };
+    b.querySelector("#ok").onclick = () => { done = true; grantConsent("transcribe"); close(); res(true); };
     b.querySelector("#no").onclick = () => { close(); res(false); };
+    b.querySelector("#pv").onclick = (e) => { e.preventDefault(); privacySheet(); };
     new MutationObserver((_, ob) => { if (!document.body.contains(b)) { ob.disconnect(); if (!done) res(false); } }).observe(document.body, { childList: true, subtree: true });
   });
 }
@@ -861,7 +880,7 @@ function renderFamily(box) {
   at.querySelector(".tg").onclick = async (e) => { const sw = e.currentTarget; if (!S.autoTx || !S.consent.transcribe) { if (!S.consent.transcribe && !(await askTxConsent())) return; S.autoTx = true; } else S.autoTx = false; save(); sw.setAttribute("aria-checked", S.autoTx); };
   trs.append(at);
   if (S.consent.transcribe) { const wd = $(`<button class="btn" type="button" style="margin-top:12px">Stop sending audio for transcription</button>`);
-    wd.onclick = () => { S.consent.transcribe = false; S.autoTx = false; save(); renderFamily(box); }; trs.append(wd); }
+    wd.onclick = () => { withdrawConsent("transcribe"); S.autoTx = false; save(); renderFamily(box); }; trs.append(wd); }
 
   const look = sec("Look");
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
@@ -875,7 +894,8 @@ function renderFamily(box) {
   };
   const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete everything</button>`);
   del.onclick = () => { if (confirm("Delete everything? This removes your family, your recordings and your wins from this device. It can't be undone.")) wipeAll(); };
-  data.append(dl, $(`<br>`), del);
+  const pv = $(`<button class="btn" type="button" style="margin-top:8px">Read the privacy notice</button>`); pv.onclick = privacySheet;
+  data.append(dl, $(`<br>`), pv, $(`<br>`), del);
 
   const about = sec("About");
   about.append($(`<p class="para">Tell Me Again, early prototype. Type is Bricolage Grotesque and Barlow Condensed, both under the SIL Open Font License. Every question is written by a person; nothing here makes up anyone's history.</p>`));
