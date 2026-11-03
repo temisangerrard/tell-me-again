@@ -111,6 +111,8 @@ Roughly in priority order.
 
 - [x] Bots (`bot()` in each engine in `engines.js`, run by the room in `src/room.js`): Add a bot in a room lobby, or Play a bot in one tap from the Play tab. Bots only use their own hand and public state, and every move goes through the same `act()` as a person's.
 - [ ] Bot difficulty levels, and bots in the local pass-the-phone games.
+- [x] Sit tab as a family dashboard (`js/sit-home.js`): Next up (who most needs a story, with a question for a topic they haven't covered), the family ordered by need with a topic-coverage ring, a page per person (topics covered, their recordings, year born, remove), activity feed and library.
+- [ ] Relationship per person (grandmother, cousin) for grouping and question choice; search and pinning for large families; live status when someone is in a room; attribute older recordings that have no speaker.
 
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.

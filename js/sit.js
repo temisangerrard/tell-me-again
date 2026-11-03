@@ -3,6 +3,7 @@
 const ROLES = ["Asker", "Storyteller", "Witness", "Witness"];
 const SEAT_CLS = ["s-ask", "s-st", "s-w1", "s-w2"];
 function nextQuestion() {
+  if (typeof pinnedQ !== "undefined" && pinnedQ && !S.asked.includes(pinnedQ.q)) return pinnedQ; // the question "Next up" suggested
   const pool = QUESTIONS.filter((q) => S.chapters.includes(q.c));
   const n = S.asked.length, maxD = n < 2 ? 1 : n < 4 ? 2 : n < 6 ? 3 : 4; // ease in: warm-up first
   const fresh = pool.filter((q) => !S.asked.includes(q.q) && q.d <= maxD).sort((a, b) => a.d - b.d);
@@ -26,7 +27,7 @@ function wrapUp(after) {
   });
   const close = sheet("Wrap up this sitting", body);
   body.querySelector("#cl").onclick = close;
-  sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); sitting = null; save(); close(); after(); };
+  sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); sitting = null; pinnedQ = null; save(); close(); after(); };
 }
 // 3-2-1, then a full-screen run screen: the family colour, a huge timer, one big stop button. Resolves with the overlay or null if cancelled.
 function countdown() {
@@ -101,7 +102,7 @@ function clipRow(c, box) {
 function renderSitting(box, msg) {
   const n = S.sittings.length, st = streak(), f = famName(S.name);
   const back = $(`<button class="btn gback" type="button">‹ Family</button>`);
-  back.onclick = () => { if (live || (activeCall && activeCall.mode() !== "idle")) return; sitting = null; renderSit(box); };
+  back.onclick = () => { if (live || (activeCall && activeCall.mode() !== "idle")) return; sitting = null; pinnedQ = null; renderSit(box); };
   back.hidden = !!(activeCall && activeCall.mode() !== "idle"); // hang up first
   box.replaceChildren(back, $(`<h1 class="title">Sitting ${n + 1}</h1>`),
     $(`<div class="smeta"><p>The ${esc(f)} family · Season one${n ? ` · ${n} of ${SEASON} done${st > 1 ? `, ${st} weeks running` : ""}` : ""}</p>
