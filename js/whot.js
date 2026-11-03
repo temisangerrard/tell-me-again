@@ -106,7 +106,7 @@ function renderWhot(box) {
   function play(i) {
     const p = g.pl[g.turn], c = p.hand[i]; if (!c || !playable(c)) return;
     p.hand.splice(i, 1); g.disc.push(c); g.top = c;
-    if (!p.hand.length) { g.over = p; paint(); recordWin(p.name); showLb(); return; }
+    if (!p.hand.length) { g.over = p; paint(); recordWin(p.name); showLb(); celebrate(el); return; }
     if (c.s === "whot") { if (g.pend) { g.pend = null; g.msg = `${p.name} cancelled the pick with a Whot.`; } g.pickShape = true; paint(); return; }
     g.shape = c.s;
     const nx = (g.turn + 1) % g.pl.length;

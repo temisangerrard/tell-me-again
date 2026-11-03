@@ -54,7 +54,7 @@ function renderAyo(box) {
   function end() {
     g.busy = false; const w = g.sc[0] === g.sc[1] ? null : g.sc[0] > g.sc[1] ? 0 : 1; g.over = w === null ? "draw" : w; paint();
     say(w === null ? "A draw." : `${g.names[w]} wins, ${g.sc[w]} to ${g.sc[1 - w]}.`);
-    if (w !== null) recordWin(g.names[w]); showLb();
+    if (w !== null) { recordWin(g.names[w]); celebrate(el); } showLb();
     showResult();
   }
   function showResult() {

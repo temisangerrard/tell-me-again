@@ -3,19 +3,23 @@
 function mountRoom(box, code, name, onLeave) {
   const pid = roomPid(code); claimRoom(code, pid); const beat = setInterval(() => claimRoom(code, pid), 5000); let ws, st = null, dead = false, tries = 0, errT, stage = null;
   box.replaceChildren($(`<div class="room2"><div class="rtop2"><div class="rcode"><small>Room</small><b>${esc(code)}</b></div>
-    <button class="btn" id="sh" type="button">Share</button><button class="btn" id="sd" type="button" aria-pressed="false"></button><button class="btn" id="lv" type="button">Leave</button></div>
+    <button class="btn" id="sh" type="button">Share</button><button class="btn" id="sd" type="button" aria-pressed="false"></button><button class="btn" id="al" type="button" aria-pressed="false" hidden></button><button class="btn" id="lv" type="button">Leave</button></div>
     <div class="members" id="mem" aria-label="Who's here"></div><p class="err" id="er" role="status"></p><div id="voice2"></div><div id="stage2"></div><div class="reacts" role="group" aria-label="Reactions"></div></div>`));
   const er = box.querySelector("#er"), stg = box.querySelector("#stage2");
   const note = (m, ms = 3500) => { er.textContent = m; clearTimeout(errT); if (ms) errT = setTimeout(() => er.textContent = "", ms); };
   const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   const sd = box.querySelector("#sd"), paintSound = () => { sd.textContent = soundOn() ? "Sound on" : "Sound off"; sd.setAttribute("aria-pressed", soundOn()); };
   sd.onclick = () => { setSound(!soundOn()); paintSound(); }; paintSound();
+  const al = box.querySelector("#al"), paintAlerts = () => { al.textContent = nudge.on() ? "Alerts on" : "Alerts off"; al.setAttribute("aria-pressed", nudge.on()); };
+  if (nudge.supported()) { al.hidden = false; paintAlerts(); al.onclick = async () => { if (nudge.on()) nudge.disable(); else if (!(await nudge.enable())) note("Notifications are blocked for this site. Allow them in your browser settings."); paintAlerts(); }; }
+  const onVisible = () => { if (!document.hidden) nudge.back(box.querySelector("#stage2"), wasMyTurn); };
+  document.addEventListener("visibilitychange", onVisible);
   REACTIONS.forEach((e) => { const b = $(`<button class="rx" type="button" aria-label="React ${e}">${e}</button>`); b.onclick = () => { send({ t: "react", e }); floatReaction(box, e, "You"); feel.react(); }; box.querySelector(".reacts").append(b); });
   let wasMyTurn = false, wasOver = true, lastMsg = "";
   const feelGame = (g) => {
     const mine = g.seat >= 0 && g.v.turn === g.seat && g.v.over === null, over = g.v.over !== null;
-    if (over && !wasOver) { if (g.v.over === g.seat) feel.win(); else if (g.v.over === "draw") feel.move(); else feel.lose(); }
-    else if (mine && !wasMyTurn) feel.yourTurn();
+    if (over && !wasOver) { if (g.v.over === g.seat) feel.win(); else if (g.v.over === "draw") feel.move(); else feel.lose(); if (g.v.over !== "draw") celebrate(box.querySelector("#stage2")); }
+    else if (mine && !wasMyTurn) { feel.yourTurn(); nudge.turn(); }
     else if (!over && g.v.msg !== lastMsg && lastMsg) feel.move();
     wasMyTurn = mine; wasOver = over; lastMsg = g.v.msg;
   };
@@ -24,7 +28,7 @@ function mountRoom(box, code, name, onLeave) {
   const leave = (forget = true) => {
     if (leaving) return leaving;
     leaving = (async () => {
-      dead = true; clearTimeout(errT); clearInterval(beat);
+      dead = true; clearTimeout(errT); clearInterval(beat); document.removeEventListener("visibilitychange", onVisible);
       send({ t: "sig", d: JSON.stringify({ k: "bye" }) });
       try { await voice.end(); } catch {} try { ws && ws.close(); } catch {} if (activeCall === voice) activeCall = null;
       if (currentRoom === session) currentRoom = null;

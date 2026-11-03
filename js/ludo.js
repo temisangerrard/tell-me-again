@@ -59,7 +59,7 @@ function renderLudo(box) {
     const home = np === 56;
     if (p.t.every((q) => q === 56)) {
       g.over = p; g.dice = null; g.movable = []; paint(); say(`${p.name} is home!`);
-      recordWin(p.name); showLb();
+      recordWin(p.name); showLb(); celebrate(el);
       el.querySelector("#winbox").innerHTML = `<div class="win"><b>${esc(p.name)} wins</b><button class="btn" id="again" type="button">Play again</button></div>`;
       el.querySelector("#again").onclick = () => { newGame(); renderLudo(box); }; return;
     }
