@@ -51,9 +51,19 @@ npx wrangler deploy
 - **No audio is stored on our servers.** Audio is sent for transcription and discarded; recordings and text live on the user's device. Cloud storage is a future *paid* feature, not a default.
 - Anything that sends audio or data off the device needs explicit consent first (`grantConsent` / `withdrawConsent`, notice in `privacySheet`). Bump `PRIVACY_V` when the notice changes.
 - Controller: Settley Studio, run by Temisan Agbajoh. This is a separate product from Settley: don't send its email from `settley.co`.
-- Bump the cache name in `sw.js` on every change that ships. Dev fixtures (`?data=`) only work on localhost.
-- Run `node test/engines.test.mjs` and `BASE=http://localhost:8787 node test/room.test.mjs` (with `npx wrangler dev`) before shipping. Room creation is limited to 20 per minute per IP, so wait between test runs.
-- Deploy with `npx wrangler deploy` from this folder only. Ask before buying anything.
+- Dev fixtures (`?data=`) only work on localhost.
+- Ask before buying anything or changing outward-facing settings (domains, DNS, billing, repo settings).
+
+## How we work (Claude, Codex and people share this repo)
+
+- `main` is the source of truth and always matches what is deployed. Don't commit to it directly: branch from the latest `main`, open a pull request **into `main`** (never into another feature branch), and merge it there.
+- Before starting, `git fetch` and rebase or merge the latest `main`. Before opening a PR, do it again. Resolve conflicts by keeping both sides' intent; never overwrite or revert someone else's work to make a conflict go away.
+- `index.html` holds almost everything, so keep changes small and focused, one concern per PR, to avoid conflicts.
+- Tests must pass before a PR: `npm install` once, then `npm test`. For room and call changes also run `npx wrangler dev` and `BASE=http://localhost:8787 node test/room.test.mjs` (add `FULL=1` for full games; room creation is limited to 20 per minute per IP, so wait between runs). `npm run test:browser` needs `npx playwright install chromium`.
+- Add or update a test with every behaviour change, and verify UI changes in a real browser at phone width.
+- Bump the cache name in `sw.js` on every change that ships.
+- Deploy only from an up-to-date `main`, with `npx wrangler deploy` in this folder, after the PR is merged. Say what version went out. Never deploy a branch.
+- Keep this file current: tick tasks off in the same PR, and add new rules here, not in chat.
 
 ## Tasks still to do
 
@@ -73,7 +83,7 @@ Roughly in priority order.
 
 **Voice sitting**
 - [ ] Relay for networks that block direct calls (Cloudflare Realtime TURN key). Today it only uses public STUN and can fail on strict networks.
-- [ ] Group calls (currently one to one).
+- [ ] Group calls (currently one to one). The call is a floating widget (`callDock`, `voiceSitting`) that persists across tabs; the host steers questions from Sit.
 - [x] Save captured audio on hangup, peer-channel closure, call failure or a sustained disconnection; show recording state on both phones.
 - [ ] Reconnect handling and keeping the call alive when the phone locks (requires real-device testing).
 - [ ] Test on real iPhone and Android devices.
