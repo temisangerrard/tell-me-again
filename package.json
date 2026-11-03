@@ -1,5 +1,12 @@
 {
   "name": "family-sitting",
   "private": true,
-  "scripts": { "dev": "wrangler dev", "deploy": "wrangler deploy", "test": "node test/engines.test.mjs" }
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node test/engines.test.mjs && node --test test/ui.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
 }

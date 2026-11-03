@@ -24,7 +24,8 @@ Test fixtures (`?data=worst`, `?data=empty`, ...) only work on localhost.
 ## Test
 
 ```bash
-node test/engines.test.mjs                 # rules: Ludo, Ayo, Whot with every house-rule combination
+npm install                              # development-only UI test dependency
+npm test                                 # game engines and UI regressions
 BASE=http://localhost:8787 node test/room.test.mjs   # live rooms over WebSockets (add FULL=1 for full games)
 ```
 
@@ -93,3 +94,10 @@ Roughly in priority order.
 - [ ] Pick and attach a domain (nothing bought; `again.family` was the favourite).
 - [ ] Optional real photo avatars.
 - [ ] Licence.
+
+## Landing and state cleanup (2026-11-03)
+
+- [x] Explain recording, optional transcripts, and the publication roadmap on the landing page with interactive examples. Fictional stories and publication concepts are labelled.
+- [x] Group Family controls into profile, activity, preferences, and information sections; clear stale online display names when a profile name is cleared.
+- [x] Treat Ayo winner seat zero as a completed game; restore results when returning to a finished board without counting another win.
+- [x] Add UI regression tests for landing startup, profile name clearing, and Ayo result restoration. `jsdom` is development-only; the shipped app still has no build step.
