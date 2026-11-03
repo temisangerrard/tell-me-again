@@ -93,14 +93,17 @@ function clipRow(c, box) {
     if (pendingClipEdits.has(c.id)) pendingClipEdits.get(c.id).cancel();
     await Promise.allSettled([...clipWrites]);
     try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch { tx.append($(`<p class="err">The recording couldn't be deleted.</p>`)); return; }
-    URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSitting(box, "Recording deleted.");
+    URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSit(box, "Recording deleted.");
   };
   paint(); li._run = run; return li;
 }
 
 function renderSitting(box, msg) {
   const n = S.sittings.length, st = streak(), f = famName(S.name);
-  box.replaceChildren($(`<h1 class="title">Sitting ${n + 1}</h1>`),
+  const back = $(`<button class="btn gback" type="button">‹ Family</button>`);
+  back.onclick = () => { if (live || (activeCall && activeCall.mode() !== "idle")) return; sitting = null; renderSit(box); };
+  back.hidden = !!(activeCall && activeCall.mode() !== "idle"); // hang up first
+  box.replaceChildren(back, $(`<h1 class="title">Sitting ${n + 1}</h1>`),
     $(`<div class="smeta"><p>The ${esc(f)} family · Season one${n ? ` · ${n} of ${SEASON} done${st > 1 ? `, ${st} weeks running` : ""}` : ""}</p>
       <div class="ticks" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div></div>`));
   // The table: you at the bottom, the storyteller across from you, witnesses either side, the question in the middle.
@@ -130,7 +133,7 @@ function renderSitting(box, msg) {
   const setLive = (on) => { seatEls[1].classList.toggle("speaking", on); role.textContent = on ? "Speaking" : ROLES[1]; rec.textContent = on ? "Stop" : "Record the answer"; skip.disabled = on || !q; };
   if (live) { setLive(true); rs.textContent = "Recording…"; }
   // While a call is live, Record goes through the call (both voices) and the current question is pushed to the other phone.
-  onClipSaved = () => { if (box.isConnected && !box.hidden) renderSitting(box); };
+  onClipSaved = () => { if (box.isConnected && !box.hidden) renderSit(box); };
   onCallSkip = () => { if (!skip.disabled) skip.click(); };
   onCallChange = () => { if (!rec.isConnected) return; const c = activeCall && activeCall.live(); if (c) { activeCall.setQuestion(q ? q.q : null); const on = activeCall.recording(); rec.textContent = on ? "Stop and save" : "Record the answer"; skip.disabled = on || !q; } };
   if (activeCall && activeCall.live()) { activeCall.setQuestion(q ? q.q : null); onCallChange(); }
@@ -155,7 +158,7 @@ function renderSitting(box, msg) {
     let t0 = Date.now();
     mr.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop()); live = null; closeRun();
-      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "in-person", at: t0 } };
+      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", who, at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "in-person", at: t0 } };
       let kept = true;
       if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
       clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept });
@@ -182,7 +185,7 @@ function renderSitting(box, msg) {
     box.append(era);
   }
   const wu = $(`<button class="btn wide" type="button">Finish this sitting</button>`);
-  wu.onclick = () => wrapUp(() => renderSitting(box, `Sitting saved. ${streak() > 1 ? `${streak()} weeks running.` : "See you next week."}`));
+  wu.onclick = () => wrapUp(() => renderSit(box, `Sitting saved. ${streak() > 1 ? `${streak()} weeks running.` : "See you next week."}`));
   box.append(wu);
 }
 
