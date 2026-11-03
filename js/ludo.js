@@ -31,7 +31,7 @@ function renderLudo(box) {
     g.pl.forEach((p, pi) => p.t.forEach((q, i) => {
       const grp = q >= 0 && q < 56 ? at[p.k + ":" + q] : null;
       const [x, y, s] = tokPos(p.k, q, grp ? grp.indexOf(i) : i, grp ? grp.length : 1);
-      const t = els[pi][i]; t.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+      const t = els[pi][i]; placeTok(t, p.k, q, grp ? grp.indexOf(i) : i, grp ? grp.length : 1);
       const can = !g.over && pi === g.turn && g.movable.includes(i) && !g.busy; t.classList.toggle("go", can); t.tabIndex = can ? 0 : -1;
     }));
     roll.innerHTML = g.dice ? diceHTML(g.dice) : `<span class="rl">Roll</span>`;
@@ -43,10 +43,12 @@ function renderLudo(box) {
     if (g.over || g.dice || g.busy) return;
     const d = 1 + Math.floor(Math.random() * 6); g.dice = d; g.busy = true;
     const cur = g.pl[g.turn]; g.movable = cur.t.map((p, i) => canMove(p, d) ? i : -1).filter((i) => i >= 0);
-    if (!reduce) roll.animate([{ transform: "rotate(0) scale(.88)" }, { transform: "rotate(140deg) scale(1.06)" }, { transform: "none" }], { duration: 240, easing: "cubic-bezier(.23,1,.32,1)" });
+    roll.disabled = true;
+    tumbleDice(roll, d, () => {
     if (!g.movable.length) { paint(); say(`${cur.name} rolled a ${d}`, "No move. Pass it on."); setTimeout(() => endTurn(false), 1100); }
     else if (g.movable.length === 1) { paint(); say(`${cur.name} rolled a ${d}`, "Only one move, so we'll make it."); setTimeout(() => move(g.turn, g.movable[0], true), 550); }
     else { g.busy = false; paint(); say(`${cur.name} rolled a ${d}`, "Tap a token to move it."); }
+    });
   }
   function move(pi, i, auto) {
     if (g.over || !g.dice || pi !== g.turn || !g.movable.includes(i) || (g.busy && !auto)) return;

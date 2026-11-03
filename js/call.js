@@ -1,7 +1,14 @@
 "use strict";
 // Voice call widget
+// Phone in-app browsers (X, Instagram, Facebook and the like) can't use the microphone at all; the page has to be opened in Safari or Chrome.
+function inAppBrowser(ua = navigator.userAgent) {
+  if (/(FBAN|FBAV|FB_IAB|Instagram|Twitter|Snapchat|TikTok|MicroMessenger|LinkedInApp|Line\/|GSA\/)/i.test(ua)) return true;
+  if (/; wv\)/.test(ua)) return true; // Android WebView
+  return /iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua); // iOS web views leave Safari out of the user agent
+}
 function micMessage(e) {
   const n = e && e.name;
+  if (inAppBrowser()) return "This in-app browser can't use the microphone. Tap Share, choose Open in Safari (or Chrome), and try again.";
   if (!window.isSecureContext || !navigator.mediaDevices) return "This page can't use the microphone here. Open it in Safari or Chrome.";
   if (n === "NotAllowedError" || n === "SecurityError") return "The microphone is blocked for this site. Turn it on in your browser or phone settings, then try again.";
   if (n === "NotFoundError" || n === "OverconstrainedError") return "No microphone found on this device.";
@@ -50,7 +57,7 @@ function voiceSitting(box, relay, myName, note) {
   function render() {
     const paint = (el) => { if (mode === "idle") { dockEl.hidden = true; dockEl.replaceChildren(); box.replaceChildren(el); } else { box.replaceChildren(); dockEl.hidden = false; dockEl.replaceChildren(el); } };
     const root = () => (mode === "idle" ? box : dockEl);
-    if (mode === "idle") { paint($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; if (onCallChange) onCallChange(); return; }
+    if (mode === "idle") { paint($(`<div class="voice"><h2>Voice call</h2>${inAppBrowser() ? `<p class="err">${esc(micMessage())}</p>` : ""}<div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; if (onCallChange) onCallChange(); return; }
     if (mode === "ringing") { paint($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); dockEl.querySelector("#vj").onclick = join; dockEl.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
     const rec = !!mr;
     const recording = rec || peerRecording;

@@ -89,7 +89,7 @@ Roughly in priority order.
 - [ ] Group calls (currently one to one). The call is a floating widget (`callDock`, `voiceSitting`) that persists across tabs; the host steers questions from Sit.
 - [x] Save captured audio on hangup, peer-channel closure, call failure or a sustained disconnection; show recording state on both phones.
 - [ ] Reconnect handling and keeping the call alive when the phone locks (requires real-device testing).
-- [ ] Test on real iPhone and Android devices.
+- [ ] Test on real iPhone and Android devices. Known: in-app browsers (X, Instagram, Facebook) cannot use the microphone; the app detects them (`inAppBrowser` in `js/call.js`) and says to open the link in Safari or Chrome.
 - [ ] Optional: "Start a call" buttons that open WhatsApp or FaceTime to invite someone (links only; those calls can't be recorded).
 
 **Transcription**
@@ -100,7 +100,8 @@ Roughly in priority order.
 **Game feel**
 - [x] Each tab is its own player in a room (`roomPid`, `claimRoom` in `js/online.js`), so two tabs on one device are two people.
 - [x] Soft sound and a buzz on your turn, a fanfare on a win, emoji reactions between phones, Play again, and a Sound on/off toggle (`js/feel.js`).
-- [ ] Dice and token animations, per-game victory moments, and a "Your turn" nudge for backgrounded phones.
+- [x] Ludo dice tumble and tokens hop square by square, local and online (`js/ludo-motion.js`).
+- [ ] Per-game victory moments, Whot and Ayo motion, and a "Your turn" nudge for backgrounded phones.
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
 
 **Make tab**

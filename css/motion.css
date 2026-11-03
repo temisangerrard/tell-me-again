@@ -36,3 +36,7 @@
 .float-react span { font-size:2rem; } .float-react small { font-size:.7rem; color:var(--muted); }
 @keyframes floatup { from { transform:translateY(0); opacity:1; } to { transform:translateY(-180px); opacity:0; } }
 @media (prefers-reduced-motion:reduce) { .float-react { animation:none; opacity:0; } }
+
+/* dice */
+.roll.tumble { animation:tumble .6s var(--ease-out); }
+@keyframes tumble { 0% { transform:rotate(0) scale(.85); } 25% { transform:rotate(-24deg) scale(1.1); } 50% { transform:rotate(20deg) scale(1.04); } 75% { transform:rotate(-10deg) scale(1.02); } 100% { transform:none; } }

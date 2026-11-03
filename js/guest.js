@@ -25,7 +25,7 @@ function guestScreen(code) {
   const el = $(`<section class="guest"><div class="mark"><i></i>Tell me again</div><h1 class="display" style="font-size:clamp(2.8rem,14vw,4.2rem)">You're invited.</h1>
     <p class="sub">Room <b style="color:var(--accent);letter-spacing:.1em">${esc(code)}</b></p>
     <label class="field"><span class="lbl">Your name</span><input class="inp" id="gn" type="text" maxlength="30" autocomplete="off" value="${esc(saved)}" placeholder="What should they call you?"></label>
-    <button class="cta" id="gj" type="button" style="margin-top:24px">Join the room</button><p class="err" id="ge" role="status"></p></section>`);
+    <button class="cta" id="gj" type="button" style="margin-top:24px">Join the room</button><p class="err" id="ge" role="status">${inAppBrowser() ? esc("To talk, open this link in Safari or Chrome. This app's browser can't use the microphone.") : ""}</p></section>`);
   app.append(el);
   const leave = () => { history.replaceState(null, "", location.pathname); render(); };
   el.querySelector("#gj").onclick = async () => {

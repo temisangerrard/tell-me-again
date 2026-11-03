@@ -17,7 +17,7 @@ function mountOnlineGame(kind, box, send, st, note) {
     const el = $(`<div class="ludo"><div class="bar2"><div class="turn"><i></i><b></b></div></div><div class="boardwrap"><svg viewBox="0 0 15 15" role="group" aria-label="Ludo board">${boardSVG()}<g class="toks"></g></svg></div>
       <div class="dicebar"><button class="roll" type="button" aria-label="Roll the dice"></button><div class="rollmsg" role="status"></div></div><div class="ov"></div></div>`);
     box.append(el);
-    const toks = el.querySelector(".toks"), roll = el.querySelector(".roll"); let tokEls = null, cur = null, seat = -1;
+    const toks = el.querySelector(".toks"), roll = el.querySelector(".roll"); let tokEls = null, cur = null, seat = -1, prevDice, lastKey;
     roll.onclick = () => act({ a: "roll" });
     return { update(g) {
       const v = g.v; cur = v; seat = g.seat;
@@ -33,11 +33,14 @@ function mountOnlineGame(kind, box, send, st, note) {
       const at = {}; v.pl.forEach((p) => p.t.forEach((q, i) => { if (q >= 0 && q < 56) (at[p.k + ":" + q] = at[p.k + ":" + q] || []).push(i); }));
       v.pl.forEach((p, pi) => p.t.forEach((q, i) => {
         const grp = q >= 0 && q < 56 ? at[p.k + ":" + q] : null, [x, y, sc] = tokPos(p.k, q, grp ? grp.indexOf(i) : i, grp ? grp.length : 1);
-        const t = tokEls[pi][i]; t.style.transform = `translate(${x}px,${y}px) scale(${sc})`;
+        const t = tokEls[pi][i]; placeTok(t, p.k, q, grp ? grp.indexOf(i) : i, grp ? grp.length : 1);
         const can = v.over === null && seat === v.turn && pi === v.turn && v.movable.includes(i); t.classList.toggle("go", can); t.tabIndex = can ? 0 : -1;
       }));
       const face = v.dice !== null ? v.dice : v.last ? v.last.d : null;
-      roll.innerHTML = face ? diceHTML(face) : `<span class="rl">Roll</span>`; roll.disabled = !(v.over === null && seat === v.turn && v.dice === null);
+      const lk = JSON.stringify(v.last), rolled = prevDice === undefined ? null : v.dice !== null && prevDice === null ? v.dice : v.dice === null && lk !== lastKey && v.last && v.last.d ? v.last.d : null;
+      prevDice = v.dice; lastKey = lk;
+      if (rolled) tumbleDice(roll, rolled); else roll.innerHTML = face ? diceHTML(face) : `<span class="rl">Roll</span>`;
+      roll.disabled = !(v.over === null && seat === v.turn && v.dice === null);
       el.querySelector(".rollmsg").innerHTML = `${esc(v.msg)}`;
       const ov = el.querySelector(".ov"); ov.replaceChildren(); if (v.over !== null) { const w = over(g); ov.append(w); wire(w, () => send({ t: "stop" })); }
     } };
