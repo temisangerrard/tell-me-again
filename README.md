@@ -45,6 +45,7 @@ npx wrangler deploy
 - No build step. Keep `index.html` (inline CSS and JS) plus `questions.js`, `engines.js`, `sw.js`, `manifest.json`. Don't add a framework or bundler.
 - Never use the word "motto" in the UI (the field is "A saying your family lives by"). Write "onchain" if it ever comes up, not "on-chain".
 - Don't localise the app: no `.ng`, no single-ethnicity art or copy. Heritage is optional and neutral.
+- Copy: if a string isn't needed, delete it. No taglines, helper text or captions that restate a label, defend a choice or calm a worry. Keep only a real consequence at the moment of choosing, a scope or compatibility fact, what an empty state means and what to do next, and units on bare values. If a screen needs explaining, fix the layout. Cut whole clauses, don't reword them. Target: Linear's site, Apple Notes.
 - Anti-slop: human copy, no illustrated faces, flat cards. White is the default theme; warm and night are options. Accent colours must pass contrast (`onAccent()`).
 - **No audio is stored on our servers.** Audio is sent for transcription and discarded; recordings and text live on the user's device. Cloud storage is a future *paid* feature, not a default.
 - Anything that sends audio or data off the device needs explicit consent first (`grantConsent` / `withdrawConsent`, notice in `privacySheet`). Bump `PRIVACY_V` when the notice changes.

@@ -600,9 +600,9 @@ const ICON = {
   make: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.2 5.3 5.8.5-4.4 3.8 1.4 5.6L12 15l-5 3.2 1.4-5.6L4 8.8l5.8-.5z"/></svg>`
 };
 const MAKES = [
-  ["magazine", "Magazine", "Portraits, recipes and the stories behind them", ICON.mag],
-  ["storybook", "Storybook", "Your family's tales, illustrated for the kids", ICON.book],
-  ["short", "Animated short", "A short film starring your family", ICON.film]
+  ["magazine", "Magazine", "", ICON.mag],
+  ["storybook", "Storybook", "", ICON.book],
+  ["short", "Animated short", "", ICON.film]
 ];
 
 /* ---------- shell ---------- */
@@ -616,7 +616,7 @@ const THEME_BG = { white: "#fcfcfa", warm: "#fbf5ec", night: "#0b0b0c" };
 const getTheme = () => { const t = lsGet("sitting-theme"); return THEMES.some(([k]) => k === t) ? t : "white"; };
 function applyTheme(t = getTheme()) { document.documentElement.dataset.theme = t; const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = THEME_BG[t]; }
 function themePicker() {
-  const body = $(`<div><h2>Pick a look</h2><p class="hint" style="margin-top:6px">Changes the whole app. You can switch any time.</p><div class="picks"></div></div>`);
+  const body = $(`<div><h2>Pick a look</h2><div class="picks"></div></div>`);
   const draw = () => { const cur = getTheme(); body.querySelector(".picks").replaceChildren(...THEMES.map(([k, n, d]) => {
     const prev = { white: ["#fcfcfa", "#f3f3f0", "#1d1d1f"], warm: ["#fbf5ec", "#f4eadb", "#3b2a22"], night: ["#0b0b0c", "#1f1f22", "#f4f3e8"] }[k];
     const b = $(`<button class="pick" type="button" aria-pressed="${k === cur}"><span class="ico" style="background:${prev[0]};box-shadow:inset 0 0 0 1.5px #8884"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="5" rx="2.5" fill="${prev[1]}"/><rect x="3" y="13" width="12" height="4" rx="2" fill="${prev[2]}"/></svg></span><span><b>${n}</b><span class="d">${d}</span></span></button>`);
@@ -658,47 +658,45 @@ function welcome() {
     <div class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></div>
     <div class="hero2">
       <h1 class="display">Tell me again.</h1>
-      <p class="sub">Your family already has the stories. This is where you write them down, while someone is still around to say that's not how it happened.</p>
-      <div class="row"><button class="cta" id="go" type="button">Start a family</button><button class="alt" id="si2" type="button">I already have an account</button></div><p class="fine" style="margin-top:14px;max-width:none">Free. No account needed to start. Nothing leaves your phone until you invite someone.</p>
+      <p class="sub">Record your family's stories, one question at a time.</p>
+      <div class="row"><button class="cta" id="go" type="button">Start a family</button></div>
     </div>
     <div class="rside">
       <div class="pieces" aria-hidden="true">
-        <div class="pc mag"><small>Issue 01</small><b>The ${esc(f)} issue</b><span>Portraits, recipes, and the stories behind them.</span></div>
-        <div class="pc book"><small>Page 3</small><p>${esc(q)}</p><i>Their answer, in their own words.</i></div>
+        <div class="pc mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>
+        <div class="pc book"><small>Page 3</small><p>${esc(q)}</p></div>
         <div class="pc film"><small style="margin-left:46px;margin-top:6px">A short film</small><b>The ${esc(f)} short</b></div>
       </div>
-      <p class="fine">What you end up with. Made from your own questions and answers.</p>
+      
     </div>
     <ol class="how">
-      <li><b>Pull up a chair.</b><span>Send a link. The elder just taps it, no app and no account.</span></li>
-      <li><b>Ask one good question.</b><span>We hand you the question. You press record.</span></li>
-      <li><b>Play something while it sinks in.</b><span>Ludo, Ayo or Whot, each on their own phone.</span></li>
-      <li><b>Keep it.</b><span>By the end of the season: a magazine, a storybook, or a short film.</span></li>
+      <li><b>Send a link</b></li>
+      <li><b>Ask a question</b></li>
+      <li><b>Play a game</b></li>
+      <li><b>Keep it</b></li>
     </ol><div class="more">
-      <div class="blk" style="margin-top:0"><h2>One table. Three ways to keep it.</h2>
+      <div class="blk" style="margin-top:0">
         <div class="trio">
-          <div><b>Sit</b><p>One good question at a time, with follow-ups ready for when the answer goes somewhere interesting. Press record and let them talk.</p></div>
-          <div><b>Play</b><p>Ludo, Ayo and Whot, each on their own phone. People open up more when their hands are busy.</p></div>
-          <div><b>Make</b><p>A magazine cover, a storybook, a short film. Built from their words, the way they said them.</p></div>
+          <div><b>Sit</b><p>Record one question at a time.</p></div>
+          <div><b>Play</b><p>Ludo, Ayo and Whot together.</p></div>
+          <div><b>Make</b><p>A magazine, storybook or short film.</p></div>
         </div></div>
-      <div class="blk"><h2>Far away? Pull up a chair anyway.</h2>
-        <p class="lead">Send a link. They tap it and you're on a voice call inside the app, with the question on both screens. Your phone records the answer. No other app to install.</p></div>
-      <div class="blk"><h2>Their stories stay theirs.</h2>
+      <div class="blk"><h2>Sit from anywhere</h2><p class="lead">Voice call in the app. Your phone records.</p></div>
+      <div class="blk"><h2>Private</h2>
         <ul class="promise">
-          <li><b>Recordings live on your phone</b><span>We don't keep a copy on our servers.</span></li>
-          <li><b>Turning speech into text is your call</b><span>We ask first. The audio is sent, the words come back, and it isn't kept.</span></li>
-          <li><b>No ads, no tracking</b><span>No cookies and no analytics.</span></li>
-          <li><b>Delete everything in one tap</b><span>Or download it all first.</span></li>
+          <li><b>Recordings stay on your phone</b></li>
+          <li><b>Speech to text only if you ask</b></li>
+          <li><b>No ads, no tracking</b></li>
+          <li><b>Delete everything in one tap</b></li>
         </ul></div>
       <div class="blk"><h2>Questions people ask</h2>
         <div class="faq">
-          <details><summary>Does my grandmother need an app or an account?</summary><p>No. She taps the link you send and she's in. You do the rest on your phone.</p></details>
-          <details><summary>What if they don't speak English?</summary><p>Record in whatever language they like. Turning it into text works for English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili, and it does better with names you've added in Family.</p></details>
-          <details><summary>What does it cost?</summary><p>Using it is free. Keeping your recordings safe in the cloud, so you can lose a phone without losing a grandfather's voice, will be a paid extra later. Nothing is stored there by default.</p></details>
-          <details><summary>Who can hear the recordings?</summary><p>Whoever has the phone they're saved on. We can't, because they never reach us.</p></details>
-          <details><summary>Who makes this?</summary><p>Settley Studio, run by Temisan Agbajoh. Questions: ${PRIVACY_MAIL}.</p></details>
+          <details><summary>Do they need an app or account?</summary><p>No. She taps your link.</p></details>
+          <details><summary>What if they don't speak English?</summary><p>Record in any language. Text works for English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili.</p></details>
+          <details><summary>What does it cost?</summary><p>Free. Cloud backup will be a paid extra later.</p></details>
+          <details><summary>Who makes this?</summary><p>Settley Studio. ${PRIVACY_MAIL}</p></details>
         </div></div>
-      <div class="endcta"><h2>Someone's still around to ask.</h2><button class="cta" id="go2" type="button">Start a family</button></div>
+      <div class="endcta"><button class="cta" id="go2" type="button">Start a family</button></div>
       <div class="foot"><span>Made by Settley Studio</span><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}" style="color:inherit">Contact</a></div>
     </div></section>`);
   host.append(el);
@@ -713,22 +711,21 @@ function authScreen(mode = "up") {
   app.className = "app"; app.replaceChildren();
   const el = $(`<section class="authwrap">
     <div class="top"><button class="back" id="ab" aria-label="Back" type="button">${ICON.back}</button></div>
-    <h1 id="ah"></h1><p class="sub" id="as"></p>
+    <h1 id="ah"></h1>
     <div class="seg" role="group" aria-label="Create an account or sign in"><button type="button" data-m="up" aria-pressed="false">Create account</button><button type="button" data-m="in" aria-pressed="false">Sign in</button></div>
     <label class="field" id="ef"><span class="lbl">Email</span><input class="inp sm" id="em" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com"></label>
-    <label class="field" id="cf" hidden><span class="lbl">The 6-digit code we emailed you</span><input class="inp" id="cd" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"></label>
+    <label class="field" id="cf" hidden><span class="lbl">Code</span><input class="inp" id="cd" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"></label>
     <button class="cta" id="go" type="button">Email me a code</button>
     <button class="btn ghost" id="pk" type="button" disabled>Use a passkey</button>
-    <button class="btn ghost" id="skip" type="button" style="color:var(--muted)">Keep going without an account</button>
+    <button class="btn ghost" id="skip" type="button" style="color:var(--muted)">Continue without an account</button>
     <p class="msg" id="mg" role="status"></p>
-    <p class="legal">We only use your email to sign you in. See the <button type="button" id="pv">privacy notice</button>.</p></section>`);
+    <p class="legal">By continuing you accept the <button type="button" id="pv">privacy notice</button>.</p></section>`);
   app.append(el); host = app;
   const $e = (i) => el.querySelector(i), msg = (t, bad) => { $e("#mg").textContent = t; $e("#mg").className = "msg" + (bad ? " bad" : ""); };
   let step = "email";
   const paint = () => {
-    $e("#ah").textContent = mode === "up" ? "Keep your family's stories safe." : "Welcome back.";
-    $e("#as").textContent = mode === "up" ? "An account lets you get your family back on a new phone and, later, back up recordings. You never need one to start." : "We'll email you a code. No password to remember.";
-    el.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === mode));
+    $e("#ah").textContent = mode === "up" ? "Create your account" : "Sign in";
+        el.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === mode));
     $e("#cf").hidden = step === "email"; $e("#go").textContent = step === "email" ? "Email me a code" : "Check the code";
   };
   el.querySelectorAll(".seg button").forEach((b) => b.onclick = () => { mode = b.dataset.m; step = "email"; msg(""); paint(); });
@@ -741,7 +738,7 @@ function authScreen(mode = "up") {
       const r = await fetch(step === "email" ? "/api/auth/start" : "/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, code: $e("#cd").value.trim(), mode }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) msg(j.error || "Something went wrong. Try again.", true);
-      else if (step === "email") { step = "code"; paint(); msg("Check your inbox. The code lasts 10 minutes."); $e("#cd").focus(); }
+      else if (step === "email") { step = "code"; paint(); msg("Code sent."); $e("#cd").focus(); }
       else render();
     } catch { msg("We couldn't reach the server. Check your connection.", true); }
     b.disabled = false;
@@ -750,20 +747,20 @@ function authScreen(mode = "up") {
 }
 
 function nameStep() {
-  const el = screen(1, "What's your family called?", "A surname, or whatever everyone calls you.", `
+  const el = screen(1, "What's your family called?", "", `
     <label class="field"><span class="lbl">Family name</span>
       <input class="inp" id="name" type="text" maxlength="40" autocomplete="off" enterkeyhint="next" value="${esc(S.name)}" placeholder="e.g. ${pick(SUR)}"></label>
     <label class="field"><span class="lbl">A saying your family lives by <small>(optional)</small></span>
       <input class="inp sm" id="saying" type="text" maxlength="90" autocomplete="off" enterkeyhint="next" value="${esc(S.saying)}" placeholder="The one your mum always says"></label>
-    <p class="hint">A proverb, a catchphrase, something everyone can finish for you. Skip it if nothing comes to mind.</p>`);
+    `);
   const sync = () => { S.name = el.querySelector("#name").value.trim(); S.saying = el.querySelector("#saying").value.trim(); save(); el.querySelector("#n").disabled = !famName(S.name); };
   el.querySelectorAll("input").forEach((i) => i.oninput = sync); sync(); enterNext(el, () => go(2));
 }
 
 function colorStep() {
-  const el = screen(2, "Pick your colour", "It follows your family across everything you make.", `
+  const el = screen(2, "Pick your colour", "", `
     <div class="preview"><div class="tile xl">${esc(initial(famName(S.name) || "?"))}</div>
-      <div style="min-width:0"><div class="nm">${esc(famName(S.name) || "Your family")}</div><div class="sg">${S.saying ? esc(S.saying) : "Tell Me Again"}</div></div></div>
+      <div style="min-width:0"><div class="nm">${esc(famName(S.name) || "Your family")}</div><div class="sg">${esc(S.saying)}</div></div></div>
     <div class="swatches" role="group" aria-label="Family colour"></div>`);
   const box = el.querySelector(".swatches");
   COLORS.forEach(([v, l]) => {
@@ -775,10 +772,10 @@ function colorStep() {
 }
 
 function startStep() {
-  const el = screen(3, "Where does your story start?", "Skip anything you don't know. We only use this to suggest better questions.", `
+  const el = screen(3, "Where does your story start?", "", `
     <label class="field"><span class="lbl">Town or city your people come from</span>
       <input class="inp sm" id="town" type="text" maxlength="60" autocomplete="off" enterkeyhint="done" value="${esc(S.town)}" placeholder="e.g. ${pick(PLACE)}"></label>
-    <div class="field"><span class="lbl" id="hl">Heritage <small>(pick any that apply)</small></span>
+    <div class="field"><span class="lbl" id="hl">Heritage</span>
       <div class="chips" id="hc" role="group" aria-labelledby="hl"></div></div>
     <label class="field"><span class="lbl">Not listed? Add your own</span>
       <input class="inp sm" id="own" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Type it and press Enter"></label>`);
@@ -798,7 +795,7 @@ function heritageUI(box, own) { // chips for any that apply, plus an "add your o
 }
 
 function makeStep() {
-  const el = screen(4, "What do you want to make?", "Pick any. Every story you record feeds whatever you choose.", `<div class="picks"></div>`);
+  const el = screen(4, "What do you want to make?", "", `<div class="picks"></div>`);
   const box = el.querySelector(".picks");
   MAKES.forEach(([id, t, d, ic]) => {
     const b = $(`<button class="pick" type="button"><span class="ico">${ic}</span><span><b>${t}</b><span class="d">${d}</span></span></button>`);
@@ -809,7 +806,7 @@ function makeStep() {
 }
 
 function topicsStep() {
-  const el = screen(5, "What do you want to know about?", "Pick the topics for this season. You can change them later.", `<div class="chips" id="ch" role="group" aria-label="Topics"></div>`);
+  const el = screen(5, "What do you want to know about?", "", `<div class="chips" id="ch" role="group" aria-label="Topics"></div>`);
   const box = el.querySelector("#ch"), n = el.querySelector("#n");
   CHAPTERS.forEach((ch) => {
     const b = $(`<button class="chip" type="button" title="${esc(ch.blurb)}">${esc(ch.label)}</button>`);
@@ -821,14 +818,14 @@ function topicsStep() {
 }
 
 function inviteStep() {
-  const el = screen(6, "Who's at the first sitting?", "Up to four seats. Your storyteller doesn't need an account, just a link or a phone call.", `
+  const el = screen(6, "Who's at the first sitting?", "", `
     <label class="field"><span class="lbl">Your name</span>
       <input class="inp" id="me" type="text" maxlength="30" autocomplete="off" enterkeyhint="next" value="${esc(S.me.name)}" placeholder="What do they call you?"></label>
     <label class="field"><span class="lbl">Your storyteller</span>
       <input class="inp" id="en" type="text" maxlength="40" autocomplete="off" enterkeyhint="next" value="${esc(S.elder.name)}" placeholder="e.g. Grandma, Papa, Aunty Ese"></label>
     <label class="field"><span class="lbl">Year they were born</span>
       <input class="inp sm" id="eb" type="text" inputmode="numeric" autocomplete="off" value="${esc(S.elder.born)}" placeholder="e.g. 1950"></label>
-    <p class="hint">It helps us find the moments they'll remember best.</p>
+    
     <label class="field"><span class="lbl">Others joining <small>(one name per line, up to two)</small></span>
       <textarea class="inp" id="others" rows="2" maxlength="120">${esc(S.seats.slice(2).join("\n"))}</textarea></label>`, "Open the room");
   const sync = () => {
@@ -870,7 +867,7 @@ const PRIVACY_V = "2026-11-03", PRIVACY_MAIL = "temisan@settley.co";
 function grantConsent(k) { S.consent[k] = true; S.consent[k + "At"] = Date.now(); S.consent.v = PRIVACY_V; delete S.consent[k + "Off"]; save(); }
 function withdrawConsent(k) { S.consent[k] = false; S.consent[k + "Off"] = Date.now(); save(); }
 function privacySheet() {
-  const b = $(`<div><h2>Privacy</h2><p class="hint" style="margin-top:6px">Version ${PRIVACY_V}. Plain words, not a wall of legal text.</p>
+  const b = $(`<div><h2>Privacy</h2><p class="hint" style="margin-top:6px">Version ${PRIVACY_V}</p>
     <h3 class="ph">Who's responsible</h3><p class="para">Tell Me Again is made by Settley Studio, run by Temisan Agbajoh, which is responsible for any information described here. Write to <a href="mailto:${PRIVACY_MAIL}">${PRIVACY_MAIL}</a> for anything below.</p>
     <h3 class="ph">What we hold</h3><p class="para"><b>On your device:</b> your family details, recordings, written-out words and game wins. We never see these.<br><b>In a game room you create:</b> first names and game moves, erased after a day of quiet.<br><b>If you turn a recording into text:</b> that audio is sent to Cloudflare's speech-to-text service and the words come back. Cloudflare says it keeps no data from this service, and we don't keep the audio.</p>
     <h3 class="ph">Why, and your say</h3><p class="para">Recordings of a person's voice and what they say about health, faith, family and history can be sensitive. So we only send audio anywhere after you say yes, and you can say no and still use everything else. Say yes again or withdraw any time under Family. Only record people who know and are happy about it.</p>
@@ -884,8 +881,7 @@ function privacySheet() {
 function askTxConsent() {
   return new Promise((res) => {
     const b = $(`<div><h2>Turn recordings into text?</h2>
-      <p class="para" style="margin-top:10px">We'll send the audio to Cloudflare's speech-to-text service, which sends back the words. Cloudflare says this service keeps no data, and we don't keep the audio either. The recording itself stays on this device.</p>
-      <p class="para">It gets names and places wrong sometimes, so you'll be able to fix the words. You can turn this off any time under Family. <a href="#" id="pv">How we handle your information</a></p>
+      <p class="para" style="margin-top:10px">The audio goes to Cloudflare's speech-to-text service and the words come back. Neither of us keeps the audio. Turn it off any time under Family. <a href="#" id="pv">Privacy</a></p>
       <button class="cta" id="ok" type="button" style="margin-top:20px">Yes, turn it into text</button>
       <button class="btn" id="no" type="button" style="width:100%;margin-top:8px;background:transparent;color:var(--muted)">Not now</button></div>`);
     let done = false; const close = sheet("Turn recordings into text?", b);
@@ -948,7 +944,7 @@ function renderFamily(box) {
       b.onclick = () => { if (isOn(id) && min && items.filter(([k]) => isOn(k)).length <= min) return; toggle(id); b.setAttribute("aria-pressed", isOn(id)); save(); }; w.querySelector(".chips").append(b); });
   };
 
-  const you = sec("You", "How you show up at the table and in rooms.");
+  const you = sec("You");
   field(you, "Your name", S.me.name, { max: 30, ph: "What do they call you?", on: (v) => { S.me.name = v; reseat(); if (v) lsSet("sitting-name", v); } });
 
   const fam = sec("The family");
@@ -958,13 +954,13 @@ function renderFamily(box) {
   const sw = $(`<div class="field"><span class="lbl">Family colour</span><div class="swatches" role="group" aria-label="Family colour"></div></div>`); fam.append(sw);
   COLORS.forEach(([v, l]) => { const b = $(`<button class="sw" type="button" aria-label="${l}" title="${l}" style="background:${v}"></button>`); b.setAttribute("aria-pressed", S.color === v);
     b.onclick = () => { S.color = v; sw.querySelectorAll(".sw").forEach((x) => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); applyColor(); save(); paintHead(); }; sw.querySelector(".swatches").append(b); });
-  const hc = $(`<div class="field"><span class="lbl">Heritage <small>(any that apply)</small></span><div class="chips"></div></div>`);
+  const hc = $(`<div class="field"><span class="lbl">Heritage</span><div class="chips"></div></div>`);
   const own = $(`<label class="field"><span class="lbl">Not listed? Add your own</span><input class="inp sm" type="text" maxlength="40" autocomplete="off" placeholder="Type it and press Enter"></label>`);
   fam.append(hc, own); heritageUI(hc.querySelector(".chips"), own.querySelector("input"));
   chipGroup(fam, "Topics to ask about", CHAPTERS.map((c) => [c.id, c.label]), (id) => S.chapters.includes(id), (id) => { S.chapters = S.chapters.includes(id) ? S.chapters.filter((x) => x !== id) : [...S.chapters, id]; }, 1);
   chipGroup(fam, "What you're making", MAKES.map(([id, t]) => [id, t]), (id) => S.makes.includes(id), (id) => { S.makes = S.makes.includes(id) ? S.makes.filter((x) => x !== id) : [...S.makes, id]; });
 
-  const tbl = sec("At the table", "Up to four seats.");
+  const tbl = sec("At the table");
   field(tbl, "Your storyteller", S.elder.name, { max: 40, ph: "e.g. Grandma, Papa, Aunty Ese", on: (v) => { S.elder.name = v; reseat(); } });
   field(tbl, "Year they were born", S.elder.born, { max: 4, ph: "e.g. 1950", on: (v, i) => { i.value = i.value.replace(/\D/g, "").slice(0, 4); S.elder.born = i.value; } });
   const ot = $(`<label class="field"><span class="lbl">Others joining <small>(one name per line, up to two)</small></span><textarea class="inp" rows="2" maxlength="120">${esc(S.seats.slice(2).join("\n"))}</textarea></label>`); tbl.append(ot);
@@ -975,19 +971,19 @@ function renderFamily(box) {
   season.append($(`<ul class="facts"><li><span>Sittings done</span><b>${S.sittings.length} of ${SEASON}</b></li><li><span>Weeks running</span><b>${st}</b></li><li><span>Stories told</span><b>${S.told}</b></li><li><span>Games won</span><b>${totalWins()}</b></li></ul>`));
   const lb = leaderboard(); if (lb) season.append(lb);
 
-  const recs = sec("Recordings", "Kept on this device only.");
+  const recs = sec("Recordings");
   recs.append($(`<ul class="facts"><li><span>On this device</span><b>${clips.length} · ${fmtDur(clipTotal())}</b></li></ul>`));
   if (clips.length) { const d = $(`<button class="btn" type="button" style="margin-top:12px">Delete all recordings</button>`);
     d.onclick = async () => { if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
     recs.append(d); }
 
-  const trs = sec("Turning recordings into text", "Optional. Off until you say yes.");
+  const trs = sec("Turning recordings into text");
   const lang = $(`<label class="field"><span class="lbl">Language they speak</span><select class="inp sm" id="lang"></select></label>`);
   TX_LANGS.forEach(([v, l]) => lang.querySelector("select").append(new Option(l, v, false, S.lang === v)));
   lang.querySelector("select").onchange = (e) => { S.lang = e.target.value; save(); };
   const hint = $(`<label class="field"><span class="lbl">Names and places they might mention</span><input class="inp sm" id="hints" type="text" maxlength="120" autocomplete="off" value="${esc(S.hints || "")}" placeholder="e.g. Ogbomoso, Aunty Folake, Chidi"></label>`);
   hint.querySelector("input").oninput = (e) => { S.hints = e.target.value; save(); };
-  trs.append(lang, hint, $(`<p class="para">We can't reliably handle Igbo or Nigerian Pidgin yet. Detecting automatically does its best, and you can always edit the words.</p>`));
+  trs.append(lang, hint, $(`<p class="para">Igbo and Nigerian Pidgin aren't supported yet.</p>`));
   const at = $(`<div class="rule"><div class="t"><b>Turn each recording into text automatically</b><span>Sends the audio for transcription as soon as it's saved.</span></div><button class="tg" type="button" role="switch" aria-label="Turn each recording into text automatically" aria-checked="${S.autoTx && S.consent.transcribe}"></button></div>`);
   at.querySelector(".tg").onclick = async (e) => { const sw = e.currentTarget; if (!S.autoTx || !S.consent.transcribe) { if (!S.consent.transcribe && !(await askTxConsent())) return; S.autoTx = true; } else S.autoTx = false; save(); sw.setAttribute("aria-checked", S.autoTx); };
   trs.append(at);
@@ -998,8 +994,7 @@ function renderFamily(box) {
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
 
   const data = sec("Your information");
-  data.append($(`<p class="para">Your family details, recordings, written-out words and wins live on this device. A room you create holds only names and game moves, and it's erased after a day of quiet. If you choose to turn a recording into text, that one recording is sent to Cloudflare's speech service to get the words back; it isn't kept. There's no account yet, so there's nothing to sign in to and nothing stored about you elsewhere.</p>`));
-  const dl = $(`<button class="btn" type="button" style="margin-top:12px">Download my information</button>`);
+    const dl = $(`<button class="btn" type="button" style="margin-top:12px">Download my information</button>`);
   dl.onclick = () => {
     const out = { app: "Tell Me Again", exportedAt: new Date().toISOString(), family: S, recordings: clips.map((c) => ({ question: c.q, recordedAt: new Date(c.at).toISOString(), seconds: c.dur, words: c.text || null, wordsBy: c.text ? c.tx : null })), note: "Audio files can be saved one by one from the Recorded list on the Sit tab." };
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" })); a.download = "tell-me-again-my-information.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
@@ -1010,7 +1005,7 @@ function renderFamily(box) {
   data.append(dl, $(`<br>`), pv, $(`<br>`), del);
 
   const about = sec("About");
-  about.append($(`<p class="para">Tell Me Again, early prototype. Type is Bricolage Grotesque and Barlow Condensed, both under the SIL Open Font License. Every question is written by a person; nothing here makes up anyone's history.</p>`));
+  about.append($(`<p class="para">Tell Me Again by Settley Studio</p>`));
 }
 
 const ROLES = ["Asker", "Storyteller", "Witness", "Witness"];
@@ -1025,7 +1020,7 @@ function nextQuestion() {
 // Sit down together, then wrap up: a ten-second note on how it went. This is what counts as a sitting.
 function wrapUp(after) {
   let r = null; const tags = [];
-  const body = $(`<div><h2>How did that sitting go?</h2><p class="hint" style="margin-top:8px">A quick note so you can look back on it.</p>
+  const body = $(`<div><h2>How did that sitting go?</h2>
     <div class="thumbs"><button class="thumb" type="button" data-r="up" aria-pressed="false">Good one</button><button class="thumb" type="button" data-r="down" aria-pressed="false">Tough one</button></div>
     <div class="chips" role="group" aria-label="What was it like?"></div>
     <button class="cta" id="sv" type="button" style="margin-top:24px" disabled>Save this sitting</button>
@@ -1120,7 +1115,7 @@ function renderSitting(box, msg) {
     <div class="q">${q ? esc(q.q) : "That's every question we have for these topics. Add more topics under Family."}</div>
     ${q && q.tip ? `<p class="tip">${esc(q.tip)}</p>` : ""}
     ${q && q.sensitive ? `<p class="warn">This one can bring up hard memories. Check they're happy to go there, and let them skip it.</p>` : ""}
-    ${q ? `<p class="hint" id="fuh">If they go quiet, try:</p><div class="fus" role="group" aria-labelledby="fuh"></div>` : ""}
+    ${q ? `<p class="hint" id="fuh">If they go quiet</p><div class="fus" role="group" aria-labelledby="fuh"></div>` : ""}
     <button class="cta" id="rec" type="button">Record the answer</button>
     <p class="rs" id="rs" role="status"></p>
     <button class="btn skip" id="skip" type="button"${q ? "" : " disabled"}>Skip this question</button></div>`);
@@ -1129,7 +1124,7 @@ function renderSitting(box, msg) {
   table.append(w); box.append(table);
 
   const rec = w.querySelector("#rec"), rs = w.querySelector("#rs"), skip = w.querySelector("#skip"), role = seatEls[1].querySelector(".role");
-  rs.textContent = msg || "Press record when they're ready. It stays on this device.";
+  rs.textContent = msg || "";
   // The ring means "someone is speaking", so it follows the recording.
   const setLive = (on) => { seatEls[1].classList.toggle("speaking", on); role.textContent = on ? "Speaking" : ROLES[1]; rec.textContent = on ? "Stop" : "Record the answer"; skip.disabled = on || !q; };
   if (live) { setLive(true); rs.textContent = "Recording…"; }
@@ -1168,9 +1163,9 @@ function renderSitting(box, msg) {
   const born = parseInt(S.elder.born, 10); // era anchors: ages ~10–30 are where memory is richest
   if (born > 1900 && born <= new Date().getFullYear()) {
     const hits = ERAS.filter((e) => e.y >= born + 10 && e.y <= born + 30);
-    const era = $(`<section><h2 class="sec">What was happening</h2><p class="hint" style="margin:4px 0 0">When ${esc(S.elder.name)} was 10 to 30. Try: "Where were you when this happened?"</p><ul class="eras2"></ul></section>`);
+    const era = $(`<section><h2 class="sec">What was happening</h2><p class="hint" style="margin:4px 0 0">${esc(S.elder.name)} at 10 to 30</p><ul class="eras2"></ul></section>`);
     if (hits.length) hits.forEach((e) => era.querySelector(".eras2").append($(`<li><b>${e.y}</b><span>${esc(e.t)}</span><em>${e.y - born} years old</em></li>`)));
-    else era.querySelector(".eras2").replaceWith($(`<p class="hint">Nothing in our timeline for those years yet.</p>`));
+    else era.querySelector(".eras2").replaceWith($(`<p class="hint">Nothing for those years.</p>`));
     box.append(era);
   }
   const wu = $(`<button class="btn wide" type="button">Finish this sitting</button>`);
@@ -1186,9 +1181,9 @@ const BADGES = [
 function renderMake(box) {
   const done = S.told, f = famName(S.name), NEED = 5, got = Math.min(done, NEED);
   const kinds = {
-    magazine: { thumb: `<div class="thumb mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>`, d: "Portraits, recipes, and the stories behind them." },
-    storybook: { thumb: `<div class="thumb book"><small>Storybook</small><b>${esc(f)} family tales</b><i></i><i></i></div>`, d: "Stories your kids will ask to hear again." },
-    short: { thumb: `<div class="thumb film"><b style="margin-top:auto">The ${esc(f)} short</b></div>`, d: "A short animated film, voiced by your family." }
+    magazine: { thumb: `<div class="thumb mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>`, d: "" },
+    storybook: { thumb: `<div class="thumb book"><small>Storybook</small><b>${esc(f)} family tales</b><i></i><i></i></div>`, d: "" },
+    short: { thumb: `<div class="thumb film"><b style="margin-top:auto">The ${esc(f)} short</b></div>`, d: "" }
   };
   box.replaceChildren($(`<h1 class="title">Make something</h1>`),
     $(`<div><p class="lede"><b>${done}</b>${done === 1 ? "story" : "stories"} told. ${done >= NEED ? "That's enough for a first issue." : `${NEED - done} more makes a first issue.`}</p>
@@ -1196,7 +1191,7 @@ function renderMake(box) {
   const list = $(`<ul class="works"></ul>`);
   MAKES.forEach(([id, label]) => {
     const k = kinds[id], mine = S.makes.includes(id);
-    const li = $(`<li class="work">${k.thumb}<div><h3>${label}${mine ? `<span class="chosen">Chosen</span>` : ""}</h3><p>${k.d}</p><button class="btn" type="button">Preview</button></div></li>`);
+    const li = $(`<li class="work">${k.thumb}<div><h3>${label}${mine ? `<span class="chosen">Chosen</span>` : ""}</h3><button class="btn" type="button">Preview</button></div></li>`);
     li.querySelector("button").onclick = () => ({ magazine: previewMag, storybook: previewBook, short: previewShort })[id]();
     list.append(li);
   });
@@ -1207,7 +1202,7 @@ function renderMake(box) {
 }
 const closeBtn = (close) => { const b = $(`<button class="btn" type="button" style="width:100%;margin-top:16px">Close</button>`); b.onclick = close; return b; };
 async function previewMag() {
-  const body = $(`<div><h2>Cover preview</h2><p class="hint" style="margin-top:8px">A real cover, made from your family's name and colour. Stories fill the inside later.</p><canvas class="cvs" role="img" aria-label="Magazine cover preview"></canvas>
+  const body = $(`<div><h2>Cover preview</h2><canvas class="cvs" role="img" aria-label="Magazine cover preview"></canvas>
     <button class="cta" type="button" id="dl" style="margin-top:16px">Save the cover</button></div>`);
   const close = sheet("Magazine cover preview", body); body.append(closeBtn(close));
   const cv = body.querySelector("canvas"), W = 800, H = 1060, ctx = cv.getContext("2d"), f = famName(S.name).toUpperCase();
@@ -1239,7 +1234,7 @@ function previewBook() {
   if (words.length) words.forEach((c) => pages.push({ q: c.q, a: c.text.trim() }));
   else (told.length ? told : QUESTIONS.filter((q) => S.chapters.includes(q.c)).slice(0, 3).map((q) => q.q)).forEach((q) => pages.push({ q, idea: !told.length }));
   pages.push({ end: true });
-  const body = $(`<div><h2>Storybook preview</h2><p class="hint" style="margin-top:8px">${words.length ? "Built from the words you've turned into text." : told.length ? "One page per question you've asked. Turn a recording into text on the Sit tab and their words appear here." : "No stories yet, so these are page ideas."} Swipe through.</p><div class="pager" tabindex="0" aria-label="Storybook pages"></div><p class="hint" id="pn" style="text-align:center;margin-top:8px" role="status"></p></div>`);
+  const body = $(`<div><h2>Storybook preview</h2><div class="pager" tabindex="0" aria-label="Storybook pages"></div><p class="hint" id="pn" style="text-align:center;margin-top:8px" role="status"></p></div>`);
   const pg = body.querySelector(".pager");
   pages.forEach((p, i) => pg.append($(p.cover ? `<div class="pg cv"><small>A family storybook</small><b>${esc(f)} family tales</b><p>Told by ${esc(S.elder.name || "the family")}</p><span class="shape"></span></div>`
     : p.end ? `<div class="pg"><small>The end</small><b>To be continued</b><p>Every sitting adds a page.</p><span class="shape"></span></div>`
@@ -1249,7 +1244,7 @@ function previewBook() {
   const close = sheet("Storybook preview", body); body.append(closeBtn(close));
 }
 function previewShort() {
-  const f = famName(S.name), body = $(`<div><h2>Short film preview</h2><p class="hint" style="margin-top:8px">The title sequence. The animated story itself comes next.</p><div id="stage"></div>
+  const f = famName(S.name), body = $(`<div><h2>Short film preview</h2><p class="hint" style="margin-top:8px">Title sequence only</p><div id="stage"></div>
     <button class="cta" type="button" id="rp" style="margin-top:16px">Play again</button></div>`);
   const lines = [["sm", "A Tell Me Again film"], ["", `The ${f} family`], ["sm", "Starring"], ...S.seats.filter(Boolean).slice(0, 4).map((n) => ["", n]), ["sm", "Season one"]];
   const play = () => { const st = body.querySelector("#stage"); const r = $(`<div class="reel" aria-label="Title sequence">${lines.map(([c, t], i) => `<div class="${c}" style="--i:${i}">${esc(t)}</div>`).join("")}</div>`); st.replaceChildren(r); };
@@ -1304,17 +1299,17 @@ function leaderboard() {
 }
 function askStrip(c) {
   const q = nextQuestion();
-  c.innerHTML = q ? `<small class="kicker">Ask while you play</small><p>${esc(q.q)}</p><div class="row"><span class="hint" style="margin:0">Heard their answer? Move on.</span><button class="btn" type="button">Next question</button></div>` : `<small class="kicker">Ask while you play</small><p class="hint">You've asked everything for these topics.</p>`;
+  c.innerHTML = q ? `<small class="kicker">Ask while you play</small><p>${esc(q.q)}</p><div class="row"><button class="btn" type="button">Next question</button></div>` : `<small class="kicker">Ask while you play</small><p class="hint">You've asked everything for these topics.</p>`;
   const b = c.querySelector("button"); if (b) b.onclick = () => { S.asked.push(q.q); S.told++; save(); askStrip(c); };
 }
 let lastGame = null; // which game screen the Play tab reopens on
 const backGames = (box) => { const b = $(`<button class="btn gback" type="button">‹ All games</button>`); b.onclick = () => { lastGame = null; renderPlay(box); }; return b; };
 function renderPlay(box) {
-  box.replaceChildren($(`<h1 class="title">Play together</h1>`), $(`<p class="sub">Keep talking while you play. Ask a question between turns.</p>`));
+  box.replaceChildren($(`<h1 class="title">Play together</h1>`), );
   const list = $(`<div class="games">
-    <button class="game" id="ludo" type="button"><span class="g">6</span><span><b>Ludo</b><span class="d">2 to 4 players. First one home wins.</span></span></button>
-    <button class="game" id="ayo" type="button"><span class="g">12</span><span><b>Ayo</b><span class="d">Also called Oware. 2 players, capture the seeds.</span></span></button>
-    <button class="game" id="whot" type="button"><span class="g">20</span><span><b>Whot</b><span class="d">The card game. 2 to 4 players. Set your own house rules.</span></span></button></div>`);
+    <button class="game" id="ludo" type="button"><span class="g">6</span><span><b>Ludo</b><span class="d">2 to 4 players</span></span></button>
+    <button class="game" id="ayo" type="button"><span class="g">12</span><span><b>Ayo</b><span class="d">2 players</span></span></button>
+    <button class="game" id="whot" type="button"><span class="g">20</span><span><b>Whot</b><span class="d">2 to 4 players</span></span></button></div>`);
   box.append(onlineCard(box), $(`<h2 class="sec" style="margin-top:28px">On one screen</h2>`), list);
   const lb = leaderboard(); if (lb) box.append(lb);
   list.querySelector("#ludo").onclick = () => { if (!game) newGame(); renderLudo(box); };
@@ -1450,7 +1445,7 @@ function whotRuleRows(box) { // the switches and hand-size chips; they edit this
 }
 function whotSetup(box) {
   lastGame = null;
-  box.replaceChildren(backGames(box), $(`<h1 class="title">Whot</h1>`), $(`<p class="sub">Every home plays it a little differently. Set your house rules, then deal.</p>`));
+  box.replaceChildren(backGames(box), $(`<h1 class="title">Whot</h1>`), );
   box.append($(`<h2 class="sec">Same everywhere</h2>`), $(`<ul class="fixed">${WFIXED.map(([k, t]) => `<li><b>${k}</b><span>${t}</span></li>`).join("")}</ul>`));
   box.append($(`<h2 class="sec">Your house rules</h2>`));
   whotRuleRows(box);
@@ -1592,7 +1587,7 @@ function ayoMoves(g) {
   return m;
 }
 function ayoSetup(box) {
-  box.replaceChildren(backGames(box), $(`<h1 class="title">Ayo</h1>`), $(`<p class="sub">Who's playing? Pick two.</p>`)); lastGame = null;
+  box.replaceChildren(backGames(box), $(`<h1 class="title">Ayo</h1>`), $(`<p class="sub">Pick two.</p>`)); lastGame = null;
   const names = S.seats.slice(0, 4), sel = [0, 1];
   const row = (label, k) => { const w = $(`<div class="pickrow"><span class="lbl">${label}</span><div class="chips" role="group" aria-label="${label}"></div></div>`);
     const draw = () => { const c = w.querySelector(".chips"); c.replaceChildren(...names.map((n, i) => { const b = $(`<button class="chip" type="button" aria-pressed="${sel[k] === i}">${esc(n)}</button>`); b.onclick = () => { sel[k] = i; if (sel[1 - k] === i) sel[1 - k] = names.findIndex((_, j) => j !== i); [...box.querySelectorAll(".pickrow")].forEach((r) => r.redraw()); }; return b; })); };
@@ -1681,12 +1676,12 @@ function voiceSitting(box, relay, myName, note) {
   const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
 
   function render() {
-    if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Talk it through</h2><p class="hint">A voice call right here, no other app. Then the host can record the answer on their phone.</p><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
-    if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><p class="hint">It's a voice call. Your microphone will turn on when you join.</p><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
+    if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
+    if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
     const rec = !!mr;
     box.replaceChildren($(`<div class="voice"><h2>${mode === "calling" ? "Calling…" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
-      ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "Pick a question when you're ready." : "Listening. The host will pick a question."}</p>`}
-      ${rec ? `<p class="hint"><i class="live"></i>Recording on the host's phone</p>` : ""}
+      ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "" : "Listening"}</p>`}
+      ${rec ? `<p class="hint"><i class="live"></i>Recording</p>` : ""}
       <div class="vrow">
         ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto">${rec ? "Stop and save" : "Record the answer"}</button>` : ""}
         <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
@@ -1795,13 +1790,13 @@ function mountRoom(box, code, name, onLeave) {
   function lobby() {
     const seated = st.members.filter((m) => m.seat >= 0).length, host = st.me && st.me.host;
     const el = $(`<div class="onl"><h2 class="sec" style="margin-top:8px">${host ? "Pick a game" : "Waiting for the host"}</h2>
-      <p class="hint">${seated} ${seated === 1 ? "person" : "people"} at the table. ${seated < 2 ? "Share the code or link so someone can join." : host ? "Start whenever everyone's here." : "You'll jump in as soon as they start."}</p><div class="games"></div></div>`);
+      <p class="hint">${seated} ${seated === 1 ? "person" : "people"} at the table</p><div class="games"></div></div>`);
     if (host) {
-      const games = [["ludo", "6", "Ludo", "2 to 4 players"], ["ayo", "12", "Ayo", "First two seats play, the rest watch"], ["whot", "20", "Whot", "2 to 4 players. Your hand is private."]];
+      const games = [["ludo", "6", "Ludo", "2 to 4 players"], ["ayo", "12", "Ayo", "2 play, the rest watch"], ["whot", "20", "Whot", "2 to 4 players"]];
       games.forEach(([k, g, t, d]) => { const b = $(`<button class="game" type="button"><span class="g">${g}</span><span><b>${t}</b><span class="d">${d}</span></span></button>`);
         b.disabled = seated < 2; b.onclick = () => send({ t: "start", game: k, rules: k === "whot" ? S.whotRules : undefined }); el.querySelector(".games").append(b); });
       const hr = $(`<button class="btn" type="button" style="margin-top:12px">Whot house rules</button>`);
-      hr.onclick = () => { const b = $(`<div><h2>Whot house rules</h2><p class="hint" style="margin-top:6px">You're the host, so these apply to the game you start.</p></div>`); whotRuleRows(b); b.append(closeBtn(sheet("Whot house rules", b))); };
+      hr.onclick = () => { const b = $(`<div><h2>Whot house rules</h2></div>`); whotRuleRows(b); b.append(closeBtn(sheet("Whot house rules", b))); };
       el.append(hr);
     }
     stg.replaceChildren(el);
@@ -1901,7 +1896,7 @@ function mountOnlineGame(kind, box, send, st, note) {
 // Play tab: create a room, or join one by code.
 function onlineCard(box) {
   const saved = lsGet("sitting-name") || (S.me && S.me.name) || "";
-  const el = $(`<div class="card onl"><h3>Play online</h3><p class="hint" style="margin-top:0">Everyone plays on their own phone. Share a code or a link.</p>
+  const el = $(`<div class="card onl"><h3>Play online</h3>
     <label class="field" style="margin-top:14px"><span class="lbl">Your name</span><input class="inp sm" id="on" type="text" maxlength="30" autocomplete="off" value="${esc(saved)}" placeholder="What should they call you?"></label>
     <button class="cta" id="mk" type="button" style="margin-top:16px">Create a room</button>
     <div class="row2"><input class="inp sm" id="jc" type="text" maxlength="60" autocomplete="off" placeholder="Room code" aria-label="Room code"><button class="btn" id="jn" type="button">Join</button></div><p class="err" id="oe" role="status"></p></div>`);
@@ -1922,7 +1917,7 @@ function guestScreen(code) {
   app.className = "app"; app.replaceChildren(); applyColor();
   const saved = lsGet("sitting-name") || "";
   const el = $(`<section class="guest"><div class="mark"><i></i>Tell me again</div><h1 class="display" style="font-size:clamp(2.8rem,14vw,4.2rem)">You're invited.</h1>
-    <p class="sub">Room <b style="color:var(--accent);letter-spacing:.1em">${esc(code)}</b>. Add your name and jump in. No account needed.</p>
+    <p class="sub">Room <b style="color:var(--accent);letter-spacing:.1em">${esc(code)}</b></p>
     <label class="field"><span class="lbl">Your name</span><input class="inp" id="gn" type="text" maxlength="30" autocomplete="off" value="${esc(saved)}" placeholder="What should they call you?"></label>
     <button class="cta" id="gj" type="button" style="margin-top:24px">Join the room</button><p class="err" id="ge" role="status"></p></section>`);
   app.append(el);
