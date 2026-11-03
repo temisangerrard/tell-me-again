@@ -45,6 +45,14 @@ const shareTo = async (code, who) => {
   try { await navigator.clipboard.writeText(`${text}: ${url}`); return "Link copied"; } catch { return url; }
 };
 // Asked when you press Record: pick who's sitting, then record here or send links. Resolves true to record now.
+// What to tell someone watching a running game: will the next round include them? Play again seats the first people by seat
+// (two for Ayo, four otherwise), so a third Ayo player or a fifth anything keeps watching.
+function watchNote(st) {
+  const g = st.game, seated = st.members.filter((m) => m.seat >= 0).sort((a, b) => a.seat - b.seat);
+  const place = seated.findIndex((m) => m.you), cap = g && g.kind === "ayo" ? 2 : 4;
+  if (place >= 0 && place < cap) return "You're watching. You'll be dealt in next round.";
+  return g && g.kind === "ayo" ? "Ayo is for two players. You're watching." : "The table is full. You're watching.";
+}
 // Seat the chosen people for this sitting: the first is the storyteller.
 function applySitting(names) {
   const pr = S.people.find((x) => x.n === names[0]);

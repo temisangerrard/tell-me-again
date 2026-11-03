@@ -58,7 +58,7 @@ function mountRoom(box, code, name, onLeave, opts = {}) {
     // A game is running and you're not in it. If a bot is playing, you can take its seat; otherwise you'll be dealt in next round.
     if (g && g.seat < 0 && g.v.over === null && st.me) {
       const bot = g.bots && g.bots[0];
-      tk.replaceChildren($(bot ? `<div class="takeover"><span>${esc(bot.name)} is playing.</span><button class="cta" type="button">Take ${esc(bot.name)}'s seat</button></div>` : `<div class="takeover"><span>You're watching. You'll be dealt in next round.</span></div>`));
+      tk.replaceChildren($(bot ? `<div class="takeover"><span>${esc(bot.name)} is playing.</span><button class="cta" type="button">Take ${esc(bot.name)}'s seat</button></div>` : `<div class="takeover"><span>${esc(watchNote(st))}</span></div>`));
       const b = tk.querySelector("button"); if (b) b.onclick = () => send({ t: "takeover" });
     } else tk.replaceChildren();
     if (!g) { stage = null; wasMyTurn = false; wasOver = true; lastMsg = ""; return lobby(); }

@@ -149,7 +149,15 @@
       if (!s.deck.length && s.disc.length > 1) { const keep = s.disc.pop(); s.deck = shuffle(s.disc); s.disc = [keep]; }
       if (!s.deck.length) break; s.hands[seat].push(s.deck.pop()); got++;
     }
+    if (got < k) s.dry = true; // the market couldn't give everything asked of it
     return got;
+  }
+  // The market can't supply the cards someone has to pick up (even after shuffling the discards back in): the game ends there
+  // and the player with the fewest cards wins. Without this, bots (or tired people) can pass the same 2s round in circles for ever.
+  function wend(s) {
+    const n = s.hands.map((h) => h.length), low = Math.min(...n), winners = n.map((c, i) => (c === low ? i : -1)).filter((i) => i >= 0);
+    s.over = winners.length === 1 ? winners[0] : "draw";
+    s.msg = winners.length === 1 ? `The market ran out. ${s.names[winners[0]]} wins with the fewest cards (${low}).` : `The market ran out. It's a draw on ${low} cards each.`;
   }
   const wadvance = (s, k) => { s.turn = (s.turn + k) % s.names.length; if (s.last && s.last.seat === s.turn) s.last = null; };
   const whot = {
@@ -164,7 +172,8 @@
       deck.push(...tmp);
       return { kind: "whot", R, names: names.slice(), hands, deck, disc: [top], top, shape: top.s, turn: 0, pend: null, susp: false, pickShape: false, last: null, over: null, msg: "Cards are dealt." };
     },
-    act(s, seat, a) {
+    act(s, seat, a) { const e = whot.step(s, seat, a); if (!e && s.dry && s.over === null) wend(s); return e; },
+    step(s, seat, a) {
       if (s.over !== null) return "The game is over.";
       const R = s.R, me = s.hands[seat], nm = s.names[seat], n = s.names.length, nx = (seat + 1) % n, nxn = s.names[nx];
       if (a.a === "call") { if (!s.last || s.last.seat !== seat) return "Nothing to call."; s.last.called = true; s.msg = `${nm} called last card!`; return null; }

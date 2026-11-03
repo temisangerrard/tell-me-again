@@ -53,3 +53,15 @@ test("the microphone message says what to do on this phone, and whether it will 
   assert.match(w.micMessage({ name: "NotReadableError" }), /Another app/); assert.match(w.micMessage({ name: "NotFoundError" }), /No microphone/);
   await a.close();
 });
+
+test("a watcher is only promised a seat next round when the game can actually seat them", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  const st = (kind, seats, youIdx) => ({ game: { kind }, members: seats.map((s, i) => ({ seat: s, you: i === youIdx })) });
+  w.__st = st("ludo", [0, 1, 2], 2); assert.match(w.eval("watchNote(__st)"), /dealt in next round/, "third at a Ludo table: in next round");
+  w.__st = st("whot", [0, 1, 2, 3, -1], 4); assert.match(w.eval("watchNote(__st)"), /table is full/, "a member with no seat");
+  w.__st = st("ayo", [0, 1], 1); assert.match(w.eval("watchNote(__st)"), /dealt in next round/, "second at an Ayo table: in");
+  w.__st = st("ayo", [0, 1, 2], 2); assert.match(w.eval("watchNote(__st)"), /Ayo is for two players/, "third Ayo watcher is not promised a seat");
+  w.__st = st("ludo", [3, 0, 1, 2, 4], 0); assert.match(w.eval("watchNote(__st)"), /dealt in next round/, "seats are ordered, not listed order");
+  w.__st = st("ludo", [0, 1, 2, 3, 4], 4); assert.match(w.eval("watchNote(__st)"), /table is full/, "a fifth person at a four-seat table");
+  await a.close();
+});
