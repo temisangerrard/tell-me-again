@@ -105,8 +105,9 @@ function renderWhot(box) {
   };
   function play(i) {
     const p = g.pl[g.turn], c = p.hand[i]; if (!c || !playable(c)) return;
+    feel.card();
     p.hand.splice(i, 1); g.disc.push(c); g.top = c;
-    if (!p.hand.length) { g.over = p; paint(); recordWin(p.name); showLb(); celebrate(el); return; }
+    if (!p.hand.length) { g.over = p; paint(); recordWin(p.name); showLb(); celebrate(el); feel.win(); return; }
     if (c.s === "whot") { if (g.pend) { g.pend = null; g.msg = `${p.name} cancelled the pick with a Whot.`; } g.pickShape = true; paint(); return; }
     g.shape = c.s;
     const nx = (g.turn + 1) % g.pl.length;
@@ -164,6 +165,7 @@ function renderWhot(box) {
     const dr = $(`<button class="wc back" type="button" aria-label="${g.susp ? "Miss your turn" : g.pend ? `Pick up ${g.pend.total} cards` : "Pick from the market"}, ${g.deck.length} cards left">${label}<small>${g.susp ? "suspended" : g.deck.length + " left"}</small></button>`);
     dr.onclick = () => {
       if (g.pickShape) return;
+      feel.card();
       if (g.susp) { g.susp = false; g.msg = `${cur.name} is suspended and misses a turn.`; advance(1); paint(); return; }
       if (g.pend) { const got = wdraw(g, cur, g.pend.total); g.pend = null; g.msg = `${cur.name} picked up ${got}.`; if (R.pickSkips) advance(1); else g.msg += " Play on."; paint(); return; }
       const n = wdraw(g, cur, 1); g.msg = `${cur.name} picked from the market${n ? "" : " (it was empty)"}.`; advance(1); paint();

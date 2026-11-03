@@ -2,29 +2,35 @@
 // What a game feels like: a soft sound and a buzz on your turn, a fanfare on a win, and emoji reactions between phones.
 const soundOn = () => lsGet("sitting-sound") !== "off";
 const setSound = (on) => lsSet("sitting-sound", on ? "on" : "off");
-let audioCtx = null;
-function tone(freq, at, dur, gain = 0.06, type = "sine") {
-  if (!soundOn()) return;
+// One audio context for the whole app, created on the first touch (phones keep audio locked until a tap).
+let audioCtx = null, sounds = null;
+function audioReady() {
   try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime + at;
-    o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + dur + 0.02);
-  } catch {}
+    if (!audioCtx) {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      audioCtx = new C();
+      const master = buildChain(audioCtx);
+      sounds = buildSounds(audioCtx, master);
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    return sounds;
+  } catch { return null; }
 }
+["pointerdown", "touchstart", "keydown"].forEach((ev) => window.addEventListener(ev, () => { if (soundOn()) audioReady(); }, { passive: true }));
+const play = (name, ...args) => { if (!soundOn()) return; const s = audioReady(); if (s && s[name]) { try { s[name](0, ...args); } catch {} } };
 const buzz = (p) => { try { if (!reduceMotion() && navigator.vibrate) navigator.vibrate(p); } catch {} };
 const feel = {
-  yourTurn() { tone(660, 0, 0.14); tone(880, 0.12, 0.2); buzz(40); },
-  move() { tone(520, 0, 0.06, 0.035, "triangle"); },
-  win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.28, 0.07)); buzz([60, 40, 60, 40, 120]); },
-  lose() { tone(392, 0, 0.25, 0.04); tone(330, 0.18, 0.3, 0.04); },
-  rattle() { tone(300 + Math.random() * 200, 0, 0.04, 0.03, "square"); },
-  land() { tone(440, 0, 0.1, 0.05, "triangle"); },
-  hop(i, step) { tone(420 + i * 45, i * step, 0.05, 0.03, "triangle"); },
-  card() { tone(300, 0, 0.05, 0.03, "sawtooth"); tone(500, 0.04, 0.07, 0.025, "triangle"); },
-  sow() { tone(610 + Math.random() * 60, 0, 0.05, 0.03, "triangle"); },
-  capture() { tone(330, 0, 0.12, 0.05); tone(247, 0.08, 0.18, 0.05); },
-  react() { tone(740, 0, 0.08, 0.04, "triangle"); }
+  yourTurn() { play("yourTurn"); buzz(40); },
+  move() { play("tap"); },
+  win() { play("win"); buzz([60, 40, 60, 40, 120]); },
+  lose() { play("lose"); },
+  rattle() { play("rattle"); },
+  land() { play("land"); },
+  hop(i, step) { if (!soundOn()) return; const s = audioReady(); if (s) { try { s.hop(i * step, i); } catch {} } },
+  card() { play("card"); },
+  sow() { play("sow"); },
+  capture() { play("capture"); },
+  react() { play("react"); }
 };
 const REACTIONS = ["😂", "👏", "😮", "❤️", "🔥"];
 function floatReaction(host, emoji, who) {

@@ -114,6 +114,9 @@ Roughly in priority order.
 - [x] Sit tab as a family dashboard (`js/sit-home.js`): Next up (who most needs a story, with a question for a topic they haven't covered), the family ordered by need with a topic-coverage ring, a page per person (topics covered, their recordings, year born, remove), activity feed and library.
 - [ ] Relationship per person (grandmother, cousin) for grouping and question choice; search and pinning for large families; live status when someone is in a room; attribute older recordings that have no speaker.
 
+- [x] Sound design (`js/sounds.js`, `js/feel.js`): synthesised, no files. Dice rattle and knock, wooden token hops, card slide, clay seed drops, bell chimes for your turn and wins; routed through a compressor, limiter and soft clip; unlocks on the first touch; a Sound setting in Family. Levels were measured by rendering each sound offline (`buildChain` + `buildSounds` on an `OfflineAudioContext`): singles peak 0.5 to 0.8, worst-case overlaps stay under 0.9.
+- [ ] iPhone's silent switch mutes web audio. Fixing that means switching the page's audio session to playback, which would also interrupt the user's music, so decide before doing it. Optional: a soft background ambience, and different sound themes.
+
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
 - [ ] Storybook and short-film generation; video export.
