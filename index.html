@@ -699,15 +699,15 @@ function welcome() {
     <section class="landing-games"><div><h2 class="section-title">Play together</h2><p>Play Ludo, Ayo or Whot between questions. Invite family to an online game, or pass one phone around the table.</p></div>
       <div class="game-sample"><svg viewBox="0 0 15 15" role="img" aria-label="Ludo board from Tell Me Again">${boardSVG()}</svg><div><b>Your family table</b><p>Ludo & Whot · 2–4 players<br>Ayo · 2 players</p><p class="fine">Voice calls currently support two people.</p></div></div>
     </section>
-    <section class="future-note"><div><h2>Publications in development</h2></div><p>Personalised magazine covers and book previews are here to try. Full magazines, storybooks and films made from your stories are still in development.</p></section>
+    <section class="future-note"><div><h2>Your family magazine</h2></div><p>Personalised magazine covers and book previews are here to try. Make a magazine from selected transcripts and save it as a PDF. Storybooks and films are still in development.</p></section>
     <section aria-label="Common questions"><div class="faq">
       <details><summary>Does my family need an account?</summary><p>No. Start your family on this device and share a room link. Guests enter their name to join. Account sign-in is still in development.</p></details>
       <details><summary>Where do the recordings go?</summary><p>Recordings and transcripts stay on the device that saves them. Download a copy to keep a backup. If you choose transcription, that recording is sent to the speech service for processing.</p></details>
       <details><summary>Can we speak our own language?</summary><p>You can record in any language. Transcription offers English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili; accuracy varies. Igbo and Nigerian Pidgin aren't supported yet.</p></details>
-      <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, save a personalised magazine cover, and explore book and film-title previews. Complete books and films aren't available yet.</p></details>
+      <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, back up your family archive, and make a magazine to print or save as PDF. Storybooks and films are previews.</p></details>
     </div></section>
     <div class="endcta"><button class="cta" id="go2" type="button">Start your family</button></div>
-    <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
+    <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="restore-welcome">Restore backup</button><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
   </section>`);
   host.append(el);
   let questionIndex = 0;
@@ -727,6 +727,7 @@ function welcome() {
   };
   el.querySelectorAll("[data-example]").forEach(b => b.onclick = () => showExample(b.dataset.example));
   showExample("ask");
+  el.querySelector("#restore-welcome").onclick = () => { const b = $(`<div><h2>Restore backup</h2></div>`); backupControls(b, false); const close = sheet("Restore backup", b); b.append(closeBtn(close)); };
   el.querySelector("#pvl").onclick = privacySheet;
   el.querySelector("#go").onclick = () => go(1); el.querySelector("#go2").onclick = () => go(1);
   el.querySelector("#si").onclick = () => authScreen("in");
@@ -868,7 +869,16 @@ function inviteStep() {
 /* ---------- the room: Sit / Play / Make ---------- */
 let clips = []; // {id, q, at, dur, blob, url}. Kept on this device in IndexedDB so they survive a refresh. Nothing is uploaded.
 const idbOpen = () => new Promise((res, rej) => { const r = indexedDB.open("tellmeagain", 1); r.onupgradeneeded = () => r.result.createObjectStore("clips", { keyPath: "id" }); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-const idbDo = async (mode, fn) => { const db = await idbOpen(); return new Promise((res, rej) => { const tx = db.transaction("clips", mode), rq = fn(tx.objectStore("clips")); tx.oncomplete = () => res(rq && rq.result); tx.onerror = () => rej(tx.error); }); };
+const idbDo = async (mode, fn) => {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("clips", mode); let rq;
+    tx.oncomplete = () => { db.close(); resolve(rq && rq.result); };
+    tx.onabort = () => { db.close(); reject(tx.error || new Error("Recording storage was interrupted.")); };
+    tx.onerror = () => {};
+    try { rq = fn(tx.objectStore("clips")); } catch (error) { tx.abort(); reject(error); }
+  });
+};
 async function loadClips() {
   if (DEV.has("data")) return;
   try { const all = await idbDo("readonly", (st) => st.getAll()); clips = all.sort((a, b) => b.at - a.at).map((c) => ({ ...c, url: URL.createObjectURL(c.blob) })); } catch {}
@@ -881,7 +891,21 @@ const fmtDur = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).
 const TX_LANGS = [["", "Detect automatically"], ["en", "English"], ["fr", "French"], ["pt", "Portuguese"], ["ar", "Arabic"], ["yo", "Yoruba"], ["ha", "Hausa"], ["sw", "Swahili"]];
 const txBusy = new Set(); // clip ids being transcribed right now
 const clipRecord = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "url" && k[0] !== "_")); // what gets stored: no blob URL, no UI flags
-const saveClip = async (c) => { if (DEV.has("data")) return; try { await idbDo("readwrite", (st) => st.put(clipRecord(c))); } catch {} };
+const pendingClipEdits = new Map(), clipWrites = new Set();
+const saveClip = c => {
+  if (DEV.has("data")) return Promise.resolve();
+  const write = idbDo("readwrite", st => st.put(clipRecord(c)));
+  clipWrites.add(write); write.then(() => { c._unsaved = false; clipWrites.delete(write); }, () => clipWrites.delete(write));
+  return write;
+};
+async function flushClipEdits() {
+  const queued = [...pendingClipEdits.values()].map(save => save());
+  await Promise.all([...queued, ...clipWrites]);
+}
+async function cancelClipEdits() {
+  for (const save of pendingClipEdits.values()) save.cancel();
+  pendingClipEdits.clear(); await Promise.allSettled([...clipWrites]);
+}
 const txNames = () => [...new Set([...String(S.hints || "").split(","), famName(S.name), S.elder.name, ...S.seats.slice(2), S.me.name, S.town].map((x) => String(x || "").trim()).filter(Boolean))].join(", ").slice(0, 170);
 async function transcribeClip(c) {
   if (c.dur > 720) throw new Error("That recording is longer than 12 minutes, which is too long to turn into text in one go.");
@@ -890,6 +914,124 @@ async function transcribeClip(c) {
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Couldn't turn that into text. Please try again.");
   c.text = j.text || ""; c.tx = "ai"; c.txAt = Date.now(); await saveClip(c);
 }
+/* ---------- Complete local backups ---------- */
+const BACKUP_LIMIT = 128 * 1024 * 1024;
+let restoring = false;
+function downloadFile(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+async function createBackup() {
+  if (live || activeVoiceRecording || restoring || txBusy.size) throw new Error("Finish recording or transcription before making a backup.");
+  const family = structuredClone(S), recordings = [], snapshot = clips.map(c => ({ ...c }));
+  let bytes = 0;
+  for (const c of snapshot) {
+    bytes += c.blob.size;
+    if (bytes > BACKUP_LIMIT * .7) throw new Error("This archive is too large for one backup. Save the audio files individually.");
+    const data = new Uint8Array(await c.blob.arrayBuffer()); let binary = "";
+    for (let i = 0; i < data.length; i += 32768) binary += String.fromCharCode(...data.subarray(i, i + 32768));
+    recordings.push({ id: c.id, q: c.q, at: c.at, dur: c.dur, type: c.blob.type, size: c.blob.size, audio: btoa(binary),
+      ...(c.text !== undefined ? { text: c.text, tx: c.tx || "typed", txAt: c.txAt } : {}), ...(c.recordingConsent ? { recordingConsent: c.recordingConsent } : {}) });
+  }
+  return JSON.stringify({ app: "Tell Me Again", version: 1, exportedAt: new Date().toISOString(), family, theme: getTheme(), recordings });
+}
+function parseBackup(text) {
+  const bad = () => { throw new Error("This isn't a valid Tell Me Again backup."); };
+  if (typeof text !== "string" || text.length > BACKUP_LIMIT) throw new Error("Choose a backup smaller than 128 MB.");
+  let b; try { b = JSON.parse(text); } catch { return bad(); }
+  const object = v => v && typeof v === "object" && !Array.isArray(v);
+  const string = (v, max = 1000) => typeof v === "string" && v.length <= max;
+  const strings = (v, count, length) => Array.isArray(v) && v.length <= count && v.every(x => string(x, length));
+  const number = (v, max) => Number.isFinite(v) && v >= 0 && v <= max;
+  const forbidden = v => object(v) ? Object.keys(v).some(k => ["__proto__", "constructor", "prototype"].includes(k) || forbidden(v[k])) : Array.isArray(v) && v.some(forbidden);
+  if (!object(b) || b.app !== "Tell Me Again" || b.version !== 1 || forbidden(b) || !object(b.family) || !Array.isArray(b.recordings) || b.recordings.length > 1000) return bad();
+  const f = b.family, family = fresh();
+  if (!object(f.me) || !string(f.me.name, 120) || !object(f.elder) || !string(f.elder.name, 120) || !string(f.elder.born, 4)) return bad();
+  for (const key of ["name", "saying", "color", "town", "lang", "hints"]) {
+    if (!string(f[key], 1000)) return bad(); family[key] = f[key];
+  }
+  if (!/^#[0-9a-f]{6}$/i.test(f.color) || !strings(f.seats, 4, 120) || !strings(f.heritage, 100, 120) || !strings(f.asked, 10000, 4000) || !strings(f.chapters, 20, 30) || !strings(f.makes, 10, 30)) return bad();
+  if (!f.chapters.every(k => CHAPTERS.some(c => c.id === k)) || !f.makes.every(k => MAKES.some(([id]) => id === k))) return bad();
+  if (!Number.isInteger(f.told) || !number(f.told, 10000000) || !Number.isInteger(f.step) || !number(f.step, 7)) return bad();
+  if (!Array.isArray(f.wins) || f.wins.length > 1000 || !f.wins.every(w => object(w) && string(w.n, 120) && Number.isInteger(w.c) && number(w.c, 10000000))) return bad();
+  if (!Array.isArray(f.sittings) || f.sittings.length > 10000 || !f.sittings.every(s => object(s) && string(s.d, 40) && Number.isFinite(Date.parse(s.d)) && ["up", "down"].includes(s.r) && strings(s.t, 30, 120))) return bad();
+  if (!object(f.whotRules)) return bad();
+  for (const key of Object.keys(family.whotRules)) {
+    if (key === "hand" ? ![0,4,5,6,7].includes(f.whotRules[key]) : typeof f.whotRules[key] !== "boolean") return bad();
+    family.whotRules[key] = f.whotRules[key];
+  }
+  Object.assign(family, { me: { name: f.me.name }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings, told: f.told, step: f.step });
+  // A restored archive never grants permission to send audio from this device.
+  family.consent = { transcribe: false }; family.autoTx = false;
+  if (b.theme !== undefined && !THEMES.some(([k]) => k === b.theme)) return bad();
+  const ids = new Set(), recordings = b.recordings.map(c => {
+    if (!object(c) || !string(c.id, 160) || !c.id || ids.has(c.id) || !string(c.q, 4000) || !number(c.at, 8640000000000000) || !number(c.dur, 86400) || !string(c.type, 120) || !/^(audio\/[a-z0-9.+-]+|video\/webm)(;[a-z0-9= .,+-]+)?$/i.test(c.type) || !Number.isInteger(c.size) || !number(c.size, BACKUP_LIMIT) || typeof c.audio !== "string") return bad();
+    if (c.audio.length !== 4 * Math.ceil(c.size / 3) || !/^[A-Za-z0-9+/]*={0,2}$/.test(c.audio)) return bad();
+    ids.add(c.id); let binary; try { binary = atob(c.audio); } catch { return bad(); }
+    if (binary.length !== c.size) return bad();
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const out = { id: c.id, q: c.q, at: c.at, dur: c.dur, blob: new Blob([bytes], { type: c.type }) };
+    if (c.text !== undefined) {
+      if (!string(c.text, 1000000) || !["ai", "edited", "typed"].includes(c.tx)) return bad();
+      out.text = c.text; out.tx = c.tx;
+      if (c.txAt !== undefined) { if (!number(c.txAt, 8640000000000000)) return bad(); out.txAt = c.txAt; }
+    }
+    if (c.recordingConsent !== undefined) {
+      if (!object(c.recordingConsent) || !["in-person", "remote"].includes(c.recordingConsent.method) || !number(c.recordingConsent.at, 8640000000000000)) return bad();
+      out.recordingConsent = { method: c.recordingConsent.method, at: c.recordingConsent.at };
+    }
+    return out;
+  });
+  return { family, recordings, theme: b.theme || "white" };
+}
+async function restoreBackup(backup) {
+  if (restoring || live || activeVoiceRecording || txBusy.size) throw new Error("Finish recording or transcription before restoring a backup.");
+  if (currentRoom) throw new Error("Leave the online room before restoring a backup.");
+  restoring = true;
+  const keys = [KEY, "sitting-theme", "sitting-name", "sitting-room"], previous = new Map();
+  try {
+    await flushClipEdits();
+    for (const k of keys) previous.set(k, localStorage.getItem(k));
+    localStorage.setItem(KEY, JSON.stringify(backup.family)); localStorage.setItem("sitting-theme", backup.theme);
+    localStorage.setItem("sitting-name", backup.family.me.name); localStorage.removeItem("sitting-room");
+    await idbDo("readwrite", st => { st.clear(); for (const c of backup.recordings) st.put(c); });
+  } catch (e) {
+    for (const [k, v] of previous) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch {} }
+    throw new Error("The backup couldn't be restored. Your existing recordings were kept.", { cause: e });
+  } finally { restoring = false; }
+  clips.forEach(c => URL.revokeObjectURL(c.url));
+  clips = backup.recordings.map(c => ({ ...c, url: URL.createObjectURL(c.blob) })).sort((a,b) => b.at-a.at);
+  S = backup.family; game = null; ayo = null; whot = null; lastGame = null;
+  render();
+}
+function backupControls(parent, allowDownload = true) {
+  const download = $(`<button class="btn" type="button">Download full backup</button>`);
+  const restore = $(`<label class="field"><span class="lbl">Restore backup</span><input type="file" accept=".json,application/json" style="display:block;max-width:100%;margin-top:12px"></label>`);
+  const status = $(`<p class="err" role="status"></p>`);
+  download.onclick = async () => {
+    download.disabled = true; status.textContent = "Preparing backup…";
+    try { const text = await createBackup(); downloadFile(new Blob([text], { type: "application/json" }), "tell-me-again-backup.json"); status.textContent = "Backup downloaded."; }
+    catch (e) { status.textContent = e.message; } finally { download.disabled = false; }
+  };
+  restore.querySelector("input").onchange = async e => {
+    const file = e.target.files[0]; if (!file) return; e.target.value = ""; status.textContent = "";
+    try {
+      if (file.size > BACKUP_LIMIT) throw new Error("Choose a backup smaller than 128 MB.");
+      const backup = parseBackup(await file.text());
+      const b = $(`<div><h2>Restore ${esc(backup.family.name || "family")}?</h2><p class="para" style="margin:16px 0">${backup.recordings.length} recordings. Replaces the family details and recordings on this device. Download a backup first if you want to keep them.</p><button class="cta" type="button">Replace and restore</button><p role="status" class="err"></p></div>`);
+      const close = sheet("Restore family backup", b); b.append(closeBtn(close));
+      b.querySelector(".cta").onclick = async e => {
+        e.currentTarget.disabled = true;
+        try { await restoreBackup(backup); close(); }
+        catch (error) { b.querySelector(".err").textContent = error.message; b.querySelector(".cta").disabled = false; }
+      };
+    } catch (error) { status.textContent = error.message || "This backup couldn't be read."; }
+  };
+  if (allowDownload) parent.append(download);
+  parent.append(restore, status);
+}
+
 const PRIVACY_V = "2026-11-03", PRIVACY_MAIL = "temisan@settley.co";
 function grantConsent(k) { S.consent[k] = true; S.consent[k + "At"] = Date.now(); S.consent.v = PRIVACY_V; delete S.consent[k + "Off"]; save(); }
 function withdrawConsent(k) { S.consent[k] = false; S.consent[k + "Off"] = Date.now(); save(); }
@@ -919,13 +1061,34 @@ function askTxConsent() {
   });
 }
 
+// Recording permission belongs to the person speaking, separately from transcription permission.
+function recordingPermission(consequence) {
+  return new Promise(resolve => {
+    const body = $(`<div><h2>Allow this recording?</h2><p class="para" style="margin:16px 0">${esc(consequence)}</p><label style="display:flex;gap:12px;align-items:flex-start;margin:20px 0"><input type="checkbox" style="margin-top:5px"><span>Everyone being recorded is 16 or older, or has a parent or guardian present and agreeing.</span></label><button class="cta" type="button" disabled>Allow recording</button><button class="btn" type="button" style="width:100%;margin-top:12px">Not now</button></div>`);
+    let settled = false;
+    const close = sheet("Recording permission", body);
+    const finish = value => { if (settled) return; settled = true; close(); resolve(value); };
+    const allow = body.querySelector(".cta");
+    body.querySelector("input").onchange = e => { allow.disabled = !e.target.checked; };
+    allow.onclick = () => { if (!allow.disabled) finish(true); };
+    body.querySelector(".btn").onclick = () => finish(false);
+    const observer = new MutationObserver(() => { if (!body.isConnected) { observer.disconnect(); finish(false); } });
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
+window.addEventListener("beforeunload", e => {
+  if (live || activeVoiceRecording || restoring) { e.preventDefault(); e.returnValue = ""; }
+});
+
 // Wipe everything this app keeps on the device: family details, recordings, wins. Used by "Delete everything".
 async function wipeAll() {
-  stopLive(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; game = null; ayo = null; whot = null;
+  stopLive(); await cancelClipEdits(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; game = null; ayo = null; whot = null;
   try { await idbDo("readwrite", (st) => st.clear()); } catch {}
   try { localStorage.removeItem(KEY); localStorage.removeItem("sitting-room"); localStorage.removeItem("sitting-name"); } catch {}
   S = fresh(); render(); window.scrollTo(0, 0);
 }
+let currentRoom = null;
+let activeVoiceRecording = false;
 let live = null; // the recording in progress, if any: {mr, stream}
 let game = null; // the Ludo game in progress
 const paintHead = () => { const f = famName(S.name), h = document.querySelector(".rhead"); if (!h) return; h.querySelector(".tile").textContent = initial(f); h.querySelector(".who b").textContent = `The ${f} family`; h.querySelector(".who span").textContent = S.town || "Season one"; };
@@ -944,7 +1107,9 @@ function home() {
   host.append(el, bar);
   const tabs = [...bar.querySelectorAll(".tabbtn")];
   const draw = { sit: renderSitting, play: renderPlay, make: renderMake, family: renderFamily };
-  const show = (t, focus) => {
+  const show = async (t, focus) => {
+    if (t.getAttribute("aria-selected") === "true") return;
+    if (currentRoom && t.dataset.t !== "play") await currentRoom.close(false);
     tabs.forEach((x) => { x.setAttribute("aria-selected", x === t); x.tabIndex = x === t ? 0 : -1; });
     TABS.forEach(([id]) => el.querySelector("#" + id).hidden = id !== t.dataset.t);
     draw[t.dataset.t](el.querySelector("#" + t.dataset.t)); window.scrollTo(0, 0);
@@ -1011,7 +1176,7 @@ function renderFamily(box) {
   const recs = sec("Recordings");
   recs.append($(`<ul class="facts"><li><span>On this device</span><b>${clips.length} · ${fmtDur(clipTotal())}</b></li></ul>`));
   if (clips.length) { const d = $(`<button class="btn" type="button" style="margin-top:12px">Delete all recordings</button>`);
-    d.onclick = async () => { if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
+    d.onclick = async () => { if (txBusy.size) return; if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; await cancelClipEdits(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
     recs.append(d); }
 
   const trs = sec("Turning recordings into text");
@@ -1031,15 +1196,11 @@ function renderFamily(box) {
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
 
   const data = sec("Your information");
-    const dl = $(`<button class="btn" type="button" style="margin-top:12px">Download my information</button>`);
-  dl.onclick = () => {
-    const out = { app: "Tell Me Again", exportedAt: new Date().toISOString(), family: S, recordings: clips.map((c) => ({ question: c.q, recordedAt: new Date(c.at).toISOString(), seconds: c.dur, words: c.text || null, wordsBy: c.text ? c.tx : null })), note: "Audio files can be saved one by one from the Recorded list on the Sit tab." };
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" })); a.download = "tell-me-again-my-information.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
-  };
+  backupControls(data);
   const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete everything</button>`);
   del.onclick = () => { if (confirm("Delete everything? This removes your family, your recordings and your wins from this device. It can't be undone.")) wipeAll(); };
   const pv = $(`<button class="btn" type="button" style="margin-top:8px">Read the privacy notice</button>`); pv.onclick = privacySheet;
-  data.append(dl, $(`<br>`), pv, $(`<br>`), del);
+  data.append(pv, $(`<br>`), del);
 
   const about = sec("About");
   about.append($(`<p class="para">Tell Me Again by Settley Studio</p>`));
@@ -1098,11 +1259,13 @@ function runScreen(ov, who, q, onStop) {
 
 // One recording: the audio, then its words (or the way to get them), then Save and Delete.
 function clipRow(c, box) {
-  const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio><div class="tx"></div>
+  const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio>${c._unsaved ? `<p class="err save-warning">Not saved to this device. Save the audio or download a backup before leaving.</p>` : ""}<div class="tx"></div>
     <div class="cm"><span>${new Date(c.at).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${fmtDur(c.dur || 0)}</span><a href="${c.url}" download="tell-me-again-${new Date(c.at).toISOString().slice(0, 10)}.webm">Save audio</a><button class="lnk" type="button">Delete</button></div></li>`);
   const tx = li.querySelector(".tx"); let saveT;
   const paint = () => {
     tx.replaceChildren();
+    if (!c._unsaved) li.querySelector(".save-warning")?.remove();
+    li.querySelector(".lnk").disabled = txBusy.has(c.id);
     if (txBusy.has(c.id)) { tx.append($(`<p class="txs" role="status">Turning it into text. A short answer takes under half a minute; a long one can take a couple of minutes.</p>`)); tx.setAttribute("aria-busy", "true"); return; }
     tx.removeAttribute("aria-busy");
     if (c.text === undefined) {
@@ -1115,7 +1278,11 @@ function clipRow(c, box) {
     } else {
       const ta = $(`<textarea class="txt" rows="3" aria-label="What they said. You can edit it."></textarea>`); ta.value = c.text; ta.placeholder = "Type what they said";
       const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; };
-      ta.oninput = () => { c.text = ta.value; c.tx = c._typing ? "typed" : c.tx === "ai" ? "edited" : c.tx; fit(); note.textContent = c.tx === "edited" ? "Edited by you." : "Written by you."; clearTimeout(saveT); saveT = setTimeout(() => saveClip(c), 500); };
+      ta.oninput = () => { c.text = ta.value; c.tx = c._typing ? "typed" : c.tx === "ai" ? "edited" : c.tx; fit(); note.textContent = c.tx === "edited" ? "Edited by you." : "Written by you."; clearTimeout(saveT);
+        const persist = () => { clearTimeout(saveT); pendingClipEdits.delete(c.id); return saveClip(c); };
+        persist.cancel = () => { clearTimeout(saveT); pendingClipEdits.delete(c.id); };
+        pendingClipEdits.set(c.id, persist);
+        saveT = setTimeout(() => persist().then(() => li.querySelector(".save-warning")?.remove()).catch(() => { note.textContent = "Changes couldn't be saved. Download a backup before leaving."; }), 500); };
       const note = $(`<p class="txs">${c.tx === "edited" ? "Edited by you." : c.tx === "typed" || c._typing ? "Written by you." : "Written by AI. Check the names and places."}</p>`);
       tx.append(ta, note); requestAnimationFrame(fit);
     }
@@ -1127,8 +1294,11 @@ function clipRow(c, box) {
     catch (e) { txBusy.delete(c.id); paint(); const m = $(`<p class="txs err">${esc(e.message)}</p>`); tx.prepend(m); }
   };
   li.querySelector(".lnk").onclick = async () => {
+    if (txBusy.has(c.id)) return;
     if (!confirm("Delete this recording" + (c.text ? " and its words" : "") + "? This can't be undone.")) return;
-    try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch {}
+    if (pendingClipEdits.has(c.id)) pendingClipEdits.get(c.id).cancel();
+    await Promise.allSettled([...clipWrites]);
+    try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch { tx.append($(`<p class="err">The recording couldn't be deleted.</p>`)); return; }
     URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSitting(box, "Recording deleted.");
   };
   paint(); li._run = run; return li;
@@ -1168,26 +1338,31 @@ function renderSitting(box, msg) {
   rec.onclick = async () => {
     if (live) { live.mr.stop(); return; }
     if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") { rs.textContent = "This browser can't record yet. Try the latest Chrome or Safari."; return; }
+    if (restoring) return;
+    rec.disabled = true;
+    const permitted = await recordingPermission("Ask everyone present first. Their voices will be saved on this device.");
+    if (!permitted || !box.isConnected || box.hidden || restoring) { rec.disabled = false; return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { rs.textContent = "We couldn't reach the microphone. Allow it in your browser settings and try again."; return; }
+    catch { rec.disabled = false; rs.textContent = "We couldn't reach the microphone. Allow it in your browser settings and try again."; return; }
+    if (!box.isConnected || box.hidden || restoring) { stream.getTracks().forEach(t => t.stop()); rec.disabled = false; return; }
     const ov = await countdown();
-    if (!ov) { stream.getTracks().forEach((t) => t.stop()); return; }
+    if (!ov) { stream.getTracks().forEach((t) => t.stop()); rec.disabled = false; return; }
     const mr = new MediaRecorder(stream), chunks = [], who = S.seats[1] || "Storyteller";
     mr.ondataavailable = (e) => chunks.push(e.data);
     const closeRun = runScreen(ov, who, q && q.q, () => mr.stop());
     let t0 = Date.now();
     mr.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop()); live = null; closeRun();
-      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob };
+      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "in-person", at: t0 } };
       let kept = true;
       if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
-      clips.unshift({ ...clip, url: URL.createObjectURL(blob) });
+      clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept });
       S.told++; if (q) S.asked.push(q.q); save();
       if (box.isConnected) renderSitting(box, kept ? "Saved on this device. You'll find it under Recorded." : "Recorded, but this browser wouldn't keep it. It's here until you leave the page.");
       if (S.consent.transcribe && S.autoTx) { const li = [...document.querySelectorAll(".clips li")].find((x) => x.querySelector(".cq") && x.querySelector("audio").src === clips[0].url); if (li && li._run) li._run(); }
     };
-    t0 = Date.now(); live = { mr, stream }; mr.start(); setLive(true);
+    t0 = Date.now(); live = { mr, stream }; mr.start(1000); rec.disabled = false; setLive(true);
     rs.textContent = `Recording. Let ${who} take their time.`;
   };
 
@@ -1216,15 +1391,15 @@ const BADGES = [
   ["Half a season", () => S.sittings.length >= SEASON / 2], ["Season done", () => S.sittings.length >= SEASON], ["Games night", () => totalWins() >= 5]
 ];
 function renderMake(box) {
-  const done = S.told, f = famName(S.name), NEED = 5, got = Math.min(done, NEED);
+  const f = famName(S.name);
   const kinds = {
     magazine: { thumb: `<div class="thumb mag"><small>Issue 01</small><b>The ${esc(f)} issue</b></div>`, d: "" },
     storybook: { thumb: `<div class="thumb book"><small>Storybook</small><b>${esc(f)} family tales</b><i></i><i></i></div>`, d: "" },
     short: { thumb: `<div class="thumb film"><b style="margin-top:auto">The ${esc(f)} short</b></div>`, d: "" }
   };
-  box.replaceChildren($(`<h1 class="title">Make something</h1>`),
-    $(`<div><p class="lede"><b>${done}</b>${done === 1 ? "story" : "stories"} told. ${done >= NEED ? "That's enough for a first issue." : `${NEED - done} more makes a first issue.`}</p>
-      <div class="ticks" role="img" aria-label="${got} of ${NEED} stories">${[...Array(NEED)].map((_, i) => `<i class="${i < got ? "on" : ""}"></i>`).join("")}</div></div>`));
+  box.replaceChildren($(`<h1 class="title">Make something</h1>`));
+  const makeMagazine = $(`<button class="cta" type="button" style="margin-top:24px">Make a magazine</button>`);
+  makeMagazine.onclick = magazineSheet; box.append(makeMagazine);
   const list = $(`<ul class="works"></ul>`);
   MAKES.forEach(([id, label]) => {
     const k = kinds[id], mine = S.makes.includes(id);
@@ -1238,6 +1413,63 @@ function renderMake(box) {
     $(`<ul class="miles">${BADGES.map(([n, ok]) => `<li class="${ok() ? "on" : ""}">${esc(n)}<span style="position:absolute;left:-9999px">${ok() ? ", done" : ", not yet"}</span></li>`).join("")}</ul>`));
 }
 const closeBtn = (close) => { const b = $(`<button class="btn" type="button" style="width:100%;margin-top:16px">Close</button>`); b.onclick = close; return b; };
+/* ---------- A publication made from the family's selected words ---------- */
+function buildMagazine(ids) {
+  if (!Array.isArray(ids) || !ids.length) throw new Error("Choose at least one story with a transcript.");
+  const selected = ids.map(id => clips.find(c => c.id === id));
+  if (new Set(ids).size !== ids.length || selected.some(c => !c || !c.text || !c.text.trim())) throw new Error("Every selected story needs a transcript.");
+  const family = famName(S.name) || "Our family", color = /^#[0-9a-f]{6}$/i.test(S.color) ? S.color : "#e26b3f";
+  const paragraphs = text => text.split(/\n\s*\n/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; base-uri 'none'; form-action 'none'"><title>${esc(family)} — Family stories</title><style>
+  :root { --accent:${color}; --accent-ink:${onAccent(color)}; --paper:#fffdf8; --ink:#29241f; --muted:#71665c; --rule:#ded7cc; --body:Georgia,'Times New Roman',serif; --label:Arial,sans-serif; }
+  *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.75 var(--body)}
+  .page,article{max-width:780px;margin:auto;padding:64px 44px;overflow-wrap:anywhere} .cover{min-height:960px;display:flex;flex-direction:column;justify-content:space-between;border-top:18px solid var(--accent)}
+  .label{font:600 11px/1.5 var(--label);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  h1{font:normal clamp(54px,10vw,100px)/1 var(--body);letter-spacing:-.04em;margin:24px 0}h2{font:normal 40px/1.15 var(--body);margin:20px 0 32px}p{margin:0 0 24px}
+  .seal{display:grid;place-items:center;width:88px;height:88px;border:1px solid var(--ink);border-radius:50%;font:normal 46px/1 var(--body);margin-bottom:36px}
+  .saying{font-style:italic;font-size:24px;max-width:30ch}.cover-bottom{border-top:1px solid var(--ink);padding-top:20px;display:flex;justify-content:space-between;gap:20px;font:12px var(--label)}
+  .contents{border-top:1px solid var(--rule)}.contents ol{padding:0;list-style:none}.contents li{border-top:1px solid var(--rule);padding:16px 0;display:flex;gap:24px}.contents li span{font:600 13px var(--label);padding-top:7px}
+  article{border-top:1px solid var(--rule)}article .recorded{font:12px var(--label);color:var(--muted);margin:28px 0}.story-text{white-space:normal}.story-text p:first-child::first-letter{font-size:2.8em;float:left;line-height:1;margin:4px 8px 0 0}
+  .end{font:12px/1.6 var(--label);color:var(--muted);border-top:1px solid var(--rule);padding-top:24px;margin-top:44px}
+  @media(max-width:500px){.page,article{padding:36px 24px}.cover{min-height:740px}h2{font-size:30px}}
+  @page{size:A4;margin:18mm} @media print{body{background:var(--paper);print-color-adjust:exact;-webkit-print-color-adjust:exact}.page,article{max-width:none;padding:0}.cover{min-height:245mm;border-top:10px solid var(--accent);padding-top:14mm;break-after:page}.contents{border:0;break-after:page}article{border:0;break-before:page}h2{break-after:avoid}p{orphans:3;widows:3}.end{break-inside:avoid}}
+  </style></head><body>
+  <section class="page cover"><div><span class="label">Family stories · Volume 01</span></div><div><div class="seal" aria-hidden="true">${esc(initial(family))}</div><h1>${esc(family)}</h1>${S.saying ? `<p class="saying">${esc(S.saying)}</p>` : ""}${S.town ? `<p>${esc(S.town)}</p>` : ""}</div><div class="cover-bottom"><span>${selected.length} ${selected.length === 1 ? "story" : "stories"}, in our own words</span><span>Tell Me Again</span></div></section>
+  <section class="page contents"><span class="label">In this volume</span><h2>Our stories</h2><ol>${selected.map((c,i) => `<li><span>${String(i+1).padStart(2,"0")}</span><div>${esc(c.q)}</div></li>`).join("")}</ol></section>
+  ${selected.map((c,i) => `<article><span class="label">${esc(family)} · Story ${String(i+1).padStart(2,"0")}</span><h2>${esc(c.q)}</h2><div class="story-text">${paragraphs(c.text)}</div><p class="recorded">Recorded ${esc(new Date(c.at).toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"}))}</p><div class="end">${esc(family)} · Family stories</div></article>`).join("")}
+  </body></html>`;
+}
+function magazineSheet() {
+  const available = clips.filter(c => c.text && c.text.trim());
+  const body = $(`<div><h2>Make a magazine</h2><div class="mag-stories"></div><label style="display:flex;gap:12px;align-items:flex-start;margin:24px 0"><input id="reviewed" type="checkbox" style="margin-top:5px"><span>I've reviewed these transcripts and have permission to include them.</span></label><button class="cta" type="button" disabled>Preview magazine</button><p class="err" role="status"></p></div>`);
+  const selected = new Set();
+  const go = body.querySelector(".cta"), reviewed = body.querySelector("#reviewed");
+  const sync = () => { go.disabled = !selected.size || !reviewed.checked; };
+  available.forEach(c => {
+    const row = $(`<label style="display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding:16px 0"><input type="checkbox" style="margin-top:5px"><span>${esc(c.q)}</span></label>`);
+    row.querySelector("input").onchange = e => { if (e.target.checked) selected.add(c.id); else selected.delete(c.id); reviewed.checked = false; sync(); };
+    body.querySelector(".mag-stories").append(row);
+  });
+  if (!available.length) body.querySelector(".mag-stories").append($(`<p class="para" style="margin-top:16px">No transcripts yet. Turn a recording into text under Sit, then review the words.</p>`));
+  reviewed.onchange = sync;
+  const close = sheet("Make a family magazine", body); body.append(closeBtn(close));
+  go.onclick = () => {
+    try {
+      const html = buildMagazine([...selected]);
+      const preview = $(`<div><h2>Family magazine</h2><iframe title="Family magazine preview" sandbox="" style="width:100%;height:55vh;border:1px solid var(--line);margin:20px 0"></iframe><button class="cta" type="button">Print / Save PDF</button><button class="btn" type="button" style="width:100%;margin-top:12px">Download magazine</button><p class="err" role="status"></p></div>`);
+      preview.querySelector("iframe").srcdoc = html;
+      const closePreview = sheet("Family magazine", preview); preview.append(closeBtn(closePreview));
+      preview.querySelector(".btn").onclick = () => downloadFile(new Blob([html], { type: "text/html" }), "family-magazine.html");
+      preview.querySelector(".cta").onclick = () => {
+        const publication = window.open("", "_blank");
+        if (!publication) { preview.querySelector(".err").textContent = "Allow pop-ups to print the magazine, or download it and print from your browser."; return; }
+        publication.opener = null; publication.document.write(html); publication.document.close();
+        publication.focus(); setTimeout(() => publication.print(), 150);
+      };
+    } catch (e) { body.querySelector(".err").textContent = e.message; }
+  };
+}
+
 async function previewMag() {
   const body = $(`<div><h2>Cover preview</h2><canvas class="cvs" role="img" aria-label="Magazine cover preview"></canvas>
     <button class="cta" type="button" id="dl" style="margin-top:16px">Save the cover</button></div>`);
@@ -1713,6 +1945,25 @@ const shareRoom = async (code) => {
 // The host's phone records both voices on the device and nothing is uploaded anywhere.
 function voiceSitting(box, relay, myName, note) {
   let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
+  let control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, recordingQuestion = null, ending = false;
+  const sendControl = data => { if (control && control.readyState === "open") { control.send(JSON.stringify(data)); return true; } return false; };
+  function bindControl(channel) {
+    control = channel;
+    channel.onopen = render;
+    channel.onclose = () => { if (permissionReply) permissionReply(false); if (mr) stopRec(); peerRecording = false; render(); };
+    channel.onmessage = async e => {
+      let m; try { m = JSON.parse(e.data); } catch { return; }
+      if (m.k === "record-request" && !isCaller && !requesting && mode === "live" && typeof m.id === "string") {
+        requesting = true;
+        const samePeer = pc;
+        const allowed = await recordingPermission("Both voices will be saved on the caller's device. You can stop recording at any time.");
+        requesting = false;
+        if (pc === samePeer && channel === control && mode === "live") sendControl({ k: "record-answer", id: m.id, allowed });
+      } else if (m.k === "record-answer" && isCaller && m.id === requestId && permissionReply) permissionReply(m.allowed === true);
+      else if (m.k === "record-state" && !isCaller) { peerRecording = m.recording === true; render(); }
+      else if (m.k === "record-stop" && isCaller && mr) stopRec();
+    };
+  }
   const sig = (o) => relay({ t: "sig", d: JSON.stringify(o) });
   const audio = new Audio(); audio.autoplay = true; audio.playsInline = true;
 
@@ -1720,26 +1971,32 @@ function voiceSitting(box, relay, myName, note) {
     if (mode === "idle") { box.replaceChildren($(`<div class="voice"><h2>Voice call</h2><div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; return; }
     if (mode === "ringing") { box.replaceChildren($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); box.querySelector("#vj").onclick = join; box.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
     const rec = !!mr;
+    const recording = rec || peerRecording;
     box.replaceChildren($(`<div class="voice"><h2>${mode === "calling" ? "Calling…" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
       ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "" : "Listening"}</p>`}
-      ${rec ? `<p class="hint"><i class="live"></i>Recording</p>` : ""}
+      ${recording ? `<p class="hint" role="status"><i class="live"></i>Recording on the caller's device</p>` : ""}
       <div class="vrow">
-        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto">${rec ? "Stop and save" : "Record the answer"}</button>` : ""}
+        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>${q ? "Another question" : "Pick a question"}</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Stop and save" : requesting ? "Waiting for permission…" : "Record the answer"}</button>` : ""}
+        ${!isCaller && peerRecording ? `<button class="btn" id="stop-peer" type="button">Stop recording</button>` : ""}
         <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
     const g = (i) => box.querySelector(i);
     if (g("#vq")) g("#vq").onclick = () => { const n = nextQuestion(); if (!n) return; q = n.q; sig({ k: "q", q }); render(); };
     if (g("#vr")) g("#vr").onclick = rec ? stopRec : startRec;
+    if (g("#stop-peer")) g("#stop-peer").onclick = () => sendControl({ k: "record-stop" });
     g("#vm").onclick = () => { muted = !muted; if (local) local.getAudioTracks().forEach((t) => t.enabled = !muted); render(); };
     g("#vh").onclick = () => { sig({ k: "bye" }); end(); };
   }
   function mkPc() {
     pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }] });
+    if (isCaller) bindControl(pc.createDataChannel("recording-permission"));
+    else pc.ondatachannel = e => { if (e.channel.label === "recording-permission") bindControl(e.channel); };
     local.getTracks().forEach((t) => pc.addTrack(t, local));
     pc.onicecandidate = (e) => { if (e.candidate) sig({ k: "ice", c: e.candidate }); };
     pc.ontrack = (e) => { audio.srcObject = e.streams[0]; audio.play().catch(() => {}); };
     pc.onconnectionstatechange = () => {
-      if (pc && pc.connectionState === "connected") { mode = "live"; render(); }
-      if (pc && (pc.connectionState === "failed")) { note("The call couldn't connect. Some networks block voice calls; try Wi-Fi or mobile data."); end(); }
+      if (pc && pc.connectionState === "connected") { clearTimeout(disconnectTimer); mode = "live"; render(); }
+      if (pc && pc.connectionState === "disconnected") { clearTimeout(disconnectTimer); disconnectTimer = setTimeout(() => { if (pc && pc.connectionState === "disconnected") { note("Connection lost. Saving the recorded part."); end(); } }, 5000); }
+      if (pc && pc.connectionState === "failed") { note("The call couldn't connect. Try Wi-Fi or mobile data."); end(); }
     };
   }
   async function mic() {
@@ -1770,27 +2027,58 @@ function voiceSitting(box, relay, myName, note) {
     else if (m.k === "q") { q = String(m.q || "").slice(0, 400); if (mode === "live") render(); }
     else if (m.k === "bye") { if (mode === "ringing" || mode === "idle") { mode = "idle"; render(); } else { note("The call ended."); end(); } }
   }
-  function startRec() {
-    const remote = audio.srcObject; if (!remote || typeof MediaRecorder === "undefined") return note("Can't record on this browser.");
-    ctx = new (window.AudioContext || window.webkitAudioContext)(); mix = ctx.createMediaStreamDestination();
-    ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
-    chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = (e) => chunks.push(e.data);
-    mr.onstop = saveRec; t0 = Date.now(); mr.start(); render();
+  async function startRec() {
+    if (requesting || saving || mode !== "live" || restoring || !control || control.readyState !== "open") return;
+    const samePeer = pc;
+    requesting = true; render();
+    const hostAllowed = await recordingPermission("Both voices will be saved on this device. The other person will also be asked for permission.");
+    if (!hostAllowed || pc !== samePeer || ending || mode !== "live") { requesting = false; render(); return; }
+    const allowed = await new Promise(resolve => {
+      requestId = crypto.randomUUID();
+      permissionReply = value => { clearTimeout(requestTimer); permissionReply = null; requestId = null; resolve(value); };
+      requestTimer = setTimeout(() => { if (permissionReply) permissionReply(false); }, 60000);
+      if (!sendControl({ k: "record-request", id: requestId })) permissionReply(false);
+    });
+    requesting = false;
+    if (!allowed || pc !== samePeer || mode !== "live" || ending) { note("Recording wasn't allowed. You can keep talking."); render(); return; }
+    const remote = audio.srcObject;
+    if (!remote || typeof MediaRecorder === "undefined") { note("Can't record on this browser."); render(); return; }
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume(); mix = ctx.createMediaStreamDestination();
+      if (pc !== samePeer || mode !== "live" || ending || control?.readyState !== "open") { await ctx.close(); ctx = null; return; }
+      ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
+      chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      mr.onstop = saveRec; mr.onerror = () => { note("Recording was interrupted. Saving what was captured."); stopRec(); };
+      recordingQuestion = q || "Free story"; t0 = Date.now(); activeVoiceRecording = true;
+      saving = new Promise(resolve => { resolveSaving = resolve; });
+      mr.start(1000); sendControl({ k: "record-state", recording: true }); render();
+    } catch { mr = null; activeVoiceRecording = false; try { ctx && ctx.close(); } catch {} ctx = null; saving = null; note("Recording couldn't start. Your call is still connected."); render(); }
   }
-  function stopRec() { try { mr.stop(); } catch {} }
+  function stopRec() {
+    if (mr && mr.state !== "inactive") { mr.stop(); sendControl({ k: "record-state", recording: false }); }
+    return saving;
+  }
   async function saveRec() {
-    const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q || "Free story", at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob };
-    mr = null; try { ctx.close(); } catch {} ctx = null;
-    let kept = true; if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
-    clips.unshift({ ...clip, url: URL.createObjectURL(blob) }); S.told++; if (q) S.asked.push(q); save(); q = null;
-    note(kept ? "Saved on this phone. Find it under Sit, in Recorded." : "Recorded, but this browser wouldn't keep it.", 5000); render();
+    const recorder = mr;
+    const blob = new Blob(chunks, { type: recorder.mimeType }), clip = { id: crypto.randomUUID(), q: recordingQuestion, at: t0, dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "remote", at: t0 } };
+    mr = null; try { await ctx.close(); } catch {} ctx = null;
+    let kept = true;
+    if (!DEV.has("data")) { try { await idbDo("readwrite", st => st.put(clip)); } catch { kept = false; } }
+    clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept }); S.told++; if (recordingQuestion !== "Free story") S.asked.push(recordingQuestion); save(); q = null;
+    activeVoiceRecording = false;
+    const finish = resolveSaving; resolveSaving = null; saving = null; if (finish) finish();
+    note(kept ? "Saved on this device." : "Storage is full or unavailable. Keep this page open and download a backup to save the recording.", 0); render();
   }
-  function end() {
-    if (mr) { mr.onstop = null; try { mr.stop(); } catch {} mr = null; }
+  async function end() {
+    if (ending) return;
+    ending = true; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
+    if (permissionReply) permissionReply(false);
+    if (mr || saving) await stopRec();
     try { ctx && ctx.close(); } catch {} ctx = null;
+    try { control && control.close(); } catch {} control = null;
     try { pc && pc.close(); } catch {} pc = null;
-    if (local) local.getTracks().forEach((t) => t.stop()); local = null;
-    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; render();
+    if (local) local.getTracks().forEach(t => t.stop()); local = null;
+    audio.srcObject = null; mode = "idle"; isCaller = false; q = null; pend = []; muted = false; peerRecording = false; requesting = false; ending = false; render();
   }
   render();
   return { onSig, end };
@@ -1805,11 +2093,23 @@ function mountRoom(box, code, name, onLeave) {
   const note = (m, ms = 3500) => { er.textContent = m; clearTimeout(errT); if (ms) errT = setTimeout(() => er.textContent = "", ms); };
   const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   box.querySelector("#sh").onclick = async () => { const m = await shareRoom(code); if (m) note(m); };
-  const leave = () => { try { voice.end(); } catch {} dead = true; clearTimeout(errT); try { ws && ws.close(); } catch {} lsSet("sitting-room", ""); onLeave(); };
+  let leaving = null;
+  const leave = (forget = true) => {
+    if (leaving) return leaving;
+    leaving = (async () => {
+      dead = true; clearTimeout(errT);
+      send({ t: "sig", d: JSON.stringify({ k: "bye" }) });
+      try { await voice.end(); } catch {} try { ws && ws.close(); } catch {}
+      if (currentRoom === session) currentRoom = null;
+      if (forget) { lsSet("sitting-room", ""); onLeave(); }
+    })();
+    return leaving;
+  };
   const voice = voiceSitting(box.querySelector("#voice2"), send, () => (st && st.me && st.me.name) || name, note);
-  box.querySelector("#lv").onclick = () => { voice.end(); leave(); };
+  box.querySelector("#lv").onclick = () => leave();
 
   function connect() {
+    if (dead) return;
     ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/rooms/${code}/ws`);
     ws.onopen = () => { tries = 0; send({ t: "join", pid, name }); };
     ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch { return; } if (m.t === "state") { st = m; paintRoom(); } else if (m.t === "sig") voice.onSig(m.d); else if (m.t === "err") note(m.m); };
@@ -1842,8 +2142,10 @@ function mountRoom(box, code, name, onLeave) {
     }
     stg.replaceChildren(el);
   }
+  const session = { close: leave };
+  currentRoom = session;
   connect();
-  return { close: leave };
+  return session;
 }
 
 function mountOnlineGame(kind, box, send, st, note) {

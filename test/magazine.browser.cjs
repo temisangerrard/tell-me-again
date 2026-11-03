@@ -1,0 +1,15 @@
+// Run against local Wrangler dev; all stories/audio are synthetic test fixtures.
+const { join } = require('node:path');
+const { tmpdir } = require('node:os');
+const {chromium}=require('playwright');const assert=require('node:assert/strict');
+(async()=>{
+ const b=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE});const p=await b.newPage({viewport:{width:390,height:844}});const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://localhost:8787');
+ await p.evaluate(async()=>{await loadClips();S.step=7;S.name='Etim';S.me.name='Ada';S.elder.name='Papa';S.town='Calabar';S.saying='There is always room at the table.';reseat();save();clips=[{id:'kitchen',q:'Who taught you to cook?',at:Date.now(),dur:20,blob:new Blob(['sample'],{type:'audio/webm'}),text:'I learned by standing beside my mother. She would put a bowl in my hands and tell me to watch.\n\nOn Sundays, the kitchen was the busiest room in the house. Everyone had a job, and everyone wanted the first taste.',tx:'edited'},{id:'home',q:'Walk me through your childhood home.',at:Date.now(),dur:20,blob:new Blob(['sample'],{type:'audio/webm'}),text:'The front door opened onto a small courtyard. I remember the sound of rain on the roof, and the tree we sat under in the afternoon.\n\nThere was always someone visiting. Our neighbours came to borrow things and stayed to talk.',tx:'edited'}];render();});
+ await p.getByRole('tab',{name:'Make',exact:true}).click();await p.getByRole('button',{name:'Make a magazine',exact:true}).click();let dlg=p.getByRole('dialog',{name:'Make a family magazine',exact:true});
+ const checks=dlg.getByRole('checkbox');await checks.nth(0).check();await checks.nth(1).check();assert.equal(await dlg.getByRole('button',{name:'Preview magazine'}).isDisabled(),true);await checks.nth(2).check();await dlg.getByRole('button',{name:'Preview magazine'}).click();
+ const preview=p.getByRole('dialog',{name:'Family magazine',exact:true});await preview.waitFor();await p.screenshot({path:join(tmpdir(), 'tma-magazine-ui.png')});
+ const download=p.waitForEvent('download');await preview.getByRole('button',{name:'Download magazine'}).click();await(await download).saveAs(join(tmpdir(), 'tma-magazine.html'));
+ const publication=await b.newPage({viewport:{width:900,height:1100}});await publication.goto(require('node:url').pathToFileURL(join(tmpdir(), 'tma-magazine.html')).href);await publication.pdf({path:join(tmpdir(), 'tma-magazine.pdf'),format:'A4',printBackground:true});await publication.screenshot({path:join(tmpdir(), 'tma-magazine-cover.png'),fullPage:true});
+ assert.equal(await publication.locator('article').count(),2);assert.match(await publication.locator('article').first().innerText(),/standing beside my mother/);assert.deepEqual(errors,[]);
+ console.log('Magazine selection, review confirmation, sandboxed preview, standalone download and 2-story PDF export passed.');await b.close();
+})().catch(e=>{console.error(e);process.exit(1)});

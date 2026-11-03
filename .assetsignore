@@ -16,3 +16,6 @@ AGENTS.md
 
 # Version-control metadata must never be served.
 .git
+
+# Internal implementation plans
+docs
