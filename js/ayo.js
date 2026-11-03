@@ -54,7 +54,7 @@ function renderAyo(box) {
   function end() {
     g.busy = false; const w = g.sc[0] === g.sc[1] ? null : g.sc[0] > g.sc[1] ? 0 : 1; g.over = w === null ? "draw" : w; paint();
     say(w === null ? "A draw." : `${g.names[w]} wins, ${g.sc[w]} to ${g.sc[1 - w]}.`);
-    if (w !== null) { recordWin(g.names[w]); celebrate(el); } showLb();
+    if (w !== null) { recordWin(g.names[w]); celebrate(el); feel.win(); } showLb();
     showResult();
   }
   function showResult() {
@@ -68,11 +68,12 @@ function renderAyo(box) {
     while (n > 0) { c = (c + 1) % 12; if (c === i) continue; steps.push(c); n--; }
     paint(); let k = 0;
     const tick = () => {
-      if (k < steps.length) { g.p[steps[k]]++; paint(steps[k]); k++; setTimeout(tick, 150); return; }
+      if (k < steps.length) { g.p[steps[k]]++; paint(steps[k]); feel.sow(); k++; setTimeout(tick, 150); return; }
       const opp = ASIDE(1 - g.turn); let caps = [], x = c;
       if (opp.includes(c)) { while (opp.includes(x) && (g.p[x] === 2 || g.p[x] === 3)) { caps.push(x); x = (x + 11) % 12; }
         if (opp.every((o) => caps.includes(o) || g.p[o] === 0) && caps.length) caps = []; } // never capture every seed on their side
       let got = 0; caps.forEach((o) => { got += g.p[o]; g.p[o] = 0; }); g.sc[g.turn] += got;
+      if (got) feel.capture();
       paint(); say(got ? `${g.names[g.turn]} captured ${got}.` : ""); setTimeout(finish, got ? 500 : 0);
     };
     tick();

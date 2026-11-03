@@ -68,6 +68,8 @@ function renderFamily(box) {
 
   const look = sec("Look");
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
+  const snd = sec("Sound"); // game sounds and the buzz on your turn
+  chipGroup(snd, "Game sounds", [["on", "On"], ["off", "Off"]], (id) => (soundOn() ? "on" : "off") === id, (id) => { setSound(id === "on"); snd.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", ["on", "off"][i] === id)); if (id === "on") feel.yourTurn(); });
 
   const data = sec("Your information");
   backupControls(data);
