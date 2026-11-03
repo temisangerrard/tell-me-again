@@ -24,3 +24,24 @@ test("with no window open, tapping the notification opens the app", async () => 
   listeners.notificationclick({ notification: { close() {} }, waitUntil: (p) => { wait = p; } }); await wait;
   assert.equal(opened, "/");
 });
+
+test("the app only reloads itself for an update when nothing would be lost", async () => {
+  const { app } = await import("./app.mjs");
+  const a = app(); await a.ready; const { w } = a;
+  assert.equal(w.eval("idleForUpdate()"), true, "quiet app: safe to reload");
+  w.eval('sitting = ["Ese"]'); assert.equal(w.eval("idleForUpdate()"), false, "a sitting is open");
+  w.eval("sitting = null; activeCall = { mode: () => 'live' }"); assert.equal(w.eval("idleForUpdate()"), false, "a call is live");
+  w.eval("activeCall = null; currentRoom = { close() {} }"); assert.equal(w.eval("idleForUpdate()"), false, "in a room");
+  w.eval("currentRoom = null; restoring = true"); assert.equal(w.eval("idleForUpdate()"), false, "restoring a backup");
+  w.eval("restoring = false; activeVoiceRecording = true"); assert.equal(w.eval("idleForUpdate()"), false, "recording a call");
+  w.eval("activeVoiceRecording = false"); assert.equal(w.eval("idleForUpdate()"), true);
+  w.eval("pendingClipEdits.set('x', () => {})"); assert.equal(w.eval("idleForUpdate()"), false, "a transcript edit is waiting to save");
+  w.eval("pendingClipEdits.clear(); clipWrites.add(Promise.resolve())"); assert.equal(w.eval("idleForUpdate()"), false, "a clip is being written");
+  w.eval("clipWrites.clear(); txBusy.add('c')"); assert.equal(w.eval("idleForUpdate()"), false, "a recording is being turned into text");
+  w.eval("txBusy.clear(); clips = [{ id: 'u', _unsaved: true }]"); assert.equal(w.eval("idleForUpdate()"), false, "the only copy of a recording is in memory");
+  w.eval("clips = []; game = { over: null }"); assert.equal(w.eval("idleForUpdate()"), false, "a Ludo game on this phone");
+  w.eval("game = null; ayo = { over: null }"); assert.equal(w.eval("idleForUpdate()"), false, "an Ayo game on this phone");
+  w.eval("ayo = null; whot = { over: undefined }"); assert.equal(w.eval("idleForUpdate()"), false, "a Whot game on this phone");
+  w.eval("whot = { over: { name: 'a' } }; ayo = { over: 0 }; game = { over: { name: 'b' } }"); assert.equal(w.eval("idleForUpdate()"), true, "finished games don't block an update");
+  await a.close();
+});
