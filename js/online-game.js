@@ -54,24 +54,49 @@ function mountOnlineGame(kind, box, send, st, note) {
     const ap = el.querySelector(".apits"), rt = $(`<div class="rowlbl"></div>`), rb = $(`<div class="rowlbl"></div>`); ap.append(rt);
     const pits = [...Array(12)].map(() => { const b = $(`<button class="pit" type="button"></button>`); b.onclick = () => { if (b.classList.contains("can")) act({ a: "sow", i: +b.dataset.i }); }; ap.append(b); return b; });
     ap.append(rb);
-    return { update(g) {
+    let shownP = null, animating = false, pending = null, lastKeyA, timers = [];
+    const draw = (g, p, sc, hit, caps, busy) => {
       const v = g.v, flip = g.seat === 1, order = flip ? [5,4,3,2,1,0,6,7,8,9,10,11] : [11,10,9,8,7,6,0,1,2,3,4,5];
-      const mv = v.over === null && g.seat === v.turn ? E.ayo.moves(v) : [], lastPit = v.last && v.last.steps.length ? v.last.steps[v.last.steps.length - 1] : -1;
-      pits.forEach((b, k) => { const i = order[k], n = v.p[i], can = mv.includes(i);
-        b.dataset.i = i; b.innerHTML = seedsHTML(n); b.disabled = !can; b.className = `pit ${i > 5 ? "b" : ""} ${can ? "can" : ""} ${n === 0 ? "zero" : ""} ${i === lastPit ? "hit" : ""} ${v.last && v.last.caps.includes(i) ? "cap" : ""}`;
+      const mv = !busy && v.over === null && g.seat === v.turn ? E.ayo.moves(v) : [];
+      pits.forEach((b, k) => { const i = order[k], n = p[i], can = mv.includes(i);
+        b.dataset.i = i; b.innerHTML = seedsHTML(n); b.disabled = !can; b.className = `pit ${i > 5 ? "b" : ""} ${can ? "can" : ""} ${n === 0 ? "zero" : ""} ${i === hit ? "hit" : ""} ${caps.includes(i) ? "cap" : ""}`;
         b.setAttribute("aria-label", `${g.names[i > 5 ? 1 : 0]}, pit ${(i % 6) + 1}, ${n} ${n === 1 ? "seed" : "seeds"}`); });
-      [0, 1].forEach((t) => { const sc = el.querySelectorAll(".score")[t]; sc.innerHTML = `<b>${v.sc[t]}</b><span>${esc(g.names[t])}${g.seat === t ? " (you)" : ""}</span>`; sc.classList.toggle("on", v.turn === t && v.over === null); });
+      [0, 1].forEach((t) => { const s = el.querySelectorAll(".score")[t]; s.innerHTML = `<b>${sc[t]}</b><span>${esc(g.names[t])}${g.seat === t ? " (you)" : ""}</span>`; s.classList.toggle("on", v.turn === t && v.over === null); });
       const top = flip ? 0 : 1, bot = flip ? 1 : 0; // your own side is always the bottom row
       rt.textContent = g.names[top] + (g.seat === top ? " (you)" : ""); rb.textContent = g.names[bot] + (g.seat === bot ? " (you)" : "");
       rt.classList.toggle("on", v.turn === top && v.over === null); rb.classList.toggle("on", v.turn === bot && v.over === null);
       el.querySelector(".hint").textContent = v.msg;
-      const ov = el.querySelector(".ov"); ov.replaceChildren(); if (v.over !== null) { const w = over(g); ov.append(w); wire(w, () => send({ t: "stop" })); }
+      const ov = el.querySelector(".ov"); ov.replaceChildren(); if (v.over !== null && !busy) { const w = over(g); ov.append(w); wire(w, () => send({ t: "stop" })); }
+    };
+    const settle = (g) => { animating = false; shownP = g.v.p.slice(); draw(g, g.v.p, g.v.sc, g.v.last && g.v.last.steps.length ? g.v.last.steps[g.v.last.steps.length - 1] : -1, g.v.last ? g.v.last.caps : [], false); if (pending) { const nx = pending; pending = null; api.update(nx); } };
+    // Only replay a move that really follows from the board on screen (a reconnect or a skipped update would show wrong counts).
+    const follows = (v) => {
+      const L = v.last; if (!shownP || shownP[L.pit] !== L.steps.length) return false;
+      if (v.over !== null) return true; // the end of a game sweeps leftover seeds, so the board can't be compared exactly
+      const p = shownP.slice(); p[L.pit] = 0; L.steps.forEach((c) => p[c]++); L.caps.forEach((c) => { p[c] = 0; });
+      return p.every((n, i) => n === v.p[i]);
+    };
+    // Replay the server's move: lift the seeds, drop them one pit at a time, then clear any capture.
+    const sow = (g) => {
+      const v = g.v, L = v.last, p = shownP.slice(), sc = v.sc.slice(); sc[L.seat] -= L.got; animating = true;
+      p[L.pit] = 0; draw(g, p, sc, -1, [], true);
+      L.steps.forEach((c, k) => timers.push(setTimeout(() => { p[c]++; draw(g, p, sc, c, [], true); feel.sow(); }, 140 * (k + 1))));
+      const t = 140 * (L.steps.length + 1);
+      if (L.caps.length) timers.push(setTimeout(() => { L.caps.forEach((c) => { p[c] = 0; }); draw(g, p, v.sc, L.steps[L.steps.length - 1], L.caps, true); feel.capture(); }, t));
+      timers.push(setTimeout(() => settle(g), t + (L.caps.length ? 450 : 80)));
+    };
+    const api = { update(g) {
+      if (animating) { pending = g; return; }
+      const v = g.v, key = JSON.stringify(v.last);
+      if (shownP && v.last && v.last.steps.length && key !== lastKeyA && !reduceMotion() && follows(v)) { lastKeyA = key; return sow(g); }
+      lastKeyA = key; settle(g);
     } };
+    return api;
   }
 
   // whot
   const el = $(`<div class="whot"><div class="scores"></div><div class="stg"></div></div>`); box.append(el);
-  return { update(g, state) {
+  const draw = (g, state) => {
     const v = g.v, stg = el.querySelector(".stg"), seat = g.seat, mine = seat === v.turn && v.over === null; stg.replaceChildren();
     el.querySelector(".scores").replaceChildren(...v.names.map((n, i) => $(`<span class="${i === v.turn && v.over === null ? "on" : ""}">${esc(n)}${i === seat ? " (you)" : ""} · ${v.counts[i]}</span>`)),
       (() => { const b = $(`<button class="btn rulebtn" type="button">Rules</button>`); b.onclick = () => { const x = $(`<div><h2>The rules</h2>${whotRulesList(v.R)}</div>`); x.append(closeBtn(sheet("Whot rules", x))); }; return b; })());
@@ -94,7 +119,8 @@ function mountOnlineGame(kind, box, send, st, note) {
     const hand = $(`<div class="hand" role="group" aria-label="Your hand"></div>`);
     v.hand.forEach((c, i) => { const ok = mine && E.whot.playableCard(v, c), b = wcardEl(c, ok ? "can" : "no"); b.disabled = !ok; b.onclick = () => act({ a: "play", i }); hand.append(b); });
     stg.append(hand);
-  } };
+  };
+  return { update(g, state) { const before = cardSnapshot(el); draw(g, state); cardSettle(el, before); } };
 }
 
 // Play tab: create a room, or join one by code.

@@ -21,6 +21,9 @@ const feel = {
   rattle() { tone(300 + Math.random() * 200, 0, 0.04, 0.03, "square"); },
   land() { tone(440, 0, 0.1, 0.05, "triangle"); },
   hop(i, step) { tone(420 + i * 45, i * step, 0.05, 0.03, "triangle"); },
+  card() { tone(300, 0, 0.05, 0.03, "sawtooth"); tone(500, 0.04, 0.07, 0.025, "triangle"); },
+  sow() { tone(610 + Math.random() * 60, 0, 0.05, 0.03, "triangle"); },
+  capture() { tone(330, 0, 0.12, 0.05); tone(247, 0.08, 0.18, 0.05); },
   react() { tone(740, 0, 0.08, 0.04, "triangle"); }
 };
 const REACTIONS = ["😂", "👏", "😮", "❤️", "🔥"];

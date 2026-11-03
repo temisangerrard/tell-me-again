@@ -46,3 +46,71 @@ test("online Ludo keeps rolls and token moves disabled while the dice tumble", a
   assert.equal(roll.disabled, true, "roll stays disabled: a die is already on the table");
   await a.close();
 });
+
+test("online Ayo replays a move seed by seed, then lands on the server's board", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.matchMedia = () => ({ matches: false });
+  const box = w.document.createElement("div"); w.document.body.append(box);
+  w.__box = box; w.__send = () => {};
+  const view = w.eval('mountOnlineGame("ayo", __box, __send, { me: { host: true } }, () => {})');
+  const s = w.eval('JSON.parse(JSON.stringify(Engines.ayo.init(["Ade", "Bo"])))');
+  view.update({ seat: 0, names: ["Ade", "Bo"], v: JSON.parse(JSON.stringify(s)) });
+  const sum = () => [...box.querySelectorAll(".pit")].reduce((t, b) => t + b.querySelectorAll("i, .seed, em").length, 0);
+  const err = w.eval("(globalThis.__s = " + JSON.stringify(s) + "), Engines.ayo.act(__s, 0, { a: 'sow', i: 2 })");
+  assert.equal(err, null);
+  const after = w.eval("JSON.parse(JSON.stringify(__s))");
+  view.update({ seat: 0, names: ["Ade", "Bo"], v: after });
+  assert.equal([...box.querySelectorAll(".pit")].every((b) => b.disabled), true, "pits locked while the seeds are sown");
+  await new Promise((r) => setTimeout(r, 1200));
+  const labels = [...box.querySelectorAll(".pit")].map((b) => b.getAttribute("aria-label"));
+  assert.ok(labels.length === 12);
+  const pit2 = box.querySelector('.pit[data-i="2"]'); assert.match(pit2.getAttribute("aria-label"), /0 seeds/);
+  await a.close();
+});
+
+test("online Whot: a dealt hand flies from the market, a played card flies from your hand or across the table", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.matchMedia = () => ({ matches: false });
+  w.Element.prototype.getBoundingClientRect = function () { return { left: 10, top: 10, width: 50, height: 70 }; };
+  const calls = []; w.Element.prototype.animate = function (f, o) { calls.push({ el: this, f, o }); return {}; };
+  const mk = (top, hand, pile = true) => { const r = w.document.createElement("div");
+    r.innerHTML = `<div class="piles">${pile ? '<div class="wc back"></div>' : ""}<div class="wc big" aria-label="${top}"></div></div><div class="hand">${hand.map((h) => `<button class="wc" aria-label="${h}"></button>`).join("")}</div><span class="need">circle</span>`; return r; };
+  // 1. first render with nothing before: a deal
+  const empty = w.document.createElement("div"); const s0 = w.cardSnapshot(empty); assert.equal(s0.top, null);
+  const r1 = mk("5 of circle", ["1 of star", "2 of star", "3 of star"]); w.cardSettle(r1, s0);
+  assert.equal(calls.filter((c) => c.el.matches(".hand .wc")).length, 3, "every dealt card flies in");
+  // 2. you play a card from your hand: it flies to the pile
+  calls.length = 0; const s1 = w.cardSnapshot(r1);
+  const r2 = mk("2 of star", ["1 of star", "3 of star"]); w.cardSettle(r2, s1);
+  assert.equal(calls.filter((c) => c.el.matches(".big")).length, 1, "the played card animates onto the pile");
+  assert.equal(calls.filter((c) => c.el.matches(".hand .wc")).length, 0, "no hand card flies in");
+  // 3. you pick: a new card flies from the market
+  calls.length = 0; const s2 = w.cardSnapshot(r2);
+  const r3 = mk("2 of star", ["1 of star", "3 of star", "9 of cross"]); w.cardSettle(r3, s2);
+  assert.equal(calls.filter((c) => c.el.matches(".hand .wc")).length, 1, "only the picked card flies in");
+  // 4. someone else plays: the pile card arrives from across the table
+  calls.length = 0; const s3 = w.cardSnapshot(r3);
+  const r4 = mk("7 of cross", ["1 of star", "3 of star", "9 of cross"]); w.cardSettle(r4, s3);
+  assert.equal(calls.filter((c) => c.el.matches(".big")).length, 1, "an opponent's card animates onto the pile");
+  await a.close();
+});
+
+test("online Ayo shows the server's board directly when a move doesn't follow from what's on screen", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.matchMedia = () => ({ matches: false });
+  const box = w.document.createElement("div"); w.document.body.append(box); w.__box = box; w.__send = () => {};
+  const view = w.eval('mountOnlineGame("ayo", __box, __send, { me: { host: true } }, () => {})');
+  w.eval('globalThis.__s = Engines.ayo.init(["Ade", "Bo"])');
+  const snap = () => JSON.parse(w.eval("JSON.stringify(__s)"));
+  const g = (v) => ({ seat: 0, names: ["Ade", "Bo"], v });
+  view.update(g(snap()));                                   // the board on screen: the start
+  assert.equal(w.eval("Engines.ayo.act(__s, 0, { a: 'sow', i: 2 })"), null);   // a move the viewer never saw
+  assert.equal(w.eval("Engines.ayo.act(__s, 1, { a: 'sow', i: 8 })"), null);
+  view.update(g(snap()));                                   // arrives out of sequence
+  const seeds = [...box.querySelectorAll(".pit")].map((b) => +b.getAttribute("aria-label").match(/, (\d+) seed/)[1]);
+  const v = snap();
+  const order = [11, 10, 9, 8, 7, 6, 0, 1, 2, 3, 4, 5];
+  assert.deepEqual(seeds, order.map((i) => v.p[i]), "the true board is on screen at once, no replay");
+  assert.ok([...box.querySelectorAll(".pit")].some((b) => !b.disabled), "pits aren't locked by a replay");
+  await a.close();
+});
