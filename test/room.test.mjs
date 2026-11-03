@@ -175,6 +175,29 @@ if (!FULL) { const before = b.errs.length; await sleep(10500); for (let i = 0; i
   h.close(); gst.close();
 }
 
+// ---- joining a game that's already running with a bot: you can take the bot's seat, once, and then you're really playing
+{
+  const room3 = (await (await fetch(`${BASE}/api/rooms`, { method: "POST" })).json()).code;
+  const h = new Client(room3, "Host"); await h.connect();
+  h.send({ t: "addbot" }); ok(await until(() => h.st.members.length === 2), "bot added");
+  h.send({ t: "start", game: "ludo" }); ok(await until(() => h.st.game), "game running with a bot");
+  const helen = new Client(room3, "Helen"); await helen.connect(); ok(await until(() => helen.st.game), "Helen sees the game");
+  ok(helen.st.game.seat === -1, "Helen joined after it started, so she is watching");
+  ok(helen.st.game.bots.length === 1 && helen.st.game.bots[0].name === h.st.members.find((m) => m.bot).name, "she is told which bot she could replace");
+  helen.send({ t: "takeover" }); ok(await until(() => helen.st.game.seat === 1), "Helen takes the bot's seat");
+  ok(await until(() => !h.st.members.some((m) => m.bot)), "the bot leaves the table");
+  ok(await until(() => h.st.game.names[1] === "Helen"), "the host sees Helen's name in the game");
+  ok(helen.st.game.bots.length === 0, "no bot left to take over");
+  helen.send({ t: "takeover" }); await settle(); ok(helen.errs.some((m) => /already playing/i.test(m)), "can't take over twice");
+  const third = new Client(room3, "Third"); await third.connect(); third.send({ t: "takeover" }); await settle(); ok(third.errs.some((m) => /taken by a person/i.test(m)), "no seat to take when only people are playing");
+  const t1 = Date.now();
+  while (Date.now() - t1 < 20000 && !(helen.st.game.v.turn === 1 && helen.st.game.v.over === null)) {
+    const v = h.st.game.v; if (v.turn === 0 && v.over === null) { if (v.dice === null) await h.act({ a: "roll" }); else await h.act({ a: "move", i: v.movable[0] }); } else await sleep(200);
+  }
+  const before = helen.errs.length; await helen.act({ a: "roll" }); ok(helen.errs.length === before, "Helen can play her turn in the seat she took");
+  h.close(); helen.close(); third.close();
+}
+
 // ---- bursts of room creation hit the rate limit (generous: 20 a minute per address)
 if (!process.env.SKIP_RATE) {
   const codes = await Promise.all(Array.from({ length: 40 }, () => fetch(`${BASE}/api/rooms`, { method: "POST" }).then((r) => r.status)));

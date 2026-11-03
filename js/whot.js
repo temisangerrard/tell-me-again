@@ -22,7 +22,7 @@ const WFIXED = [
   ["8", "Suspension. The next player misses a turn."],
   ["14", "General market. Everyone else picks one card."],
   ["20", "Whot. Play it on anything, then call the shape you want."],
-  ["Win", "Be first to empty your hand. If the market runs out, the discards are shuffled back in."]
+  ["Win", "Be first to empty your hand. If the market runs out, the discards are shuffled back in. If there still aren't enough cards to pick up, the game ends and the fewest cards wins."]
 ];
 const WHOUSE = [
   ["stack", "Stack the pick cards", "Answer a 2 with another 2, or a 5 with another 5, and the penalty adds up. Whoever can't match picks the lot."],

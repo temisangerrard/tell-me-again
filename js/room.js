@@ -4,7 +4,7 @@ function mountRoom(box, code, name, onLeave, opts = {}) {
   const pid = roomPid(code); claimRoom(code, pid); const beat = setInterval(() => claimRoom(code, pid), 5000); let ws, st = null, dead = false, tries = 0, errT, stage = null;
   box.replaceChildren($(`<div class="room2"><div class="rtop2"><div class="rcode"><small>Room</small><b>${esc(code)}</b></div>
     <button class="btn" id="sh" type="button">Share</button><button class="btn" id="sd" type="button" aria-pressed="false"></button><button class="btn" id="al" type="button" aria-pressed="false" hidden></button><button class="btn" id="lv" type="button">Leave</button></div>
-    <div class="members" id="mem" aria-label="Who's here"></div><p class="err" id="er" role="status"></p><div id="voice2"></div><div id="stage2"></div><div class="reacts" role="group" aria-label="Reactions"></div></div>`));
+    <div class="members" id="mem" aria-label="Who's here"></div><p class="err" id="er" role="status"></p><div id="voice2"></div><div id="takeover2"></div><div id="stage2"></div><div class="reacts" role="group" aria-label="Reactions"></div></div>`));
   const er = box.querySelector("#er"), stg = box.querySelector("#stage2");
   const note = (m, ms = 3500) => { er.textContent = m; clearTimeout(errT); if (ms) errT = setTimeout(() => er.textContent = "", ms); };
   const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
@@ -54,7 +54,13 @@ function mountRoom(box, code, name, onLeave, opts = {}) {
       if (m.bot && st.me && st.me.host && (!st.game || st.game.v.over !== null)) { const x = $(`<button class="rmbot" type="button" aria-label="Remove ${esc(m.name)}">×</button>`); x.onclick = () => send({ t: "rmbot", name: m.name }); el.append(x); }
       return el;
     }));
-    const g = st.game;
+    const g = st.game, tk = box.querySelector("#takeover2");
+    // A game is running and you're not in it. If a bot is playing, you can take its seat; otherwise you'll be dealt in next round.
+    if (g && g.seat < 0 && g.v.over === null && st.me) {
+      const bot = g.bots && g.bots[0];
+      tk.replaceChildren($(bot ? `<div class="takeover"><span>${esc(bot.name)} is playing.</span><button class="cta" type="button">Take ${esc(bot.name)}'s seat</button></div>` : `<div class="takeover"><span>${esc(watchNote(st))}</span></div>`));
+      const b = tk.querySelector("button"); if (b) b.onclick = () => send({ t: "takeover" });
+    } else tk.replaceChildren();
     if (!g) { stage = null; wasMyTurn = false; wasOver = true; lastMsg = ""; return lobby(); }
     if (!stage || stage.id !== g.id) { stg.replaceChildren(); stage = { id: g.id, ...mountOnlineGame(g.kind, stg, send, st, note) }; wasOver = false; wasMyTurn = false; lastMsg = ""; }
     stage.update(g, st); feelGame(g);

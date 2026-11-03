@@ -20,9 +20,12 @@ function fakeAudio(w) {
 test("the first touch creates and unlocks the audio, so sound works on a phone", async () => {
   const a = app(); await a.ready; const { w } = a; const made = fakeAudio(w);
   assert.equal(made.ctx, 0, "nothing is created before a touch");
-  w.dispatchEvent(new w.Event("pointerdown"));
-  assert.equal(made.ctx, 1, "context created on the first touch"); assert.equal(made.resumed, 1, "and resumed if the phone locked it");
-  w.dispatchEvent(new w.Event("pointerdown")); assert.equal(made.ctx, 1, "only one context for the whole app");
+  w.dispatchEvent(new w.Event("pointerdown")); w.dispatchEvent(new w.Event("touchstart"));
+  assert.equal(made.ctx, 0, "touching down doesn't count as a tap on a phone, so it doesn't pretend to unlock");
+  w.dispatchEvent(new w.Event("touchend"));
+  assert.equal(made.ctx, 1, "context created when the finger lifts"); assert.equal(made.resumed, 1, "and resumed if the phone locked it");
+  w.dispatchEvent(new w.Event("pointerup")); assert.equal(made.ctx, 1, "only one context for the whole app");
+  w.dispatchEvent(new w.Event("click")); assert.equal(made.ctx, 1);
   await a.close();
 });
 
@@ -52,5 +55,14 @@ test("the sound setting is in Family and mutes the game", async () => {
   assert.equal(chips.length, 2, "an On and an Off chip");
   chips.find((c) => c.textContent === "Off").click(); assert.equal(w.eval("soundOn()"), false);
   chips.find((c) => c.textContent === "On").click(); assert.equal(w.eval("soundOn()"), true);
+  await a.close();
+});
+
+test("a context the phone suspended again is resumed on the next tap", async () => {
+  const a = app(); await a.ready; const { w } = a; const made = fakeAudio(w);
+  w.dispatchEvent(new w.Event("touchend")); assert.equal(made.resumed, 1);
+  w.eval('audioCtx.state = "interrupted"'); // after a phone call or an app switch
+  w.dispatchEvent(new w.Event("click")); assert.equal(made.resumed, 2, "resumed again");
+  assert.equal(w.eval("audioCtx.state"), "running");
   await a.close();
 });

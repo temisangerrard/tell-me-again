@@ -6,11 +6,21 @@ function inAppBrowser(ua = navigator.userAgent) {
   if (/; wv\)/.test(ua)) return true; // Android WebView
   return /iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua); // iOS web views leave Safari out of the user agent
 }
-function micMessage(e) {
+// Where to switch the microphone back on, for the phone or computer this is.
+function micSteps(ua = navigator.userAgent) {
+  if (/iPhone|iPad|iPod/.test(ua)) return /CriOS/.test(ua) ? "Open Settings, find Chrome, and switch Microphone on. Then reload this page." : /FxiOS/.test(ua) ? "Open Settings, find Firefox, and switch Microphone on. Then reload this page." : "Open Settings, then Safari, then Microphone, and choose Ask or Allow. Then reload this page.";
+  if (/Android/.test(ua)) return "Tap the lock icon in the address bar, then Permissions, and allow Microphone. Then reload this page.";
+  return "Click the lock icon in the address bar, allow the microphone for this site, then reload this page.";
+}
+// `state` is what the browser says about the permission after a refusal: "denied" means it remembered a No and will not ask again.
+function micMessage(e, state) {
   const n = e && e.name;
   if (inAppBrowser()) return "This in-app browser can't use the microphone. Tap Share, choose Open in Safari (or Chrome), and try again.";
   if (!window.isSecureContext || !navigator.mediaDevices) return "This page can't use the microphone here. Open it in Safari or Chrome.";
-  if (n === "NotAllowedError" || n === "SecurityError") return "The microphone is blocked for this site. Turn it on in your browser or phone settings, then try again.";
+  if (n === "NotAllowedError" || n === "SecurityError") {
+    if (state === "prompt") return `The microphone wasn't allowed. Tap again and choose Allow. (${n})`;
+    return `This phone says no to the microphone for this site, and it won't ask again. ${micSteps()} (${n}${state ? ", " + state : ""})`;
+  }
   if (n === "NotFoundError" || n === "OverconstrainedError") return "No microphone found on this device.";
   if (n === "NotReadableError" || n === "AbortError") return "Another app is using the microphone. End any phone or video call, then try again.";
   return "We couldn't start the microphone. Try again.";
@@ -94,7 +104,8 @@ function voiceSitting(box, relay, myName, note) {
     try { local = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); return true; }
     catch (e) {
       if (e && (e.name === "OverconstrainedError" || e.name === "TypeError")) { try { local = await navigator.mediaDevices.getUserMedia({ audio: true }); return true; } catch (e2) { e = e2; } }
-      note(micMessage(e), 8000); return false;
+      let state = null; if (e && e.name === "NotAllowedError") { try { state = (await navigator.permissions.query({ name: "microphone" })).state; } catch {} }
+      note(micMessage(e, state), 12000); return false;
     }
   }
   let epoch = 0; // bumped when a call ends, so setup that was still waiting knows to stop
