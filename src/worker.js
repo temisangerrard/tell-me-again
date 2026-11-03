@@ -62,6 +62,10 @@ export default {
     if (origin && new URL(origin).host !== url.host) return json({ error: "Not allowed." }, 403);
 
     const ip = req.headers.get("cf-connecting-ip") || "unknown";
+    if (url.pathname === "/api/auth/start" || url.pathname === "/api/auth/verify") { // accounts aren't switched on yet; nothing is read or stored
+      if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+      return json({ error: "Accounts open soon. You can start a family without one right now." }, 503);
+    }
     if (url.pathname === "/api/transcribe") return transcribe(req, env, url, ip);
     if (url.pathname === "/api/rooms" && req.method === "POST") {
       if (!(await strict(env, "create", ip, 20, 60000))) return tooMany(); // 20 new rooms a minute per address

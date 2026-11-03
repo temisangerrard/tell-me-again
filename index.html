@@ -126,12 +126,51 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .how span { color:var(--muted); font-size:.95rem; }
 .how + .fine { margin-top:24px; }
 @media (min-width:860px){
-  .welcome { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto 1fr; grid-template-areas:"top top" "hero side" "how side"; column-gap:72px; padding:28px 56px 72px; }
-  .wtop { grid-area:top; } .hero2 { grid-area:hero; } .rside { grid-area:side; padding-top:72px; } .how { grid-area:how; margin-top:56px; align-self:start; }
+  .welcome { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto 1fr auto; grid-template-areas:"top top" "hero side" "how side" "more more"; column-gap:72px; padding:28px 56px 72px; }
+  .wtop { grid-area:top; } .hero2 { grid-area:hero; } .rside { grid-area:side; padding-top:72px; } .how { grid-area:how; margin-top:56px; align-self:start; } .more { grid-area:more; }
   .hero2 h1 { font-size:clamp(4rem,6.4vw,6.2rem); margin-top:56px; }
   .pieces { margin:0; padding:0; overflow:visible; flex-wrap:wrap; align-content:center; gap:18px; }
   .pc.mag { width:240px; } .pc.book { width:200px; } .pc.film { width:100%; max-width:none; }
 }
+
+.wtop .acts { display:flex; align-items:center; gap:8px; }
+.signin { min-height:44px; padding:8px 16px; border-radius:999px; border:0; background:var(--ink); color:var(--bg); font:600 .9rem var(--sans); cursor:pointer; }
+.hero2 .alt { background:none; border:0; padding:0; font:600 1rem var(--sans); color:var(--text); text-decoration:underline; text-underline-offset:4px; cursor:pointer; min-height:44px; }
+.more { grid-column:1/-1; margin-top:72px; }
+.more h2 { font:800 clamp(1.9rem,5vw,3rem)/1.02 var(--display); letter-spacing:-.025em; max-width:18ch; }
+.more .lead { color:var(--muted); max-width:46ch; margin-top:14px; font-size:1.05rem; }
+.blk { margin-top:64px; }
+.trio { display:grid; gap:0; margin-top:24px; }
+.trio > div { padding:22px 0; border-top:1px solid var(--line); }
+.trio b { font:800 1.5rem var(--display); letter-spacing:-.015em; display:block; }
+.trio p { color:var(--muted); margin-top:8px; max-width:42ch; }
+.promise { margin-top:20px; padding:0; list-style:none; display:grid; gap:0; }
+.promise li { padding:16px 0 16px 0; border-top:1px solid var(--line); display:grid; gap:2px; }
+.promise b { font-weight:700; } .promise span { color:var(--muted); }
+.faq { margin-top:20px; border-bottom:1px solid var(--line); }
+.faq details { border-top:1px solid var(--line); padding:4px 0; }
+.faq summary { cursor:pointer; list-style:none; padding:16px 0; font-weight:700; min-height:44px; display:flex; justify-content:space-between; gap:12px; }
+.faq summary::-webkit-details-marker { display:none; } .faq summary::after { content:"+"; font-weight:400; color:var(--muted); }
+.faq details[open] summary::after { content:"\2212"; }
+.faq p { color:var(--muted); padding:0 0 18px; max-width:56ch; }
+.endcta { margin-top:72px; padding:40px 0; border-top:1px solid var(--line); display:flex; flex-direction:column; align-items:flex-start; gap:18px; }
+.endcta .cta { width:auto; padding:0 32px; }
+.foot { display:flex; flex-wrap:wrap; gap:8px 20px; padding:20px 0 0; color:var(--muted); font-size:.9rem; }
+.foot button { background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:32px; }
+@media (min-width:860px){ .trio { grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; } .trio > div { border-top:0; padding:0; } .promise { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:40px; } }
+/* sign in */
+.authwrap { flex:1; display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
+.authwrap h1 { font:800 clamp(2.2rem,9vw,3rem)/1 var(--display); letter-spacing:-.025em; margin-top:28px; }
+.authwrap .sub { color:var(--muted); margin-top:12px; }
+.seg { display:grid; grid-template-columns:1fr 1fr; background:var(--soft); border-radius:999px; padding:4px; margin-top:24px; }
+.seg button { min-height:44px; border:0; border-radius:999px; background:transparent; color:var(--muted); font:600 .95rem var(--sans); cursor:pointer; }
+.seg button[aria-pressed=true] { background:var(--surface); color:var(--text); box-shadow:0 0 0 1px var(--line); }
+.authwrap .cta { margin-top:22px; }
+.authwrap .ghost { width:100%; margin-top:10px; background:transparent; }
+.authwrap .msg { min-height:1.4em; margin-top:12px; color:var(--muted); font-size:.95rem; }
+.authwrap .msg.bad { color:var(--danger); }
+.authwrap .legal { margin-top:auto; padding-top:28px; color:var(--muted); font-size:.85rem; }
+.authwrap .legal button { background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; }
 
 /* room */
 .roomwrap { flex:1; padding:max(12px,env(safe-area-inset-top)) 20px 120px; }
@@ -616,11 +655,11 @@ function screen(n, title, sub, body, next = "Continue") {
 function welcome() {
   const f = pick(SUR), q = (QUESTIONS.filter((x) => x.d <= 2).find((x) => /left|carry/i.test(x.q)) || QUESTIONS[0]).q;
   const el = $(`<section class="welcome">
-    <div class="wtop"><div class="mark">Tell me again</div><button class="themebtn" type="button" id="th"><i></i>Theme</button></div>
+    <div class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></div>
     <div class="hero2">
       <h1 class="display">Tell me again.</h1>
       <p class="sub">Your family already has the stories. This is where you write them down, while someone is still around to say that's not how it happened.</p>
-      <div class="row"><button class="cta" id="go" type="button">Start a family</button><p class="fine">No account. Nothing leaves your phone until you invite someone.</p></div>
+      <div class="row"><button class="cta" id="go" type="button">Start a family</button><button class="alt" id="si2" type="button">I already have an account</button></div><p class="fine" style="margin-top:14px;max-width:none">Free. No account needed to start. Nothing leaves your phone until you invite someone.</p>
     </div>
     <div class="rside">
       <div class="pieces" aria-hidden="true">
@@ -635,11 +674,79 @@ function welcome() {
       <li><b>Ask one good question.</b><span>We hand you the question. You press record.</span></li>
       <li><b>Play something while it sinks in.</b><span>Ludo, Ayo or Whot, each on their own phone.</span></li>
       <li><b>Keep it.</b><span>By the end of the season: a magazine, a storybook, or a short film.</span></li>
-    </ol><p class="fine plink"><button type="button" id="pvl">Privacy</button> · Made by Settley Studio</p></section>`);
+    </ol><div class="more">
+      <div class="blk" style="margin-top:0"><h2>One table. Three ways to keep it.</h2>
+        <div class="trio">
+          <div><b>Sit</b><p>One good question at a time, with follow-ups ready for when the answer goes somewhere interesting. Press record and let them talk.</p></div>
+          <div><b>Play</b><p>Ludo, Ayo and Whot, each on their own phone. People open up more when their hands are busy.</p></div>
+          <div><b>Make</b><p>A magazine cover, a storybook, a short film. Built from their words, the way they said them.</p></div>
+        </div></div>
+      <div class="blk"><h2>Far away? Pull up a chair anyway.</h2>
+        <p class="lead">Send a link. They tap it and you're on a voice call inside the app, with the question on both screens. Your phone records the answer. No other app to install.</p></div>
+      <div class="blk"><h2>Their stories stay theirs.</h2>
+        <ul class="promise">
+          <li><b>Recordings live on your phone</b><span>We don't keep a copy on our servers.</span></li>
+          <li><b>Turning speech into text is your call</b><span>We ask first. The audio is sent, the words come back, and it isn't kept.</span></li>
+          <li><b>No ads, no tracking</b><span>No cookies and no analytics.</span></li>
+          <li><b>Delete everything in one tap</b><span>Or download it all first.</span></li>
+        </ul></div>
+      <div class="blk"><h2>Questions people ask</h2>
+        <div class="faq">
+          <details><summary>Does my grandmother need an app or an account?</summary><p>No. She taps the link you send and she's in. You do the rest on your phone.</p></details>
+          <details><summary>What if they don't speak English?</summary><p>Record in whatever language they like. Turning it into text works for English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili, and it does better with names you've added in Family.</p></details>
+          <details><summary>What does it cost?</summary><p>Using it is free. Keeping your recordings safe in the cloud, so you can lose a phone without losing a grandfather's voice, will be a paid extra later. Nothing is stored there by default.</p></details>
+          <details><summary>Who can hear the recordings?</summary><p>Whoever has the phone they're saved on. We can't, because they never reach us.</p></details>
+          <details><summary>Who makes this?</summary><p>Settley Studio, run by Temisan Agbajoh. Questions: ${PRIVACY_MAIL}.</p></details>
+        </div></div>
+      <div class="endcta"><h2>Someone's still around to ask.</h2><button class="cta" id="go2" type="button">Start a family</button></div>
+      <div class="foot"><span>Made by Settley Studio</span><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}" style="color:inherit">Contact</a></div>
+    </div></section>`);
   host.append(el);
   el.querySelector("#pvl").onclick = privacySheet;
-  el.querySelector("#go").onclick = () => go(1);
+  el.querySelector("#go").onclick = () => go(1); el.querySelector("#go2").onclick = () => go(1);
+  el.querySelector("#si").onclick = () => authScreen("in"); el.querySelector("#si2").onclick = () => authScreen("in");
   el.querySelector("#th").onclick = themePicker;
+}
+
+// Sign in / create account. Email code first, passkey after that. The server answers "not yet" until accounts are switched on.
+function authScreen(mode = "up") {
+  app.className = "app"; app.replaceChildren();
+  const el = $(`<section class="authwrap">
+    <div class="top"><button class="back" id="ab" aria-label="Back" type="button">${ICON.back}</button></div>
+    <h1 id="ah"></h1><p class="sub" id="as"></p>
+    <div class="seg" role="group" aria-label="Create an account or sign in"><button type="button" data-m="up" aria-pressed="false">Create account</button><button type="button" data-m="in" aria-pressed="false">Sign in</button></div>
+    <label class="field" id="ef"><span class="lbl">Email</span><input class="inp sm" id="em" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com"></label>
+    <label class="field" id="cf" hidden><span class="lbl">The 6-digit code we emailed you</span><input class="inp" id="cd" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"></label>
+    <button class="cta" id="go" type="button">Email me a code</button>
+    <button class="btn ghost" id="pk" type="button" disabled>Use a passkey</button>
+    <button class="btn ghost" id="skip" type="button" style="color:var(--muted)">Keep going without an account</button>
+    <p class="msg" id="mg" role="status"></p>
+    <p class="legal">We only use your email to sign you in. See the <button type="button" id="pv">privacy notice</button>.</p></section>`);
+  app.append(el); host = app;
+  const $e = (i) => el.querySelector(i), msg = (t, bad) => { $e("#mg").textContent = t; $e("#mg").className = "msg" + (bad ? " bad" : ""); };
+  let step = "email";
+  const paint = () => {
+    $e("#ah").textContent = mode === "up" ? "Keep your family's stories safe." : "Welcome back.";
+    $e("#as").textContent = mode === "up" ? "An account lets you get your family back on a new phone and, later, back up recordings. You never need one to start." : "We'll email you a code. No password to remember.";
+    el.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === mode));
+    $e("#cf").hidden = step === "email"; $e("#go").textContent = step === "email" ? "Email me a code" : "Check the code";
+  };
+  el.querySelectorAll(".seg button").forEach((b) => b.onclick = () => { mode = b.dataset.m; step = "email"; msg(""); paint(); });
+  $e("#ab").onclick = () => render(); $e("#skip").onclick = () => (S.step > 0 ? render() : go(1)); $e("#pv").onclick = privacySheet;
+  $e("#go").onclick = async () => {
+    const email = $e("#em").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return msg("That email doesn't look right.", true);
+    const b = $e("#go"); b.disabled = true; msg("");
+    try {
+      const r = await fetch(step === "email" ? "/api/auth/start" : "/api/auth/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, code: $e("#cd").value.trim(), mode }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) msg(j.error || "Something went wrong. Try again.", true);
+      else if (step === "email") { step = "code"; paint(); msg("Check your inbox. The code lasts 10 minutes."); $e("#cd").focus(); }
+      else render();
+    } catch { msg("We couldn't reach the server. Check your connection.", true); }
+    b.disabled = false;
+  };
+  paint(); $e("#em").focus({ preventScroll: true });
 }
 
 function nameStep() {

@@ -66,7 +66,7 @@ Roughly in priority order.
 - [ ] Confirm the legal status of Settley Studio (company or trading name) and update the notice wording and contact address.
 
 **Accounts**
-- [ ] Email-code sign-in, then passkey. Needs a sending domain for this product (not `settley.co`).
+- [ ] Email-code sign-in, then passkey. The screens exist (`authScreen` in `index.html`) and call `/api/auth/start` and `/api/auth/verify`, which are stubs in `src/worker.js` that answer 503 "Accounts open soon" and store nothing. Build the real endpoints (code generation, expiry, rate limits, sessions, passkeys). Needs a sending domain for this product (not `settley.co`). The passkey button is disabled until then.
 - [ ] Host identity for sittings and any paid features.
 
 **Voice sitting**
