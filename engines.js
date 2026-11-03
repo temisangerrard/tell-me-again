@@ -46,6 +46,29 @@
       }
       return "Unknown move.";
     },
+    // A bot's next action for this seat, or null if it has none. Plays the legal move a sensible player would.
+    bot(s, seat) {
+      if (s.over !== null || s.turn !== seat) return null;
+      if (s.dice === null) return { a: "roll" };
+      const p = s.pl[seat], d = s.dice; let best = s.movable[0], bs = -1e9;
+      for (const i of s.movable) {
+        const q = p.t[i], np = q < 0 ? 0 : q + d; let sc = np / 2 + rnd(5) * 0.1;
+        if (np === 56) sc += 100;
+        if (q < 0) sc += 40; // get out of the base
+        if (np <= 50) {
+          const abs = (START[p.k] + np) % 52;
+          if (SAFE.includes(abs)) sc += 15;
+          else s.pl.forEach((o, oi) => { if (oi === seat) return; o.t.forEach((x) => {
+            if (x < 0 || x > 50) return; const at = (START[o.k] + x) % 52;
+            if (at === abs) sc += 80;                                  // a capture
+            const behind = (abs - at + 52) % 52; if (behind >= 1 && behind <= 6) sc -= 12; // an opponent can hit us there
+          }); });
+        }
+        if (q >= 0 && q <= 50 && np > 50) sc += 10; // into the home column
+        if (sc > bs) { bs = sc; best = i; }
+      }
+      return { a: "move", i: best };
+    },
     view: (s) => s
   };
 
@@ -87,6 +110,20 @@
         s.msg = "The same position came up three times, so each player keeps the seeds on their side. " + s.msg; return null;
       }
       s.msg = (got ? `${s.names[t]} captured ${got}. ` : "") + `${s.names[s.turn]}, your move.`; return null;
+    },
+    // Look one move ahead: take what it captures, minus the most the other side could capture back.
+    bot(s, seat) {
+      if (s.over !== null || s.turn !== seat) return null;
+      const mv = ayo.moves(s); if (!mv.length) return null;
+      const copy = (x) => JSON.parse(JSON.stringify(x)); let best = mv[0], bs = -1e9;
+      for (const i of mv) {
+        const c = copy(s); if (ayo.act(c, seat, { a: "sow", i })) continue;
+        let sc = (c.sc[seat] - s.sc[seat]) * 3 + (c.over === null ? 0 : c.over === seat ? 100 : c.over === "draw" ? 0 : -100);
+        if (c.over === null) { let worst = 0; for (const j of ayo.moves(c)) { const d = copy(c); if (ayo.act(d, 1 - seat, { a: "sow", i: j })) continue; worst = Math.max(worst, d.sc[1 - seat] - c.sc[1 - seat]); } sc -= worst * 2.2; }
+        sc += s.p[i] * 0.05 + rnd(10) * 0.01;
+        if (sc > bs) { bs = sc; best = i; }
+      }
+      return { a: "sow", i: best };
     },
     view: (s) => s
   };
@@ -184,6 +221,25 @@
         return null;
       }
       return "Unknown move.";
+    },
+    // A bot never looks at anyone else's hand. It always says "last card" when it should.
+    bot(s, seat) {
+      if (s.over !== null) return null;
+      const R = s.R, me = s.hands[seat];
+      if (R.lastCard && s.last && s.last.seat === seat && !s.last.called) return { a: "call" };
+      if (s.turn !== seat) return null;
+      if (s.pickShape) { const n = {}; me.forEach((c) => { if (c.s !== "whot") n[c.s] = (n[c.s] || 0) + 1; }); return { a: "shape", s: WSHAPES.slice().sort((a, b) => (n[b] || 0) - (n[a] || 0) || rnd(3) - 1)[0] }; }
+      const v = { R, pend: s.pend, susp: s.susp, top: s.top, shape: s.shape, handN: me.length };
+      let best = -1, bs = -1e9;
+      me.forEach((c, i) => {
+        if (!playableCard(v, c)) return;
+        let sc = rnd(10) * 0.1 + me.filter((x) => x.s === c.s).length * 0.8;
+        if (c.s === "whot") sc += me.length === 1 ? 0 : -6; // keep wilds back
+        else if (c.n === 14) sc += 4; else if (c.n === 2 || c.n === 5) sc += 5; else if (c.n === 8) sc += 3; else if (c.n === 1) sc += 2;
+        if (me.length === 1) sc += 100;
+        if (sc > bs) { bs = sc; best = i; }
+      });
+      return best >= 0 ? { a: "play", i: best } : { a: "draw" };
     },
     // What one seat may see: their own hand, everyone's card counts, never the market or other hands.
     view(s, seat) {

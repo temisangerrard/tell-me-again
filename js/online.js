@@ -21,7 +21,18 @@ const parseCode = (t) => { const m = String(t || "").toUpperCase().match(/ROOM=(
 const E = globalThis.Engines;
 const wcardEl = (c, cls = "", tag = "button") => $(`<${tag} class="wc ${c.s} ${cls}" ${tag === "button" ? 'type="button"' : ""} aria-label="${E.whot.wname(c)}">${c.s === "whot" ? `<span class="n">20</span><b>WHOT</b><span class="n b">20</span>` : `<span class="n">${c.n}</span>${wsvg(c.s)}<span class="n b">${c.n}</span>`}</${tag}>`);
 let sitting = null, pendingRoom = null; // who's in this sitting; a room to open on the Play tab
-function enterRoom(box, code, n) { lsSet("sitting-room", code); box.replaceChildren(); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box)); }
+function enterRoom(box, code, n, opts) { lsSet("sitting-room", code); box.replaceChildren(); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box), opts); }
+// Play a game against a bot: a private room with a bot at the table, started for you.
+async function playBot(box, kind, msg) {
+  // Solo play sends no personal data: the room only ever holds "You", the bot's name and the game moves.
+  const n = "You";
+  msg("Setting up…");
+  try {
+    const r = await fetch("/api/rooms", { method: "POST" });
+    if (r.status === 429) return msg("That's a lot of rooms at once. Wait a minute and try again.");
+    const j = await r.json(); if (!j.code) throw 0; enterRoom(box, j.code, n, { autoBot: kind });
+  } catch { msg("Couldn't set up a game. Check your connection and try again."); }
+}
 // Start a sitting call from anywhere: the room connects in the background and the call widget floats above the tabs.
 function startCall(code, name) {
   lsSet("sitting-room", code); const w = $(`<div></div>`);

@@ -28,7 +28,9 @@ function renderPlay(box) {
     <button class="game" id="ludo" type="button"><span class="g">6</span><span><b>Ludo</b><span class="d">2 to 4 players</span></span></button>
     <button class="game" id="ayo" type="button"><span class="g">12</span><span><b>Ayo</b><span class="d">2 players</span></span></button>
     <button class="game" id="whot" type="button"><span class="g">20</span><span><b>Whot</b><span class="d">2 to 4 players</span></span></button></div>`);
-  box.append(onlineCard(box), $(`<h2 class="sec" style="margin-top:28px">On one screen</h2>`), list);
+  const solo = $(`<section><h2 class="sec">Play a bot</h2><div class="row2 botrow"><button class="btn" data-k="ludo" type="button">Ludo</button><button class="btn" data-k="ayo" type="button">Ayo</button><button class="btn" data-k="whot" type="button">Whot</button></div><p class="err" id="botmsg" role="status"></p></section>`);
+  solo.querySelectorAll("[data-k]").forEach((b) => b.onclick = () => playBot(box, b.dataset.k, (t) => solo.querySelector("#botmsg").textContent = t));
+  box.append(solo, onlineCard(box), $(`<h2 class="sec" style="margin-top:28px">On one screen</h2>`), list);
   const lb = leaderboard(); if (lb) box.append(lb);
   list.querySelector("#ludo").onclick = () => { if (!game) newGame(); renderLudo(box); };
   list.querySelector("#ayo").onclick = () => ayo && ayo.over === null ? renderAyo(box) : ayoSetup(box);

@@ -52,6 +52,7 @@ npx wrangler deploy
 - Copy: if a string isn't needed, delete it. No taglines, helper text or captions that restate a label, defend a choice or calm a worry. Keep only a real consequence at the moment of choosing, a scope or compatibility fact, what an empty state means and what to do next, and units on bare values. If a screen needs explaining, fix the layout. Cut whole clauses, don't reword them. Target: Linear's site, Apple Notes.
 - Anti-slop: human copy, no illustrated faces, flat cards. White is the default theme; warm and night are options. Accent colours must pass contrast (`onAccent()`).
 - **No audio is stored on our servers.** Audio is sent for transcription and discarded; recordings and text live on the user's device. Cloud storage is a future *paid* feature, not a default.
+- Solo "Play a bot" is the one online feature that needs no consent step because it sends no personal data: only the neutral name "You", the bot's name and the moves. Keep it that way.
 - Anything that sends audio or data off the device needs explicit consent first (`grantConsent` / `withdrawConsent`, notice in `privacySheet`). Bump `PRIVACY_V` when the notice changes.
 - Controller: Settley Studio, run by Temisan Agbajoh. This is a separate product from Settley: don't send its email from `settley.co`.
 - Dev fixtures (`?data=`) only work on localhost.
@@ -107,6 +108,9 @@ Roughly in priority order.
 - [ ] Real Web Push so a phone that has the app in the background or closed is told it's their turn. Needs a service-worker `push` handler, VAPID keys, a stored subscription per member in the room, and the Worker sending the push on a turn change. iPhone only supports this for an installed (Add to Home Screen) app.
 - [ ] Motion for local pass-the-phone Whot (the gate hides the table between turns).
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
+
+- [x] Bots (`bot()` in each engine in `engines.js`, run by the room in `src/room.js`): Add a bot in a room lobby, or Play a bot in one tap from the Play tab. Bots only use their own hand and public state, and every move goes through the same `act()` as a person's.
+- [ ] Bot difficulty levels, and bots in the local pass-the-phone games.
 
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
