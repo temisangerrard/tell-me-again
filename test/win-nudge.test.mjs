@@ -44,3 +44,17 @@ test("enabling alerts asks for permission and remembers the answer", async () =>
   assert.equal(await w.eval("nudge.enable()"), false);
   await a.close();
 });
+
+test("Play a bot never sends the saved profile name to the server", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.eval('S.me.name = "Temisan"; lsSet("sitting-name", "Temisan")');
+  const posts = []; w.fetch = async (u, o) => { posts.push([u, o && o.method]); return { status: 200, json: async () => ({ code: "ABC234" }) }; };
+  w.eval("globalThis.__args = null; mountRoom = (...a) => { __args = a; return {}; }");
+  const box = w.document.createElement("div"); w.__box = box; w.__msg = () => {};
+  await w.eval('playBot(__box, "ayo", __msg)');
+  assert.deepEqual(posts, [["/api/rooms", "POST"]]);
+  assert.equal(w.eval("__args[2]"), "You", "the room is joined as a neutral name");
+  assert.equal(w.eval("__args[4].autoBot"), "ayo");
+  assert.ok(!JSON.stringify(posts).includes("Temisan"));
+  await a.close();
+});

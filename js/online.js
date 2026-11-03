@@ -24,7 +24,8 @@ let sitting = null, pendingRoom = null; // who's in this sitting; a room to open
 function enterRoom(box, code, n, opts) { lsSet("sitting-room", code); box.replaceChildren(); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box), opts); }
 // Play a game against a bot: a private room with a bot at the table, started for you.
 async function playBot(box, kind, msg) {
-  const n = lsGet("sitting-name") || (S.me && S.me.name) || "You";
+  // Solo play sends no personal data: the room only ever holds "You", the bot's name and the game moves.
+  const n = "You";
   msg("Setting up…");
   try {
     const r = await fetch("/api/rooms", { method: "POST" });
