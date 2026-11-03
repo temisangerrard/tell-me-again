@@ -260,7 +260,8 @@ body.lock { overflow:hidden; }
 .pg small { font:600 .85rem var(--sans); color:var(--accent-text); }
 .pg b { font:800 2rem/.95 var(--display);  overflow-wrap:anywhere; position:relative; }
 .pg p { color:var(--muted); font-size:.92rem; position:relative; max-width:22ch; }
-.pg .q { color:var(--text); font:600 1.15rem/1.25 var(--sans); }
+.pg .q { color:var(--text); font:600 1.05rem/1.25 var(--sans); }
+.pg .ans { max-width:none; color:var(--text); font-size:.92rem; line-height:1.4; display:-webkit-box; -webkit-line-clamp:9; -webkit-box-orient:vertical; overflow:hidden; }
 .cvs { display:block; width:100%; height:auto; border-radius:16px; margin-top:16px; }
 .reel { position:relative; aspect-ratio:16/9; margin-top:16px; border-radius:16px; overflow:hidden; background:#1d1d1f; color:#fff7ea; }
 .reel div { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:0 12px; font:800 clamp(1.8rem,9vw,3rem)/.95 var(--display);  opacity:0; overflow-wrap:anywhere; animation:life 2.4s var(--ease-out) both; animation-delay:calc(var(--i) * 2.4s); }
@@ -295,6 +296,13 @@ body.lock { overflow:hidden; }
 .eras2 b { grid-row:1/3; font:800 1.7rem/1 var(--num); color:var(--accent-text); }
 .eras2 em { font-style:normal; color:var(--muted); font-size:.88rem; }
 
+/* transcripts */
+.tx { margin-top:10px; }
+.txt { width:100%; padding:10px 12px; font:400 1rem/1.5 var(--sans); color:var(--text); background:var(--surface2); border:0; border-radius:8px; resize:none; overflow:hidden; }
+.txt:focus { outline:2px solid var(--accent); outline-offset:1px; }
+.txs { color:var(--muted); font-size:.85rem; margin-top:6px; }
+.txs.err { color:var(--danger); }
+select.inp { appearance:none; padding-right:28px; background:transparent; border-radius:0; }
 /* family */
 .fam .field:first-of-type { margin-top:18px; }
 .facts { list-style:none; margin:14px 0 0; padding:0; border-bottom:1px solid var(--line); }
@@ -474,7 +482,7 @@ const OLD_COLORS = { "#ff5b2e": "#e26b3f", "#ffc62e": "#f0b232", "#b6f23a": "#6d
 const lum = (hex) => { const c = [1, 3, 5].map((i) => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
 const contrast = (a, b) => (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
 const onAccent = (hex) => contrast(lum(hex), lum("#2b1a12")) >= contrast(lum(hex), 1) ? "#2b1a12" : "#ffffff"; // whichever of dark or white reads better on this accent
-const blank = { step: 0, me: { name: "" }, name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
+const blank = { step: 0, me: { name: "" }, consent: { transcribe: false }, autoTx: false, lang: "", hints: "", name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
 const fresh = () => structuredClone(blank);
 // Dev only (localhost): ?data=worst|empty|one|demo swaps in a fixture (never saved). &step=N picks the screen.
 const QS = new URLSearchParams(location.search);
@@ -490,7 +498,7 @@ const FIXTURES = {
 let S;
 try {
   const saved = DEV.has("data") ? (FIXTURES[DEV.get("data")] || FIXTURES.demo) : JSON.parse(localStorage.getItem(KEY) || "{}");
-  S = Object.assign(fresh(), saved); S.elder = { ...blank.elder, ...saved.elder }; S.me = { ...blank.me, ...saved.me }; S.whotRules = { ...blank.whotRules, ...saved.whotRules };
+  S = Object.assign(fresh(), saved); S.elder = { ...blank.elder, ...saved.elder }; S.me = { ...blank.me, ...saved.me }; S.consent = { ...blank.consent, ...saved.consent }; S.whotRules = { ...blank.whotRules, ...saved.whotRules };
   S.color = OLD_COLORS[S.color] || S.color;
   if (DEV.has("step")) S.step = +DEV.get("step");
   if (!(S.step >= 0 && S.step <= 7)) S.step = 0;
@@ -727,6 +735,36 @@ async function loadClips() {
 }
 const clipTotal = () => clips.reduce((a, c) => a + (c.dur || 0), 0);
 const fmtDur = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
+/* ---------- Turning a recording into text ----------
+ * The audio goes to /api/transcribe, which hands it to Cloudflare's speech model and returns the words. Nothing is kept there.
+ * The words are saved with the recording on this device, and the family can edit them: AI mishears names and places. */
+const TX_LANGS = [["", "Detect automatically"], ["en", "English"], ["fr", "French"], ["pt", "Portuguese"], ["ar", "Arabic"], ["yo", "Yoruba"], ["ha", "Hausa"], ["sw", "Swahili"]];
+const txBusy = new Set(); // clip ids being transcribed right now
+const clipRecord = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "url" && k[0] !== "_")); // what gets stored: no blob URL, no UI flags
+const saveClip = async (c) => { if (DEV.has("data")) return; try { await idbDo("readwrite", (st) => st.put(clipRecord(c))); } catch {} };
+const txNames = () => [...new Set([...String(S.hints || "").split(","), famName(S.name), S.elder.name, ...S.seats.slice(2), S.me.name, S.town].map((x) => String(x || "").trim()).filter(Boolean))].join(", ").slice(0, 170);
+async function transcribeClip(c) {
+  if (c.dur > 720) throw new Error("That recording is longer than 12 minutes, which is too long to turn into text in one go.");
+  const q = new URLSearchParams(); if (S.lang) q.set("lang", S.lang); const nm = txNames(); if (nm) q.set("names", nm);
+  let r; try { r = await fetch("/api/transcribe?" + q, { method: "POST", headers: { "content-type": c.blob.type || "audio/webm" }, body: c.blob }); } catch { throw new Error("Couldn't reach the speech service. Check your connection and try again."); }
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Couldn't turn that into text. Please try again.");
+  c.text = j.text || ""; c.tx = "ai"; c.txAt = Date.now(); await saveClip(c);
+}
+// Ask once, plainly, before any audio leaves the device.
+function askTxConsent() {
+  return new Promise((res) => {
+    const b = $(`<div><h2>Turn recordings into text?</h2>
+      <p class="para" style="margin-top:10px">We'll send the audio to Cloudflare's speech-to-text service, which sends back the words. Cloudflare says this service keeps no data, and we don't keep the audio either. The recording itself stays on this device.</p>
+      <p class="para">It gets names and places wrong sometimes, so you'll be able to fix the words. You can turn this off any time under Family.</p>
+      <button class="cta" id="ok" type="button" style="margin-top:20px">Yes, turn it into text</button>
+      <button class="btn" id="no" type="button" style="width:100%;margin-top:8px;background:transparent;color:var(--muted)">Not now</button></div>`);
+    let done = false; const close = sheet("Turn recordings into text?", b);
+    b.querySelector("#ok").onclick = () => { done = true; S.consent.transcribe = true; save(); close(); res(true); };
+    b.querySelector("#no").onclick = () => { close(); res(false); };
+    new MutationObserver((_, ob) => { if (!document.body.contains(b)) { ob.disconnect(); if (!done) res(false); } }).observe(document.body, { childList: true, subtree: true });
+  });
+}
+
 // Wipe everything this app keeps on the device: family details, recordings, wins. Used by "Delete everything".
 async function wipeAll() {
   stopLive(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; game = null; ayo = null; whot = null;
@@ -812,14 +850,27 @@ function renderFamily(box) {
     d.onclick = async () => { if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
     recs.append(d); }
 
+  const trs = sec("Turning recordings into text", "Optional. Off until you say yes.");
+  const lang = $(`<label class="field"><span class="lbl">Language they speak</span><select class="inp sm" id="lang"></select></label>`);
+  TX_LANGS.forEach(([v, l]) => lang.querySelector("select").append(new Option(l, v, false, S.lang === v)));
+  lang.querySelector("select").onchange = (e) => { S.lang = e.target.value; save(); };
+  const hint = $(`<label class="field"><span class="lbl">Names and places they might mention</span><input class="inp sm" id="hints" type="text" maxlength="120" autocomplete="off" value="${esc(S.hints || "")}" placeholder="e.g. Ogbomoso, Aunty Folake, Chidi"></label>`);
+  hint.querySelector("input").oninput = (e) => { S.hints = e.target.value; save(); };
+  trs.append(lang, hint, $(`<p class="para">We can't reliably handle Igbo or Nigerian Pidgin yet. Detecting automatically does its best, and you can always edit the words.</p>`));
+  const at = $(`<div class="rule"><div class="t"><b>Turn each recording into text automatically</b><span>Sends the audio for transcription as soon as it's saved.</span></div><button class="tg" type="button" role="switch" aria-label="Turn each recording into text automatically" aria-checked="${S.autoTx && S.consent.transcribe}"></button></div>`);
+  at.querySelector(".tg").onclick = async (e) => { const sw = e.currentTarget; if (!S.autoTx || !S.consent.transcribe) { if (!S.consent.transcribe && !(await askTxConsent())) return; S.autoTx = true; } else S.autoTx = false; save(); sw.setAttribute("aria-checked", S.autoTx); };
+  trs.append(at);
+  if (S.consent.transcribe) { const wd = $(`<button class="btn" type="button" style="margin-top:12px">Stop sending audio for transcription</button>`);
+    wd.onclick = () => { S.consent.transcribe = false; S.autoTx = false; save(); renderFamily(box); }; trs.append(wd); }
+
   const look = sec("Look");
   chipGroup(look, "Theme", THEMES.map(([k, n]) => [k, n]), (id) => getTheme() === id, (id) => { lsSet("sitting-theme", id); applyTheme(id); look.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", THEMES[i][0] === id)); });
 
   const data = sec("Your information");
-  data.append($(`<p class="para">Everything here lives on this device: your family details, your recordings and your wins. A room you create holds only names and game moves, and it's erased after a day of quiet. There's no account yet, so there's nothing to sign in to and nothing stored about you elsewhere.</p>`));
+  data.append($(`<p class="para">Your family details, recordings, written-out words and wins live on this device. A room you create holds only names and game moves, and it's erased after a day of quiet. If you choose to turn a recording into text, that one recording is sent to Cloudflare's speech service to get the words back; it isn't kept. There's no account yet, so there's nothing to sign in to and nothing stored about you elsewhere.</p>`));
   const dl = $(`<button class="btn" type="button" style="margin-top:12px">Download my information</button>`);
   dl.onclick = () => {
-    const out = { app: "Tell Me Again", exportedAt: new Date().toISOString(), family: S, recordings: clips.map((c) => ({ question: c.q, recordedAt: new Date(c.at).toISOString(), seconds: c.dur })), note: "Audio files can be saved one by one from the Recorded list on the Sit tab." };
+    const out = { app: "Tell Me Again", exportedAt: new Date().toISOString(), family: S, recordings: clips.map((c) => ({ question: c.q, recordedAt: new Date(c.at).toISOString(), seconds: c.dur, words: c.text || null, wordsBy: c.text ? c.tx : null })), note: "Audio files can be saved one by one from the Recorded list on the Sit tab." };
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" })); a.download = "tell-me-again-my-information.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
   };
   const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete everything</button>`);
@@ -881,6 +932,44 @@ function runScreen(ov, who, q, onStop) {
   return () => { clearInterval(iv); ov.remove(); document.body.classList.remove("lock"); };
 }
 
+// One recording: the audio, then its words (or the way to get them), then Save and Delete.
+function clipRow(c, box) {
+  const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio><div class="tx"></div>
+    <div class="cm"><span>${new Date(c.at).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${fmtDur(c.dur || 0)}</span><a href="${c.url}" download="tell-me-again-${new Date(c.at).toISOString().slice(0, 10)}.webm">Save audio</a><button class="lnk" type="button">Delete</button></div></li>`);
+  const tx = li.querySelector(".tx"); let saveT;
+  const paint = () => {
+    tx.replaceChildren();
+    if (txBusy.has(c.id)) { tx.append($(`<p class="txs" role="status">Turning it into text. A short answer takes under half a minute; a long one can take a couple of minutes.</p>`)); tx.setAttribute("aria-busy", "true"); return; }
+    tx.removeAttribute("aria-busy");
+    if (c.text === undefined) {
+      const b = $(`<button class="btn" type="button">Turn into text</button>`); b.onclick = () => run(); tx.append(b);
+    } else if (!c.text.trim() && !c._typing) {
+      tx.append($(`<p class="txs">We couldn't hear any speech in this one. Try again, or type what they said.</p>`));
+      const b = $(`<button class="btn" type="button" style="margin-right:8px">Try again</button>`); b.onclick = () => run();
+      const t = $(`<button class="btn" type="button">Type it myself</button>`); t.onclick = () => { c._typing = true; paint(); tx.querySelector("textarea").focus(); };
+      tx.append(b, t);
+    } else {
+      const ta = $(`<textarea class="txt" rows="3" aria-label="What they said. You can edit it."></textarea>`); ta.value = c.text; ta.placeholder = "Type what they said";
+      const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; };
+      ta.oninput = () => { c.text = ta.value; c.tx = c._typing ? "typed" : c.tx === "ai" ? "edited" : c.tx; fit(); note.textContent = c.tx === "edited" ? "Edited by you." : "Written by you."; clearTimeout(saveT); saveT = setTimeout(() => saveClip(c), 500); };
+      const note = $(`<p class="txs">${c.tx === "edited" ? "Edited by you." : c.tx === "typed" || c._typing ? "Written by you." : "Written by AI. Check the names and places."}</p>`);
+      tx.append(ta, note); requestAnimationFrame(fit);
+    }
+  };
+  const run = async () => {
+    if (!S.consent.transcribe && !(await askTxConsent())) return;
+    txBusy.add(c.id); paint();
+    try { await transcribeClip(c); txBusy.delete(c.id); paint(); }
+    catch (e) { txBusy.delete(c.id); paint(); const m = $(`<p class="txs err">${esc(e.message)}</p>`); tx.prepend(m); }
+  };
+  li.querySelector(".lnk").onclick = async () => {
+    if (!confirm("Delete this recording" + (c.text ? " and its words" : "") + "? This can't be undone.")) return;
+    try { await idbDo("readwrite", (st) => st.delete(c.id)); } catch {}
+    URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSitting(box, "Recording deleted.");
+  };
+  paint(); li._run = run; return li;
+}
+
 function renderSitting(box, msg) {
   const n = S.sittings.length, st = streak(), f = famName(S.name);
   box.replaceChildren($(`<h1 class="title">Sitting ${n + 1}</h1>`),
@@ -932,6 +1021,7 @@ function renderSitting(box, msg) {
       clips.unshift({ ...clip, url: URL.createObjectURL(blob) });
       S.told++; if (q) S.asked.push(q.q); save();
       if (box.isConnected) renderSitting(box, kept ? "Saved on this device. You'll find it under Recorded." : "Recorded, but this browser wouldn't keep it. It's here until you leave the page.");
+      if (S.consent.transcribe && S.autoTx) { const li = [...document.querySelectorAll(".clips li")].find((x) => x.querySelector(".cq") && x.querySelector("audio").src === clips[0].url); if (li && li._run) li._run(); }
     };
     t0 = Date.now(); live = { mr, stream }; mr.start(); setLive(true);
     rs.textContent = `Recording. Let ${who} take their time.`;
@@ -939,16 +1029,7 @@ function renderSitting(box, msg) {
 
   if (clips.length) {
     const sec = $(`<section><h2 class="sec">Recorded <span class="cnt">${clips.length} · ${fmtDur(clipTotal())}</span></h2><ul class="clips"></ul></section>`);
-    clips.forEach((c) => {
-      const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio>
-        <div class="cm"><span>${new Date(c.at).toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${fmtDur(c.dur || 0)}</span><a href="${c.url}" download="tell-me-again-${new Date(c.at).toISOString().slice(0, 10)}.webm">Save</a><button class="lnk" type="button">Delete</button></div></li>`);
-      li.querySelector(".lnk").onclick = async () => {
-        if (!confirm("Delete this recording? This can't be undone.")) return;
-        try { await idbDo("readwrite", (st2) => st2.delete(c.id)); } catch {}
-        URL.revokeObjectURL(c.url); clips = clips.filter((x) => x.id !== c.id); renderSitting(box, "Recording deleted.");
-      };
-      sec.querySelector(".clips").append(li);
-    });
+    clips.forEach((c) => sec.querySelector(".clips").append(clipRow(c, box)));
     box.append(sec);
   }
 
@@ -1012,7 +1093,9 @@ async function previewMag() {
   ctx.font = '800 120px "Barlow Condensed", "Arial Narrow", sans-serif'; ctx.fillText("ISSUE", 56, 250 + fs * .82 + 120);
   const topics = S.chapters.map((id) => (CHAPTERS.find((c) => c.id === id) || {}).label).filter(Boolean).slice(0, 4);
   ctx.font = '600 34px -apple-system, Inter, sans-serif'; topics.forEach((t, i) => ctx.fillText("— " + t, 60, H - 330 + i * 52));
-  if (S.saying) { ctx.font = 'italic 500 30px -apple-system, Inter, sans-serif'; const q = "“" + S.saying + "”"; let line = "", y = H - 110, lines = [];
+  const spoken = (clips.find((c) => c.text && c.text.trim()) || {}).text, firstLine = spoken ? (spoken.trim().match(/^.{20,110}?[.!?](\s|$)/) || [spoken.trim().slice(0, 100)])[0].trim() : "";
+  const pull = S.saying || firstLine;
+  if (pull) { ctx.font = 'italic 500 30px -apple-system, Inter, sans-serif'; const q = "“" + pull + "”"; let line = "", y = H - 110, lines = [];
     q.split(" ").forEach((w) => { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > W - 120 && line) { lines.push(line); line = w; } else line = t; }); lines.push(line);
     lines.slice(0, 2).forEach((l, i) => ctx.fillText(l, 60, y - (Math.min(lines.length, 2) - 1 - i) * -40 - 40)); }
   ctx.font = '700 22px -apple-system, Inter, sans-serif'; ctx.fillText("TELL ME AGAIN", 60, H - 40);
@@ -1020,13 +1103,15 @@ async function previewMag() {
 }
 function previewBook() {
   const f = famName(S.name), told = S.asked.slice(0, 5), pages = [{ cover: true }];
-  (told.length ? told : QUESTIONS.filter((q) => S.chapters.includes(q.c)).slice(0, 3).map((q) => q.q)).forEach((q) => pages.push({ q, idea: !told.length }));
+  const words = clips.filter((c) => c.text && c.text.trim()).slice().reverse().slice(0, 8); // their actual words, oldest first
+  if (words.length) words.forEach((c) => pages.push({ q: c.q, a: c.text.trim() }));
+  else (told.length ? told : QUESTIONS.filter((q) => S.chapters.includes(q.c)).slice(0, 3).map((q) => q.q)).forEach((q) => pages.push({ q, idea: !told.length }));
   pages.push({ end: true });
-  const body = $(`<div><h2>Storybook preview</h2><p class="hint" style="margin-top:8px">${told.length ? "One page per story you've asked about." : "No stories yet, so these are page ideas."} Swipe through.</p><div class="pager" tabindex="0" aria-label="Storybook pages"></div><p class="hint" id="pn" style="text-align:center;margin-top:8px" role="status"></p></div>`);
+  const body = $(`<div><h2>Storybook preview</h2><p class="hint" style="margin-top:8px">${words.length ? "Built from the words you've turned into text." : told.length ? "One page per question you've asked. Turn a recording into text on the Sit tab and their words appear here." : "No stories yet, so these are page ideas."} Swipe through.</p><div class="pager" tabindex="0" aria-label="Storybook pages"></div><p class="hint" id="pn" style="text-align:center;margin-top:8px" role="status"></p></div>`);
   const pg = body.querySelector(".pager");
   pages.forEach((p, i) => pg.append($(p.cover ? `<div class="pg cv"><small>A family storybook</small><b>${esc(f)} family tales</b><p>Told by ${esc(S.elder.name || "the family")}</p><span class="shape"></span></div>`
     : p.end ? `<div class="pg"><small>The end</small><b>To be continued</b><p>Every sitting adds a page.</p><span class="shape"></span></div>`
-    : `<div class="pg"><small>${p.idea ? "Page idea" : "Page " + i}</small><div class="q">${esc(p.q)}</div><p>Their answer goes here, in their own words.</p><span class="shape"></span></div>`)));
+    : `<div class="pg"><small>${p.idea ? "Page idea" : "Page " + i}</small><div class="q">${esc(p.q)}</div>${p.a ? `<p class="ans">${esc(p.a)}</p>` : `<p>Their answer goes here, in their own words.</p>`}</div>`)));
   const pn = body.querySelector("#pn"), upd = () => { const w = pg.firstChild.getBoundingClientRect().width + 12; pn.textContent = `Page ${Math.min(pages.length, Math.round(pg.scrollLeft / w) + 1)} of ${pages.length}`; };
   pg.addEventListener("scroll", upd, { passive: true }); upd();
   const close = sheet("Storybook preview", body); body.append(closeBtn(close));

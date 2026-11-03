@@ -12,5 +12,6 @@
   "ratelimits": [
     { "name": "ROOM_JOIN", "namespace_id": "7732", "simple": { "limit": 120, "period": 60 } }
   ],
+  "ai": { "binding": "AI" },
   "observability": { "enabled": true }
 }

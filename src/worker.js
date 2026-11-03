@@ -14,7 +14,7 @@ export class Limiter extends DurableObject {
   async alarm() { await this.ctx.storage.deleteAll(); }
 }
 const ipKey = async (ip) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("family-sitting:" + ip))).slice(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("");
-const strict = async (env, ip, limit, windowMs) => { try { return await env.LIMITER.get(env.LIMITER.idFromName("create:" + (await ipKey(ip)))).hit(limit, windowMs); } catch { return true; } };
+const strict = async (env, name, who, limit, windowMs) => { try { return await env.LIMITER.get(env.LIMITER.idFromName(name + ":" + (await ipKey(who)))).hit(limit, windowMs); } catch { return true; } };
 
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // no 0/O, 1/I/L: easy to read out over a call
 const code6 = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return [...a].map((x) => ALPHABET[x % ALPHABET.length]).join(""); };
@@ -24,6 +24,36 @@ const json = (o, status = 200) => new Response(JSON.stringify(o), { status, head
 const allowed = async (limiter, key) => { if (!limiter) return true; try { return (await limiter.limit({ key })).success; } catch { return true; } };
 const tooMany = () => json({ error: "Too many requests. Wait a minute and try again." }, 429);
 
+/* ---------- Transcription ----------
+ * The browser posts one recording; we pass it to Cloudflare's speech model and return the words. Nothing is stored and the audio
+ * is never logged. Cloudflare's docs describe this model as zero data retention. vad_filter stays ON: without it the model
+ * invents words on silence ("Thank you.") and noise, which has no place in a family's record. */
+const MAX_AUDIO = 14 * 1024 * 1024; // about 12 minutes at phone-recording bitrates
+const LANGS = new Set(["en", "fr", "pt", "ar", "yo", "ha", "sw"]);
+const b64 = (buf) => { let s = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+async function transcribe(req, env, url, ip) {
+  if (req.method !== "POST") return json({ error: "Use POST." }, 405);
+  if (!env.AI) return json({ error: "Transcription isn't available right now." }, 503);
+  const len = Number(req.headers.get("content-length") || 0);
+  if (len > MAX_AUDIO) return json({ error: "That recording is too long to turn into text in one go. Try a shorter answer." }, 413);
+  const type = req.headers.get("content-type") || "";
+  if (!/^(audio|video)\//.test(type) && type !== "application/octet-stream") return json({ error: "That doesn't look like audio." }, 415);
+  if (!(await strict(env, "tx-ip", ip, 60, 3600 * 1000))) return json({ error: "That's a lot of transcriptions. Try again in a little while." }, 429);
+  if (!(await strict(env, "tx-all", "all", 1000, 24 * 3600 * 1000))) return json({ error: "Transcription is busy today. Please try again tomorrow." }, 429);
+  const buf = await req.arrayBuffer();
+  if (!buf.byteLength) return json({ error: "No audio came through." }, 400);
+  if (buf.byteLength > MAX_AUDIO) return json({ error: "That recording is too long to turn into text in one go. Try a shorter answer." }, 413);
+  const lang = (url.searchParams.get("lang") || "").toLowerCase(), names = (url.searchParams.get("names") || "").replace(/[\u0000-\u001f<>]/g, "").slice(0, 180).trim();
+  try {
+    const r = await env.AI.run("@cf/openai/whisper-large-v3-turbo", {
+      audio: b64(buf), task: "transcribe", vad_filter: true,
+      ...(LANGS.has(lang) ? { language: lang } : {}),
+      ...(names ? { initial_prompt: `A family conversation. Names and places: ${names}.` } : {}) // helps with names, which the model otherwise spells by sound
+    });
+    return json({ text: String((r && r.text) || "").trim(), words: (r && r.word_count) || 0 });
+  } catch (e) { console.error("transcribe failed:", e && e.message); return json({ error: "The speech service had a problem. Please try again in a minute." }, 502); }
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -32,8 +62,9 @@ export default {
     if (origin && new URL(origin).host !== url.host) return json({ error: "Not allowed." }, 403);
 
     const ip = req.headers.get("cf-connecting-ip") || "unknown";
+    if (url.pathname === "/api/transcribe") return transcribe(req, env, url, ip);
     if (url.pathname === "/api/rooms" && req.method === "POST") {
-      if (!(await strict(env, ip, 20, 60000))) return tooMany(); // 20 new rooms a minute per address
+      if (!(await strict(env, "create", ip, 20, 60000))) return tooMany(); // 20 new rooms a minute per address
       for (let i = 0; i < 6; i++) {
         const code = code6();
         const r = await env.ROOMS.get(env.ROOMS.idFromName(code)).fetch(new Request(`https://room/init?code=${code}`, { method: "POST" }));
