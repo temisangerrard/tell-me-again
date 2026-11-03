@@ -8,6 +8,13 @@ function micMessage(e) {
   if (n === "NotReadableError" || n === "AbortError") return "Another app is using the microphone. End any phone or video call, then try again.";
   return "We couldn't start the microphone. Try again.";
 }
+// Relay credentials from the server, cached for a while. Falls back to STUN if the server can't say.
+let iceCache = null;
+async function getIce() {
+  if (iceCache && Date.now() - iceCache.t < 20 * 60 * 1000) return iceCache.servers;
+  try { const r = await fetch("/api/ice"); const j = await r.json(); if (r.ok && Array.isArray(j.iceServers) && j.iceServers.length) { iceCache = { t: Date.now(), servers: j.iceServers }; return j.iceServers; } } catch {}
+  return [{ urls: "stun:stun.cloudflare.com:3478" }];
+}
 let activeCall = null, onCallChange = null, onClipSaved = null, onCallSkip = null;
 function callDock() {
   let d = document.getElementById("calldock"); if (!d) { d = document.createElement("div"); d.id = "calldock"; d.className = "calldock"; d.hidden = true; d.setAttribute("aria-live", "polite"); document.body.append(d); }
@@ -17,6 +24,7 @@ function callDock() {
 function voiceSitting(box, relay, myName, note) {
   const dockEl = callDock();
   let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
+  let ice = [{ urls: "stun:stun.cloudflare.com:3478" }];
   let control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, recordingQuestion = null, ending = false;
   const sendControl = data => { if (control && control.readyState === "open") { control.send(JSON.stringify(data)); return true; } return false; };
   function bindControl(channel) {
@@ -62,7 +70,7 @@ function voiceSitting(box, relay, myName, note) {
     if (onCallChange) onCallChange();
   }
   function mkPc() {
-    pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }] });
+    pc = new RTCPeerConnection({ iceServers: ice });
     if (isCaller) bindControl(pc.createDataChannel("recording-permission"));
     else pc.ondatachannel = e => { if (e.channel.label === "recording-permission") bindControl(e.channel); };
     local.getTracks().forEach((t) => pc.addTrack(t, local));
@@ -82,13 +90,19 @@ function voiceSitting(box, relay, myName, note) {
       note(micMessage(e), 8000); return false;
     }
   }
+  let epoch = 0; // bumped when a call ends, so setup that was still waiting knows to stop
+  const release = () => { if (local) local.getTracks().forEach((t) => t.stop()); local = null; };
   async function start() {
     if (!navigator.mediaDevices || typeof RTCPeerConnection === "undefined") return note("This browser can't make voice calls yet. Try the latest Chrome or Safari.");
-    if (!(await mic())) return;
+    const e = epoch; if (!(await mic())) return;
+    if (e !== epoch) return release();
+    ice = await getIce(); if (e !== epoch) return release(); // left the room while we were setting up
     isCaller = true; mode = "calling"; sig({ k: "call", n: myName() }); render();
   }
   async function join() {
-    if (!(await mic())) { mode = "idle"; return render(); }
+    const e = epoch; if (!(await mic())) { mode = "idle"; return render(); }
+    if (e !== epoch) return release();
+    ice = await getIce(); if (e !== epoch) return release(); // left the room while we were setting up
     isCaller = false; mode = "connecting"; mkPc(); sig({ k: "join" }); render();
   }
   async function flush() { for (const c of pend.splice(0)) { try { await pc.addIceCandidate(c); } catch {} } }
@@ -150,7 +164,7 @@ function voiceSitting(box, relay, myName, note) {
   }
   async function end() {
     if (ending) return;
-    ending = true; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
+    ending = true; epoch++; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
     if (permissionReply) permissionReply(false);
     if (mr || saving) await stopRec();
     try { ctx && ctx.close(); } catch {} ctx = null;

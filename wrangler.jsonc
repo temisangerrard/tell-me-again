@@ -13,5 +13,6 @@
     { "name": "ROOM_JOIN", "namespace_id": "7732", "simple": { "limit": 120, "period": 60 } }
   ],
   "ai": { "binding": "AI" },
+  "vars": { "TURN_KEY_ID": "6f2acc8c095476ae510086fa27d1fef6" },
   "observability": { "enabled": true }
 }

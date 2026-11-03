@@ -54,6 +54,27 @@ async function transcribe(req, env, url, ip) {
   } catch (e) { console.error("transcribe failed:", e && e.message); return json({ error: "The speech service had a problem. Please try again in a minute." }, 502); }
 }
 
+/* ---------- Call relay ----------
+ * Voice calls go straight between phones. Some networks block that, so when a Cloudflare Realtime TURN key is configured
+ * (TURN_KEY_ID as a variable, TURN_KEY_API_TOKEN as a secret) we hand out short-lived relay credentials. Without it, or if
+ * Cloudflare is unreachable, callers get the public STUN server only, which is what the app used before. The relay carries
+ * audio between the two phones and Cloudflare keeps nothing. */
+const STUN_ONLY = { iceServers: [{ urls: "stun:stun.cloudflare.com:3478" }], relay: false };
+async function iceServers(req, env, ip) {
+  if (req.method !== "GET") return json({ error: "Use GET." }, 405);
+  if (!env.TURN_KEY_ID || !env.TURN_KEY_API_TOKEN) return json(STUN_ONLY);
+  if (!(await strict(env, "ice-ip", ip, 120, 3600 * 1000))) return json(STUN_ONLY); // over the limit: still give them STUN
+  try {
+    const r = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(env.TURN_KEY_ID)}/credentials/generate-ice-servers`, {
+      method: "POST", headers: { authorization: `Bearer ${env.TURN_KEY_API_TOKEN}`, "content-type": "application/json" }, body: JSON.stringify({ ttl: 3600 })
+    });
+    if (!r.ok) throw new Error("turn " + r.status);
+    const j = await r.json(); const list = Array.isArray(j.iceServers) ? j.iceServers : j.iceServers ? [j.iceServers] : [];
+    if (!list.length) throw new Error("no servers");
+    return json({ iceServers: list, relay: true });
+  } catch (e) { console.error("ice failed:", e && e.message); return json(STUN_ONLY); }
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -66,6 +87,7 @@ export default {
       if (req.method !== "POST") return json({ error: "Use POST." }, 405);
       return json({ error: "Accounts open soon. You can start a family without one right now." }, 503);
     }
+    if (url.pathname === "/api/ice") return iceServers(req, env, ip);
     if (url.pathname === "/api/transcribe") return transcribe(req, env, url, ip);
     if (url.pathname === "/api/rooms" && req.method === "POST") {
       if (!(await strict(env, "create", ip, 20, 60000))) return tooMany(); // 20 new rooms a minute per address
