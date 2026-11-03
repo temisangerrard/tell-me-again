@@ -102,7 +102,10 @@ Roughly in priority order.
 - [x] Soft sound and a buzz on your turn, a fanfare on a win, emoji reactions between phones, Play again, and a Sound on/off toggle (`js/feel.js`).
 - [x] Ludo dice tumble and tokens hop square by square, local and online (`js/ludo-motion.js`).
 - [x] Online Whot (deal, play, pick, rule chip) and online Ayo (seed-by-seed sowing replay, capture) motion: `js/card-motion.js`, `js/online-game.js`.
-- [ ] Per-game victory moments, motion for local pass-the-phone Whot, and a "Your turn" nudge for backgrounded phones.
+- [x] Win moment (confetti and a winner pop, `js/win.js`) in all three games, local and online.
+- [x] Your-turn nudge (`js/nudge.js`): a backgrounded page flashes its tab title and, with the Alerts toggle on, sends a notification; coming back pulses the stage.
+- [ ] Real Web Push so a phone that has the app in the background or closed is told it's their turn. Needs a service-worker `push` handler, VAPID keys, a stored subscription per member in the room, and the Worker sending the push on a turn change. iPhone only supports this for an installed (Add to Home Screen) app.
+- [ ] Motion for local pass-the-phone Whot (the gate hides the table between turns).
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
 
 **Make tab**
