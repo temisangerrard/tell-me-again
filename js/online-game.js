@@ -69,6 +69,13 @@ function mountOnlineGame(kind, box, send, st, note) {
       const ov = el.querySelector(".ov"); ov.replaceChildren(); if (v.over !== null && !busy) { const w = over(g); ov.append(w); wire(w, () => send({ t: "stop" })); }
     };
     const settle = (g) => { animating = false; shownP = g.v.p.slice(); draw(g, g.v.p, g.v.sc, g.v.last && g.v.last.steps.length ? g.v.last.steps[g.v.last.steps.length - 1] : -1, g.v.last ? g.v.last.caps : [], false); if (pending) { const nx = pending; pending = null; api.update(nx); } };
+    // Only replay a move that really follows from the board on screen (a reconnect or a skipped update would show wrong counts).
+    const follows = (v) => {
+      const L = v.last; if (!shownP || shownP[L.pit] !== L.steps.length) return false;
+      if (v.over !== null) return true; // the end of a game sweeps leftover seeds, so the board can't be compared exactly
+      const p = shownP.slice(); p[L.pit] = 0; L.steps.forEach((c) => p[c]++); L.caps.forEach((c) => { p[c] = 0; });
+      return p.every((n, i) => n === v.p[i]);
+    };
     // Replay the server's move: lift the seeds, drop them one pit at a time, then clear any capture.
     const sow = (g) => {
       const v = g.v, L = v.last, p = shownP.slice(), sc = v.sc.slice(); sc[L.seat] -= L.got; animating = true;
@@ -81,7 +88,7 @@ function mountOnlineGame(kind, box, send, st, note) {
     const api = { update(g) {
       if (animating) { pending = g; return; }
       const v = g.v, key = JSON.stringify(v.last);
-      if (shownP && v.last && v.last.steps.length && key !== lastKeyA && !reduceMotion()) { lastKeyA = key; return sow(g); }
+      if (shownP && v.last && v.last.steps.length && key !== lastKeyA && !reduceMotion() && follows(v)) { lastKeyA = key; return sow(g); }
       lastKeyA = key; settle(g);
     } };
     return api;

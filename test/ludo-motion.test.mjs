@@ -94,3 +94,23 @@ test("online Whot: a dealt hand flies from the market, a played card flies from 
   assert.equal(calls.filter((c) => c.el.matches(".big")).length, 1, "an opponent's card animates onto the pile");
   await a.close();
 });
+
+test("online Ayo shows the server's board directly when a move doesn't follow from what's on screen", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.matchMedia = () => ({ matches: false });
+  const box = w.document.createElement("div"); w.document.body.append(box); w.__box = box; w.__send = () => {};
+  const view = w.eval('mountOnlineGame("ayo", __box, __send, { me: { host: true } }, () => {})');
+  w.eval('globalThis.__s = Engines.ayo.init(["Ade", "Bo"])');
+  const snap = () => JSON.parse(w.eval("JSON.stringify(__s)"));
+  const g = (v) => ({ seat: 0, names: ["Ade", "Bo"], v });
+  view.update(g(snap()));                                   // the board on screen: the start
+  assert.equal(w.eval("Engines.ayo.act(__s, 0, { a: 'sow', i: 2 })"), null);   // a move the viewer never saw
+  assert.equal(w.eval("Engines.ayo.act(__s, 1, { a: 'sow', i: 8 })"), null);
+  view.update(g(snap()));                                   // arrives out of sequence
+  const seeds = [...box.querySelectorAll(".pit")].map((b) => +b.getAttribute("aria-label").match(/, (\d+) seed/)[1]);
+  const v = snap();
+  const order = [11, 10, 9, 8, 7, 6, 0, 1, 2, 3, 4, 5];
+  assert.deepEqual(seeds, order.map((i) => v.p[i]), "the true board is on screen at once, no replay");
+  assert.ok([...box.querySelectorAll(".pit")].some((b) => !b.disabled), "pits aren't locked by a replay");
+  await a.close();
+});
