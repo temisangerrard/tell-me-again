@@ -158,6 +158,13 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .foot { display:flex; flex-wrap:wrap; gap:8px 20px; padding:20px 0 0; color:var(--muted); font-size:.9rem; }
 .foot button { background:none; border:0; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer; min-height:32px; }
 @media (min-width:860px){ .trio { grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; } .trio > div { border-top:0; padding:0; } .promise { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:40px; } }
+.plist { list-style:none; margin:20px 0 0; padding:0; }
+.plist li { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line); min-height:52px; }
+.plist .pn { flex:1; font-weight:600; font-size:1.05rem; min-width:0; overflow-wrap:anywhere; }
+.plist .by { width:72px; border:0; border-bottom:1px solid var(--line); background:transparent; color:var(--text); font:inherit; padding:6px 0; }
+.plist .x { width:44px; height:44px; border:0; background:none; color:var(--muted); font-size:1.4rem; cursor:pointer; }
+.padd { display:flex; gap:10px; align-items:flex-end; margin-top:16px; } .padd .inp { flex:1; min-width:0; }
+.plist2 { margin-top:16px; }
 /* sign in */
 .authwrap { flex:1; display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 24px max(28px,env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
 .authwrap h1 { font:800 clamp(2.2rem,9vw,3rem)/1 var(--display); letter-spacing:-.025em; margin-top:28px; }
@@ -529,7 +536,7 @@ const OLD_COLORS = { "#ff5b2e": "#e26b3f", "#ffc62e": "#f0b232", "#b6f23a": "#6d
 const lum = (hex) => { const c = [1, 3, 5].map((i) => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
 const contrast = (a, b) => (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
 const onAccent = (hex) => contrast(lum(hex), lum("#2b1a12")) >= contrast(lum(hex), 1) ? "#2b1a12" : "#ffffff"; // whichever of dark or white reads better on this accent
-const blank = { step: 0, me: { name: "" }, consent: { transcribe: false }, autoTx: false, lang: "", hints: "", name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
+const blank = { step: 0, me: { name: "" }, people: [], consent: { transcribe: false }, autoTx: false, lang: "", hints: "", name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
 const fresh = () => structuredClone(blank);
 // Dev only (localhost): ?data=worst|empty|one|demo swaps in a fixture (never saved). &step=N picks the screen.
 const QS = new URLSearchParams(location.search);
@@ -545,7 +552,7 @@ const FIXTURES = {
 let S;
 try {
   const saved = DEV.has("data") ? (FIXTURES[DEV.get("data")] || FIXTURES.demo) : JSON.parse(localStorage.getItem(KEY) || "{}");
-  S = Object.assign(fresh(), saved); S.elder = { ...blank.elder, ...saved.elder }; S.me = { ...blank.me, ...saved.me }; S.consent = { ...blank.consent, ...saved.consent }; S.whotRules = { ...blank.whotRules, ...saved.whotRules };
+  S = Object.assign(fresh(), saved); S.elder = { ...blank.elder, ...saved.elder }; S.me = { ...blank.me, ...saved.me }; S.consent = { ...blank.consent, ...saved.consent }; if (!Array.isArray(saved.people)) S.people = [saved.elder && saved.elder.name ? { n: saved.elder.name, born: saved.elder.born || "" } : null, ...((saved.seats || []).slice(2).map((n) => ({ n, born: "" })))].filter(Boolean); S.whotRules = { ...blank.whotRules, ...saved.whotRules };
   S.color = OLD_COLORS[S.color] || S.color;
   if (DEV.has("step")) S.step = +DEV.get("step");
   if (!(S.step >= 0 && S.step <= 7)) S.step = 0;
@@ -750,10 +757,12 @@ function nameStep() {
   const el = screen(1, "What's your family called?", "", `
     <label class="field"><span class="lbl">Family name</span>
       <input class="inp" id="name" type="text" maxlength="40" autocomplete="off" enterkeyhint="next" value="${esc(S.name)}" placeholder="e.g. ${pick(SUR)}"></label>
+    <label class="field"><span class="lbl">Your name</span>
+      <input class="inp sm" id="myname" type="text" maxlength="30" autocomplete="off" enterkeyhint="next" value="${esc(S.me.name)}"></label>
     <label class="field"><span class="lbl">A saying your family lives by <small>(optional)</small></span>
       <input class="inp sm" id="saying" type="text" maxlength="90" autocomplete="off" enterkeyhint="next" value="${esc(S.saying)}" placeholder="The one your mum always says"></label>
     `);
-  const sync = () => { S.name = el.querySelector("#name").value.trim(); S.saying = el.querySelector("#saying").value.trim(); save(); el.querySelector("#n").disabled = !famName(S.name); };
+  const sync = () => { S.name = el.querySelector("#name").value.trim(); S.saying = el.querySelector("#saying").value.trim(); S.me.name = el.querySelector("#myname").value.trim(); if (S.me.name) lsSet("sitting-name", S.me.name); reseat(); save(); el.querySelector("#n").disabled = !famName(S.name); };
   el.querySelectorAll("input").forEach((i) => i.oninput = sync); sync(); enterNext(el, () => go(2));
 }
 
@@ -818,24 +827,25 @@ function topicsStep() {
 }
 
 function inviteStep() {
-  const el = screen(6, "Who's at the first sitting?", "", `
-    <label class="field"><span class="lbl">Your name</span>
-      <input class="inp" id="me" type="text" maxlength="30" autocomplete="off" enterkeyhint="next" value="${esc(S.me.name)}" placeholder="What do they call you?"></label>
-    <label class="field"><span class="lbl">Your storyteller</span>
-      <input class="inp" id="en" type="text" maxlength="40" autocomplete="off" enterkeyhint="next" value="${esc(S.elder.name)}" placeholder="e.g. Grandma, Papa, Aunty Ese"></label>
-    <label class="field"><span class="lbl">Year they were born</span>
-      <input class="inp sm" id="eb" type="text" inputmode="numeric" autocomplete="off" value="${esc(S.elder.born)}" placeholder="e.g. 1950"></label>
-    
-    <label class="field"><span class="lbl">Others joining <small>(one name per line, up to two)</small></span>
-      <textarea class="inp" id="others" rows="2" maxlength="120">${esc(S.seats.slice(2).join("\n"))}</textarea></label>`, "Open the room");
-  const sync = () => {
-    const eb = el.querySelector("#eb"); eb.value = eb.value.replace(/\D/g, "").slice(0, 4);
-    S.elder.name = el.querySelector("#en").value.trim(); S.elder.born = eb.value;
-    const others = el.querySelector("#others").value.split("\n").map((s) => s.trim()).filter(Boolean).slice(0, 2);
-    S.me.name = el.querySelector("#me").value.trim(); S.seats = [meName(), S.elder.name || "Storyteller", ...others]; save();
-    el.querySelector("#n").disabled = !S.elder.name;
-  };
-  el.querySelectorAll("input,textarea").forEach((i) => i.oninput = sync); sync(); enterNext(el, () => go(7));
+  const el = screen(6, "Who's in your family?", "", ``, "Done");
+  peopleEditor(el.querySelector(".content"));
+  el.querySelector("#n").onclick = () => { reseat(); go(7); };
+}
+
+// A plain list of the people you'll record or play with. Birth year is optional and only used for era prompts.
+function peopleEditor(parent, o = {}) {
+  S.people ||= [];
+  const wrap = $(`<div class="people"><ul class="plist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></div>`);
+  const ul = wrap.querySelector("ul"), inp = wrap.querySelector("input");
+  const draw = () => ul.replaceChildren(...S.people.map((p, i) => {
+    const li = $(`<li><span class="pn">${esc(p.n)}</span>${o.born ? `<input class="by" type="text" inputmode="numeric" maxlength="4" placeholder="Born" aria-label="Year ${esc(p.n)} was born" value="${esc(p.born || "")}">` : ""}<button class="x" type="button" aria-label="Remove ${esc(p.n)}">×</button></li>`);
+    const by = li.querySelector(".by"); if (by) by.oninput = () => { by.value = by.value.replace(/\D/g, "").slice(0, 4); p.born = by.value; save(); };
+    li.querySelector(".x").onclick = () => { S.people.splice(i, 1); save(); draw(); };
+    return li;
+  }));
+  const add = () => { const n = inp.value.trim(); if (!n) return; if (!S.people.some((p) => p.n.toLowerCase() === n.toLowerCase())) S.people.push({ n, born: "" }); inp.value = ""; save(); draw(); inp.focus(); };
+  wrap.querySelector(".btn").onclick = add; inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } };
+  draw(); parent.append(wrap); return wrap;
 }
 
 /* ---------- the room: Sit / Play / Make ---------- */
@@ -855,7 +865,7 @@ const TX_LANGS = [["", "Detect automatically"], ["en", "English"], ["fr", "Frenc
 const txBusy = new Set(); // clip ids being transcribed right now
 const clipRecord = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => k !== "url" && k[0] !== "_")); // what gets stored: no blob URL, no UI flags
 const saveClip = async (c) => { if (DEV.has("data")) return; try { await idbDo("readwrite", (st) => st.put(clipRecord(c))); } catch {} };
-const txNames = () => [...new Set([...String(S.hints || "").split(","), famName(S.name), S.elder.name, ...S.seats.slice(2), S.me.name, S.town].map((x) => String(x || "").trim()).filter(Boolean))].join(", ").slice(0, 170);
+const txNames = () => [...new Set([...String(S.hints || "").split(","), famName(S.name), S.elder.name, ...S.seats.slice(2), ...(S.people || []).map((x) => x.n), S.me.name, S.town].map((x) => String(x || "").trim()).filter(Boolean))].join(", ").slice(0, 170);
 async function transcribeClip(c) {
   if (c.dur > 720) throw new Error("That recording is longer than 12 minutes, which is too long to turn into text in one go.");
   const q = new URLSearchParams(); if (S.lang) q.set("lang", S.lang); const nm = txNames(); if (nm) q.set("names", nm);
@@ -960,11 +970,7 @@ function renderFamily(box) {
   chipGroup(fam, "Topics to ask about", CHAPTERS.map((c) => [c.id, c.label]), (id) => S.chapters.includes(id), (id) => { S.chapters = S.chapters.includes(id) ? S.chapters.filter((x) => x !== id) : [...S.chapters, id]; }, 1);
   chipGroup(fam, "What you're making", MAKES.map(([id, t]) => [id, t]), (id) => S.makes.includes(id), (id) => { S.makes = S.makes.includes(id) ? S.makes.filter((x) => x !== id) : [...S.makes, id]; });
 
-  const tbl = sec("At the table");
-  field(tbl, "Your storyteller", S.elder.name, { max: 40, ph: "e.g. Grandma, Papa, Aunty Ese", on: (v) => { S.elder.name = v; reseat(); } });
-  field(tbl, "Year they were born", S.elder.born, { max: 4, ph: "e.g. 1950", on: (v, i) => { i.value = i.value.replace(/\D/g, "").slice(0, 4); S.elder.born = i.value; } });
-  const ot = $(`<label class="field"><span class="lbl">Others joining <small>(one name per line, up to two)</small></span><textarea class="inp" rows="2" maxlength="120">${esc(S.seats.slice(2).join("\n"))}</textarea></label>`); tbl.append(ot);
-  ot.querySelector("textarea").oninput = (e) => { S.seats = [meName(), S.elder.name || "Storyteller", ...e.target.value.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 2)]; save(); };
+  peopleEditor(sec("People"), { born: true });
 
   const season = sec("This season");
   const st = streak();
@@ -1034,7 +1040,7 @@ function wrapUp(after) {
   });
   const close = sheet("Wrap up this sitting", body);
   body.querySelector("#cl").onclick = close;
-  sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); save(); close(); after(); };
+  sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); sitting = null; save(); close(); after(); };
 }
 // 3-2-1, then a full-screen run screen: the family colour, a huge timer, one big stop button. Resolves with the overlay or null if cancelled.
 function countdown() {
@@ -1130,6 +1136,7 @@ function renderSitting(box, msg) {
   if (live) { setLive(true); rs.textContent = "Recording…"; }
   rec.onclick = async () => {
     if (live) { live.mr.stop(); return; }
+    if (!sitting) { if (!(await chooseSitting())) return; renderSitting(box); box.querySelector("#rec").click(); return; }
     if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") { rs.textContent = "This browser can't record yet. Try the latest Chrome or Safari."; return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -1305,6 +1312,7 @@ function askStrip(c) {
 let lastGame = null; // which game screen the Play tab reopens on
 const backGames = (box) => { const b = $(`<button class="btn gback" type="button">‹ All games</button>`); b.onclick = () => { lastGame = null; renderPlay(box); }; return b; };
 function renderPlay(box) {
+  if (pendingRoom) { const pr = pendingRoom; pendingRoom = null; enterRoom(box, pr.code, pr.name); return; }
   box.replaceChildren($(`<h1 class="title">Play together</h1>`), );
   const list = $(`<div class="games">
     <button class="game" id="ludo" type="button"><span class="g">6</span><span><b>Ludo</b><span class="d">2 to 4 players</span></span></button>
@@ -1661,6 +1669,45 @@ const ROOM_RE = /^[A-Z2-9]{6}$/;
 const parseCode = (t) => { const m = String(t || "").toUpperCase().match(/ROOM=([A-Z0-9]{6})/); const c = (m ? m[1] : String(t || "").toUpperCase().replace(/[^A-Z0-9]/g, "")).slice(0, 6); return ROOM_RE.test(c) ? c : null; };
 const E = globalThis.Engines;
 const wcardEl = (c, cls = "", tag = "button") => $(`<${tag} class="wc ${c.s} ${cls}" ${tag === "button" ? 'type="button"' : ""} aria-label="${E.whot.wname(c)}">${c.s === "whot" ? `<span class="n">20</span><b>WHOT</b><span class="n b">20</span>` : `<span class="n">${c.n}</span>${wsvg(c.s)}<span class="n b">${c.n}</span>`}</${tag}>`);
+let sitting = null, pendingRoom = null; // who's in this sitting; a room to open on the Play tab
+function enterRoom(box, code, n) { lsSet("sitting-room", code); box.replaceChildren(backGames(box)); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box)); }
+const shareTo = async (code, who) => {
+  const url = `${location.origin}${location.pathname}?room=${code}`, text = `${who}, join our sitting`;
+  try { if (navigator.share) { await navigator.share({ title: "Tell Me Again", text, url }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(`${text}: ${url}`); return "Link copied"; } catch { return url; }
+};
+// Asked when you press Record: pick who's sitting, then record here or send links. Resolves true to record now.
+function chooseSitting() {
+  return new Promise((res) => {
+    let picked = sitting ? [...sitting] : [], done = false;
+    const b = $(`<div><h2>Who's joining?</h2><div class="chips plist2" role="group" aria-label="Who's joining"></div>
+      <div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" id="pa" type="button">Add</button></div>
+      <button class="cta" id="here" type="button" style="margin-top:20px">Record here</button>
+      <button class="btn" id="links" type="button" style="width:100%;margin-top:8px">Send links</button><p class="err" id="ce" role="status"></p></div>`);
+    const chips = b.querySelector(".chips"), inp = b.querySelector("input"), ce = b.querySelector("#ce");
+    const draw = () => { chips.replaceChildren(...S.people.map((p) => { const i = picked.indexOf(p.n), c = $(`<button class="chip" type="button" aria-pressed="${i >= 0}">${esc(p.n)}${i === 0 ? " · storyteller" : ""}</button>`);
+      c.onclick = () => { picked = i >= 0 ? picked.filter((x) => x !== p.n) : [...picked, p.n].slice(0, 3); draw(); }; return c; })); b.querySelector("#links").disabled = !picked.length; };
+    const add = () => { const n = inp.value.trim(); if (!n) return; if (!S.people.some((p) => p.n.toLowerCase() === n.toLowerCase())) S.people.push({ n, born: "" }); if (picked.length < 3 && !picked.includes(n)) picked.push(n); inp.value = ""; save(); draw(); inp.focus(); };
+    b.querySelector("#pa").onclick = add; inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } };
+    const apply = () => { const pr = S.people.find((x) => x.n === picked[0]); S.elder = { name: picked[0] || "", born: (pr && pr.born) || "" }; S.seats = [meName(), picked[0] || "Storyteller", ...picked.slice(1, 3)]; sitting = picked; save(); };
+    const close = sheet("Who's joining?", b);
+    b.querySelector("#here").onclick = () => { apply(); done = true; close(); res(true); };
+    b.querySelector("#links").onclick = async () => {
+      ce.textContent = "Making the room…";
+      try {
+        const r = await fetch("/api/rooms", { method: "POST" }); if (r.status === 429) { ce.textContent = "Too many rooms at once. Try again in a minute."; return; }
+        const j = await r.json(); if (!j.code) throw 0; apply(); done = true;
+        const host = lsGet("sitting-name") || S.me.name || "Host";
+        b.replaceChildren($(`<h2>Send links</h2>`), ...picked.map((n) => { const x = $(`<button class="btn" type="button" style="width:100%;margin-top:8px">Send to ${esc(n)}</button>`); x.onclick = async () => { const m = await shareTo(j.code, n); if (m) x.textContent = m; }; return x; }));
+        const go2 = $(`<button class="cta" type="button" style="margin-top:20px">Open the room</button>`);
+        go2.onclick = () => { pendingRoom = { code: j.code, name: host }; close(); res(false); const t = document.querySelector("#t-play"); if (t) t.click(); };
+        b.append(go2);
+      } catch { ce.textContent = "Couldn't make a room. Check your connection."; }
+    };
+    new MutationObserver((_, ob) => { if (!document.body.contains(b)) { ob.disconnect(); if (!done) res(false); } }).observe(document.body, { childList: true, subtree: true });
+    draw(); inp.focus();
+  });
+}
 const shareRoom = async (code) => {
   const url = `${location.origin}${location.pathname}?room=${code}`;
   try { if (navigator.share) { await navigator.share({ title: "Join our family room", text: `Room ${code}`, url }); return "Shared."; } } catch (e) { if (e && e.name === "AbortError") return ""; }
@@ -1902,7 +1949,7 @@ function onlineCard(box) {
     <div class="row2"><input class="inp sm" id="jc" type="text" maxlength="60" autocomplete="off" placeholder="Room code" aria-label="Room code"><button class="btn" id="jn" type="button">Join</button></div><p class="err" id="oe" role="status"></p></div>`);
   const oe = el.querySelector("#oe"), nm = el.querySelector("#on");
   const name = () => { const n = nm.value.trim(); if (!n) { oe.textContent = "Add your name first."; nm.focus(); return null; } lsSet("sitting-name", n); return n; };
-  const enter = (code, n) => { lsSet("sitting-room", code); box.replaceChildren(backGames(box)); const w = $(`<div></div>`); box.append(w); mountRoom(w, code, n, () => renderPlay(box)); };
+  const enter = (code, n) => enterRoom(box, code, n);
   el.querySelector("#mk").onclick = async () => { const n = name(); if (!n) return; oe.textContent = "Making your room…";
     try { const r = await fetch("/api/rooms", { method: "POST" }); if (r.status === 429) { oe.textContent = "That's a lot of rooms at once. Wait a minute and try again."; return; }
       const j = await r.json(); if (!j.code) throw 0; enter(j.code, n); } catch { oe.textContent = "Couldn't make a room. Check your connection and try again."; } };
