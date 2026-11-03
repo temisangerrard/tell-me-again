@@ -55,3 +55,31 @@ test("the family list can grow from the home view", async () => {
   assert.equal(w.eval("S.people.length"), 3);
   await a.close();
 });
+
+test("who spoke survives a backup and restore; old archives without it still load; a bad value is refused", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.eval('S.name = "Etim"; S.step = 7');
+  w.sample = new w.Blob([new Uint8Array([1, 2, 3])], { type: "audio/webm" });
+  await w.eval('clips = [{ id: "c1", q: "First home?", who: "Grandma Ese", at: 1700000000000, dur: 9, blob: sample, url: "blob:1" }, { id: "c2", q: "No speaker", at: 1700000001000, dur: 5, blob: sample, url: "blob:2" }]');
+  w.backup = await w.eval("createBackup()");
+  const raw = typeof w.backup === "string" ? JSON.parse(w.backup) : w.backup;
+  assert.equal(raw.recordings.find((r) => r.id === "c1").who, "Grandma Ese");
+  assert.equal("who" in raw.recordings.find((r) => r.id === "c2"), false, "older recordings stay as they were");
+  const parsed = w.eval("parseBackup(backup)");
+  assert.equal(parsed.recordings.find((r) => r.id === "c1").who, "Grandma Ese");
+  assert.equal(parsed.recordings.find((r) => r.id === "c2").who, undefined);
+  raw.recordings[0].who = 42; w.bad = typeof w.backup === "string" ? JSON.stringify(raw) : raw;
+  assert.throws(() => w.eval("parseBackup(bad)"));
+  await a.close();
+});
+
+test("the Back button returns after a call ends", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.eval('S.people = [{ n: "Ese", born: "" }]; sitting = ["Ese"]; clips = []');
+  const box = w.document.createElement("div"); w.document.body.append(box); w.__box = box;
+  w.eval('activeCall = { mode: () => "live", live: () => false, recording: () => false, setQuestion() {} }; renderSitting(__box)');
+  assert.equal(box.querySelector(".gback").hidden, true, "hidden while a call is live");
+  w.eval('activeCall = { mode: () => "idle", live: () => false, recording: () => false, setQuestion() {} }; onCallChange()');
+  assert.equal(box.querySelector(".gback").hidden, false, "back as soon as the call ends");
+  await a.close();
+});

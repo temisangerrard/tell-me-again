@@ -135,7 +135,7 @@ function renderSitting(box, msg) {
   // While a call is live, Record goes through the call (both voices) and the current question is pushed to the other phone.
   onClipSaved = () => { if (box.isConnected && !box.hidden) renderSit(box); };
   onCallSkip = () => { if (!skip.disabled) skip.click(); };
-  onCallChange = () => { if (!rec.isConnected) return; const c = activeCall && activeCall.live(); if (c) { activeCall.setQuestion(q ? q.q : null); const on = activeCall.recording(); rec.textContent = on ? "Stop and save" : "Record the answer"; skip.disabled = on || !q; } };
+  onCallChange = () => { if (!rec.isConnected) return; back.hidden = !!(activeCall && activeCall.mode() !== "idle"); const c = activeCall && activeCall.live(); if (c) { activeCall.setQuestion(q ? q.q : null); const on = activeCall.recording(); rec.textContent = on ? "Stop and save" : "Record the answer"; skip.disabled = on || !q; } };
   if (activeCall && activeCall.live()) { activeCall.setQuestion(q ? q.q : null); onCallChange(); }
   rec.onclick = async () => {
     if (live) { live.mr.stop(); return; }
