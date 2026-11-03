@@ -4,6 +4,17 @@
 // Each family room is a Durable Object on Cloudflare. It runs the rules (engines.js) and tells each phone only what that person may see.
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const ssGet = (k) => { try { return sessionStorage.getItem(k); } catch { return null; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch {} };
+// Who you are in a room belongs to this tab, so two tabs on one device are two people. Closing the app and coming back
+// later reclaims your seat: a tab keeps a heartbeat, and a claim nobody has refreshed for 15 seconds is up for grabs.
+function roomPid(code) {
+  let p = ssGet("pid:" + code); if (p && p.length >= 16) return p;
+  let c = null; try { c = JSON.parse(lsGet("claim:" + code) || "null"); } catch {}
+  p = c && c.pid && c.pid.length >= 16 && Date.now() - c.t > 15000 ? c.pid : crypto.randomUUID();
+  ssSet("pid:" + code, p); return p;
+}
+const claimRoom = (code, pid) => lsSet("claim:" + code, JSON.stringify({ pid, t: Date.now() }));
 const myPid = () => { let p = lsGet("sitting-pid"); if (!p || p.length < 16) { p = crypto.randomUUID(); lsSet("sitting-pid", p); } return p; };
 const ROOM_RE = /^[A-Z2-9]{6}$/;
 const parseCode = (t) => { const m = String(t || "").toUpperCase().match(/ROOM=([A-Z0-9]{6})/); const c = (m ? m[1] : String(t || "").toUpperCase().replace(/[^A-Z0-9]/g, "")).slice(0, 6); return ROOM_RE.test(c) ? c : null; };
