@@ -121,7 +121,6 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .sample-seats { display:flex; gap:8px; align-items:center; margin-top:22px; color:var(--muted); font-size:.78rem; flex-wrap:wrap; }
 .sample-seats i { width:30px; height:30px; border:1px solid var(--line); border-radius:50%; display:grid; place-items:center; background:var(--surface); color:var(--text); font:600 .7rem var(--sans); font-style:normal; }
 .example-stage .btn { align-self:flex-start; background:var(--surface); margin-top:12px; }
-.example-caption { margin-top:12px; min-height:40px; }
 .sample-wave { width:100%; height:72px; color:var(--accent-text); margin:16px 0; }
 .sample-quote { font:500 clamp(1.15rem,3vw,1.45rem)/1.5 var(--sans); margin:20px 0; }
 .sample-transcript { background:var(--surface); border-left:3px solid var(--accent); padding:16px; font-size:.9rem; color:var(--text); }
@@ -689,7 +688,7 @@ function welcome() {
           <button type="button" data-example="keep" aria-pressed="false" aria-controls="example-stage">02 Keep</button>
           <button type="button" data-example="make" aria-pressed="false" aria-controls="example-stage">03 Make</button>
         </div>
-        <div class="example-stage" id="example-stage"></div><p class="fine example-caption" id="example-caption"></p>
+        <div class="example-stage" id="example-stage"></div>
       </section>
     </div>
     <section class="landing-how" aria-label="How Tell Me Again works">
@@ -713,20 +712,17 @@ function welcome() {
   host.append(el);
   let questionIndex = 0;
   const questions = QUESTIONS.filter(x => x.c === "food" && x.d <= 2);
-  const stage = el.querySelector("#example-stage"), caption = el.querySelector("#example-caption");
+  const stage = el.querySelector("#example-stage");
   const showExample = kind => {
     el.querySelectorAll("[data-example]").forEach(b => b.setAttribute("aria-pressed", b.dataset.example === kind));
     if (kind === "ask") {
       const q = questions[questionIndex % questions.length];
-      stage.innerHTML = `<span class="sample-label">Food & the table</span><h2 class="sample-question">${esc(q.q)}</h2><p class="fine">${esc(q.f[0])}</p><button class="btn" type="button">Try another question ↗</button><div class="sample-seats"><i>You</i><i>P</i><span>You ask. Papa tells it his way.</span></div>`;
+      stage.innerHTML = `<span class="sample-label">Food & the table</span><h2 class="sample-question">${esc(q.q)}</h2><p class="fine">${esc(q.f[0])}</p><button class="btn" type="button">Try another question ↗</button><div class="sample-seats"><i>You</i><i>P</i></div>`;
       stage.querySelector("button").onclick = () => { questionIndex++; showExample("ask"); };
-      caption.textContent = "An actual question from the app. Follow-ups help you go a little deeper.";
     } else if (kind === "keep") {
-      stage.innerHTML = `<span class="sample-label">Illustrative story</span><p class="sample-quote">“On Sundays, we all ended up in my mother's kitchen.”</p><svg class="sample-wave" viewBox="0 0 320 64" aria-hidden="true">${Array.from({length:48},(_,i) => { const h = 6 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * .31)) * 48; return `<rect x="${i*6.7}" y="${32-h/2}" width="3" height="${h}" rx="1.5" fill="currentColor"/>`; }).join("")}</svg><div class="sample-transcript"><small>EXAMPLE TRANSCRIPT · EDITABLE IN THE APP</small>She never wrote the recipe down. She would just say, “Come and watch.”</div>`;
-      caption.textContent = "Fictional example, not a recording. In your family space, keep the audio and edit its transcript.";
+      stage.innerHTML = `<span class="sample-label">Fictional story example</span><p class="sample-quote">“On Sundays, we all ended up in my mother's kitchen.”</p><svg class="sample-wave" viewBox="0 0 320 64" aria-hidden="true">${Array.from({length:48},(_,i) => { const h = 6 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * .31)) * 48; return `<rect x="${i*6.7}" y="${32-h/2}" width="3" height="${h}" rx="1.5" fill="currentColor"/>`; }).join("")}</svg><div class="sample-transcript"><small>EXAMPLE TRANSCRIPT</small>She never wrote the recipe down. She would just say, “Come and watch.”</div>`;
     } else {
-      stage.innerHTML = `<span class="sample-label">Magazine concept · sample spread</span><div class="sample-spread"><div><span class="sample-label">The family table</span><h3>Sunday in her kitchen.</h3><p>Everyone had a job. Someone washed the rice. Someone set the table. And everyone waited for a taste.</p><span class="page-no">04 · A FAMILY STORY</span></div><div><p>Some things were measured by the handful. Others, by watching.</p><div class="recipe"><b>“Come and watch.”</b><p>A recipe remembered, in her own words.</p></div><span class="page-no">05 · FOOD & MEMORIES</span></div></div>`;
-      caption.textContent = "Illustrative layout with fictional text. Full publications are in development; cover previews are available now.";
+      stage.innerHTML = `<span class="sample-label">Fictional magazine example</span><div class="sample-spread"><div><span class="sample-label">The family table</span><h3>Sunday in her kitchen.</h3><p>Everyone had a job. Someone washed the rice. Someone set the table. And everyone waited for a taste.</p><span class="page-no">04 · A FAMILY STORY</span></div><div><p>Some things were measured by the handful. Others, by watching.</p><div class="recipe"><b>“Come and watch.”</b><p>A recipe remembered, in her own words.</p></div><span class="page-no">05 · FOOD & MEMORIES</span></div></div>`;
     }
   };
   el.querySelectorAll("[data-example]").forEach(b => b.onclick = () => showExample(b.dataset.example));
