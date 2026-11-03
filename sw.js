@@ -1,5 +1,5 @@
 // Network-first so edits show up immediately; the cache is only the offline fallback.
-const CACHE = "sitting-v10";
+const CACHE = "sitting-v11";
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => e.waitUntil(
   caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
