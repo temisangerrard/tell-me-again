@@ -27,3 +27,22 @@ test("a token moving forward hops through every square, a capture fades, a first
   w.placeTok(t, 1, 0, 0, 1); assert.equal(calls, 3); assert.equal(frames.length, 1 + 2, "leaving the base is a single hop");
   await a.close();
 });
+
+test("online Ludo keeps rolls and token moves disabled while the dice tumble", async () => {
+  const a = app(); await a.ready; const { w } = a;
+  w.matchMedia = () => ({ matches: false });
+  const box = w.document.createElement("div"); w.document.body.append(box);
+  const sent = [];
+  const mk = (dice, turn, last) => ({ seat: 0, names: ["Ade", "Bo"], v: { kind: "ludo", turn, dice, movable: dice ? [0] : [], last, over: null, msg: "", pl: [{ k: 0, t: [-1, -1, -1, -1] }, { k: 2, t: [-1, -1, -1, -1] }] } });
+  w.__send = (m) => sent.push(m); w.__box = box;
+  const view = w.eval('mountOnlineGame("ludo", __box, __send, { me: { host: true } }, () => {})');
+  view.update(mk(null, 0, null));
+  view.update(mk(6, 0, null)); // a roll arrives: tumbling starts
+  const roll = box.querySelector(".roll");
+  assert.equal(roll.disabled, true, "roll disabled during tumble");
+  assert.equal(box.querySelectorAll(".tok.go").length, 0, "no token can be picked during tumble");
+  await new Promise((r) => setTimeout(r, 1500));
+  assert.equal(box.querySelectorAll(".tok.go").length, 1, "the movable token becomes pickable once the dice settle");
+  assert.equal(roll.disabled, true, "roll stays disabled: a die is already on the table");
+  await a.close();
+});
