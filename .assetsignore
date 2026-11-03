@@ -13,3 +13,6 @@ package-lock.json
 .gitignore
 README.md
 AGENTS.md
+
+# Version-control metadata must never be served.
+.git

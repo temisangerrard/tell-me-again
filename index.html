@@ -103,7 +103,6 @@ textarea.inp { font-size:1.15rem; font-weight:500; resize:none; }
 .themebtn i { width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--bg) 0 50%,var(--text) 0); box-shadow:0 0 0 1.5px var(--text); }
 .signin { min-height:44px; padding:8px 12px; border:0; background:transparent; color:var(--text); font:600 .85rem var(--sans); cursor:pointer; }
 .landing-hero { display:grid; gap:36px; padding:60px 0 48px; }
-.eyebrow { font:600 .75rem var(--sans); text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
 .hero2 h1 { font:800 clamp(3.5rem,12vw,6.4rem)/.94 var(--display); letter-spacing:-.035em; margin:18px 0 24px; max-width:11ch; overflow-wrap:anywhere; }
 .hero2 .sub { font-size:1.05rem; line-height:1.6; max-width:36ch; color:var(--muted); }
 .hero2 .row { margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 24px; }
@@ -678,7 +677,7 @@ function welcome() {
   const el = $(`<section class="welcome">
     <header class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
     <div class="landing-hero">
-      <div class="hero2"><p class="eyebrow">A place for your family's stories</p>
+      <div class="hero2">
         <h1>Keep the stories only your family can tell.</h1>
         <p class="sub">Ask a good question. Record their voice. Save the names, recipes and memories you want the next generation to know.</p>
         <div class="row"><button class="cta" id="go" type="button">Start your family</button><a class="textlink" href="#product-example">See an example ↓</a></div>
@@ -698,17 +697,17 @@ function welcome() {
       <div><span class="number">02</span><h2>Follow a good question.</h2><p>Choose a topic. Use the follow-ups to find the story behind the first answer.</p></div>
       <div><span class="number">03</span><h2>Keep their own words.</h2><p>Save the recording. Turn it into text if you choose, then check and edit the words.</p></div>
     </section>
-    <section class="landing-games"><div><p class="eyebrow">Make a little time together</p><h2 class="section-title">A story. A game. Another story.</h2><p>Play Ludo, Ayo or Whot between questions. Invite family to an online game, or pass one phone around the table.</p></div>
+    <section class="landing-games"><div><h2 class="section-title">Play together</h2><p>Play Ludo, Ayo or Whot between questions. Invite family to an online game, or pass one phone around the table.</p></div>
       <div class="game-sample"><svg viewBox="0 0 15 15" role="img" aria-label="Ludo board from Tell Me Again">${boardSVG()}</svg><div><b>Your family table</b><p>Ludo & Whot · 2–4 players<br>Ayo · 2 players</p><p class="fine">Voice calls currently support two people.</p></div></div>
     </section>
-    <section class="future-note"><div><p class="eyebrow">What we're building towards</p><h2>A family history you can hold.</h2></div><p>Personalised magazine covers and book previews are here to try. Full magazines, storybooks and films made from your stories are still in development.</p></section>
+    <section class="future-note"><div><h2>Publications in development</h2></div><p>Personalised magazine covers and book previews are here to try. Full magazines, storybooks and films made from your stories are still in development.</p></section>
     <section aria-label="Common questions"><div class="faq">
       <details><summary>Does my family need an account?</summary><p>No. Start your family on this device and share a room link. Guests enter their name to join. Account sign-in is still in development.</p></details>
       <details><summary>Where do the recordings go?</summary><p>Recordings and transcripts stay on the device that saves them. Download a copy to keep a backup. If you choose transcription, that recording is sent to the speech service for processing.</p></details>
       <details><summary>Can we speak our own language?</summary><p>You can record in any language. Transcription offers English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili; accuracy varies. Igbo and Nigerian Pidgin aren't supported yet.</p></details>
       <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, save a personalised magazine cover, and explore book and film-title previews. Complete books and films aren't available yet.</p></details>
     </div></section>
-    <div class="endcta"><h2 class="section-title">Start with one question.</h2><button class="cta" id="go2" type="button">Start your family</button></div>
+    <div class="endcta"><button class="cta" id="go2" type="button">Start your family</button></div>
     <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
   </section>`);
   host.append(el);
