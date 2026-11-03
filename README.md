@@ -108,6 +108,9 @@ Roughly in priority order.
 - [ ] Motion for local pass-the-phone Whot (the gate hides the table between turns).
 - [ ] Make the "Ask while you play" question card a real beat between turns, with the host able to record the answers.
 
+- [x] Bots (`bot()` in each engine in `engines.js`, run by the room in `src/room.js`): Add a bot in a room lobby, or Play a bot in one tap from the Play tab. Bots only use their own hand and public state, and every move goes through the same `act()` as a person's.
+- [ ] Bot difficulty levels, and bots in the local pass-the-phone games.
+
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
 - [ ] Storybook and short-film generation; video export.
