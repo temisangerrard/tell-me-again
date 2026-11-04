@@ -78,3 +78,4 @@
   .future-note { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:56px; }
 }
 @media (max-width:400px) { .game-sample { grid-template-columns:1fr; } .game-sample svg { width:180px; max-width:100%; } }
+.signin.signed { font:600 .85rem var(--sans); padding:8px 12px; border-radius:99px; background:var(--surface2); color:var(--muted); max-width:46vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

@@ -47,3 +47,9 @@ test("a backup brings back people, avatars and lore, and never grants consent to
   assert.equal(got.people.length, 2); assert.ok(got.people[0].av && got.me.av, "avatars survive");
   assert.equal(got.lore.clips.a.places[0], "Uyo"); assert.equal(got.consent.lore, undefined, "lore consent is never restored");
 }));
+
+test("after a good sign-in code the screen says so, and Continue opens the Family tab", () => withApp((w, d) => {
+  w.eval(`S.step = 7; account = { email: "ada@example.com" }; signedInScreen()`);
+  assert.match(d.querySelector(".authwrap").textContent, /You're in[\s\S]*ada@example\.com/); d.querySelector("#ok").click();
+  assert.ok(d.querySelector('[data-t="family"]'), "the tab bar is back");
+}));
