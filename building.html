@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Tell Me Again was built</title>
+<meta name="description" content="A build log of how Tell Me Again was made with an AI coding assistant: the working loop, the decisions, the mistakes and what caught them.">
+<meta name="theme-color" content="#fcfcfa">
+<link rel="icon" href="art/icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="art/icons/apple-touch-icon.png">
+<script>try{var t=localStorage.getItem("sitting-theme");document.documentElement.dataset.theme=["white","warm","night"].includes(t)?t:"white"}catch(e){document.documentElement.dataset.theme="white"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/log.css">
+</head>
+<body class="logpage">
+<main class="log" id="top">
+  <header>
+    <div class="logtop"><a class="logmark" href="/"><img src="art/icons/mark.svg" alt="" width="30" height="30">Tell me again</a><a class="btn" href="/">Open the app</a></div>
+    <div class="dots" aria-hidden="true"><i style="--c:var(--b-violet)"></i><i style="--c:var(--b-coral)"></i><i style="--c:var(--b-honey)"></i><i style="--c:var(--b-leaf)"></i><i style="--c:var(--b-teal)"></i></div>
+    <span class="kick">A build log, for people learning to build with AI</span>
+    <h1>Building Tell Me Again</h1>
+    <p class="lede">Tell Me Again helps a family record the stories their parents and grandparents carry, one question at a time. This page shows how it was built with an AI coding assistant: the working loop, the decisions I made myself, what the AI got wrong, and what caught it.</p>
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><b>62</b><span>commits, 3 to 4 November 2026</span></div>
+      <div class="stat" role="listitem"><b>22</b><span>pull requests, each on its own branch</span></div>
+      <div class="stat" role="listitem"><b>102</b><span>automated tests, all passing</span></div>
+      <div class="stat" role="listitem"><b>101</b><span>hand-written interview questions</span></div>
+    </div>
+    <p class="note">Counts come from the git history and the test run. The app has no build step: about 4,000 lines of JavaScript and 900 of CSS, plus a small Cloudflare Worker.</p>
+  </header>
+
+  <section aria-labelledby="loop">
+    <span class="kick">How the work went</span>
+    <h2 id="loop">One loop, repeated</h2>
+    <p style="margin-top:14px">Every feature, from the avatar maker to sign-in, went through the same six steps. The AI did the typing. I did the deciding, and I kept the one irreversible step for myself.</p>
+    <ol class="loop">
+      <li style="--c:var(--b-violet)"><div><b>I describe a feeling or a goal in plain words</b><span>"It looks naked." "It doesn't flow." No file names, no specs.</span></div></li>
+      <li style="--c:var(--b-coral)"><div><b>The AI proposes, then builds on a branch</b><span>It explains the options and gives a recommendation. For big changes it writes the plan into the repo first.</span></div></li>
+      <li style="--c:var(--b-honey)"><div><b>It checks its own work</b><span>Automated tests, then the real thing: a browser for the screens, a local server for the backend, a real recorder for audio.</span></div></li>
+      <li style="--c:var(--b-leaf)"><div><b>I look at it and say what is wrong</b><span>This is where most of the good changes came from. The AI could not have known the characters felt off.</span></div></li>
+      <li style="--c:var(--b-teal)"><div><b>A second reviewer reads the pull request</b><span>An automated code reviewer on GitHub (Codex) comments on the diff. The AI fixes what is real and closes each thread.</span></div></li>
+      <li style="--c:var(--b-sky)"><div><b>Only my exact words ship it</b><span>"Merge and deploy" is the phrase. Nothing goes to the live site without it, and the tooling enforces that.</span></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="arc">
+    <span class="kick">What was built, in order</span>
+    <h2 id="arc">The product changed shape twice</h2>
+    <p style="margin-top:14px">It began as a recorder with family games. After feedback it became a tool for asking better questions, and then a tool for building closer relationships. The pull requests below are the real titles, grouped by what they were for.</p>
+    <div style="margin-top:24px">
+      <details class="phase" style="--c:var(--b-violet)" open><summary><span><strong>Keep the stories safe</strong><small>Recording, text, backups, privacy</small></span></summary><ul>
+        <li><code>#1</code><span>Show the family-story journey and fix profile and Ayo state</span></li>
+        <li><code>#2</code><span>Preserve family stories with full backups, recording consent and magazine export</span></li>
+        <li><code>#3</code><span>Split index.html into per-feature css and js files</span></li></ul></details>
+      <details class="phase" style="--c:var(--b-coral)"><summary><span><strong>Make it feel alive</strong><small>Games, sound, calls</small></span></summary><ul>
+        <li><code>#4</code><span>Each tab is its own player; game feel: sound, buzz, reactions, rematch</span></li>
+        <li><code>#5</code><span>Call relay: TURN credentials, with a fallback to STUN</span></li>
+        <li><code>#6</code><span>Ludo dice and token animation; in-app browser microphone warning</span></li>
+        <li><code>#7</code><span>Whot and Ayo motion</span></li>
+        <li><code>#8</code><span>Win moments and a your-turn nudge</span></li>
+        <li><code>#10</code><span>Bots: play against a bot, add bots to a room</span></li>
+        <li><code>#13</code><span>Sound design: games that sound alive</span></li>
+        <li><code>#14</code><span>Phone fixes: audio unlock, join a bot's game, clearer microphone errors</span></li></ul></details>
+      <details class="phase" style="--c:var(--b-honey)"><summary><span><strong>Know who to ask next</strong><small>The Sit tab as a family dashboard</small></span></summary><ul>
+        <li><code>#9</code><span>Sit tab: a home view with the family and activity</span></li>
+        <li><code>#11</code><span>Sit tab as a family dashboard: Next up, coverage, person pages</span></li>
+        <li><code>#12</code><span>Update itself after a deploy; show the version in Family</span></li></ul></details>
+      <details class="phase" style="--c:var(--b-leaf)"><summary><span><strong>Make it look made</strong><small>Landing page, characters, icons, avatars</small></span></summary><ul>
+        <li><code>#15</code><span>Landing page as a scroll: colour, characters, all three games live</span></li>
+        <li><code>#16</code><span>Avatar maker</span></li></ul></details>
+      <details class="phase" style="--c:var(--b-teal)"><summary><span><strong>Make the interview good</strong><small>Question bank and recording flow</small></span></summary><ul>
+        <li><code>#17</code><span>Question bank: structure, relationships, photo prompts</span></li>
+        <li><code>#18</code><span>Calls: continuous recording, Next question</span></li></ul></details>
+      <details class="phase" style="--c:var(--b-sky)"><summary><span><strong>Open it to other people</strong><small>Accounts and the Family tab</small></span></summary><ul>
+        <li><code>#19</code><span>Accounts: email code sign-in</span></li>
+        <li><code>#21</code><span>Sign-in: say you're in</span></li>
+        <li><code>#22</code><span>Family tab accordions</span></li></ul></details>
+    </div>
+    <p class="note">One of the twenty-two was closed without merging, because I changed my mind.</p>
+  </section>
+
+  <section aria-labelledby="said">
+    <span class="kick">The human part</span>
+    <h2 id="said">What I said, and what changed</h2>
+    <p style="margin-top:14px">The AI is good at building and bad at taste, so taste was my job. These are my actual messages, lightly cleaned of typos, next to what they led to.</p>
+    <div class="pairs">
+      <div class="pair" style="--c:var(--b-violet)"><div class="say"><small>On the hand-drawn characters</small>“I love everything except how the characters look.” Then: “Invoke Blender or something.”</div><div class="then"><small>What changed</small>The AI had drawn the cast as flat vector art. I rejected it, and also named the tool. It built a clay-style 3D cast with a script in headless Blender, rendered as small animated images.</div></div>
+      <div class="pair" style="--c:var(--b-coral)"><div class="say"><small>On the writing</small>“Anything that sounds like ‘it’s not this, it’s that’ is AI copy.”</div><div class="then"><small>What changed</small>It rewrote the landing page copy, then turned the rule into a test. The question bank now fails the build if it contains em dashes or that sentence pattern.</div></div>
+      <div class="pair" style="--c:var(--b-honey)"><div class="say"><small>On the Sit page</small>“It looks naked. People won’t know what to do in the app.”</div><div class="then"><small>What changed</small>A visible three-step path for the first story: add someone, ask a question, keep it. It stays until the first recording exists.</div></div>
+      <div class="pair" style="--c:var(--b-leaf)"><div class="say"><small>On the product itself</small>“I don’t want an AI interviewer. Let the AI suggest what the asker asks. This is a relationship-building tool.”</div><div class="then"><small>What changed</small>The plan was rewritten straight away. A person always asks and a person always answers. The AI only reads the written story and suggests questions to the person asking.</div></div>
+      <div class="pair" style="--c:var(--b-teal)"><div class="say"><small>On recording</small>“The start and stop of the interview is ugly. It does 3, 2, 1, then records, then doesn’t ask the next question. It doesn’t flow.”</div><div class="then"><small>What changed</small>One start, no countdown. A Next question button cuts the audio and carries on, and each answer is saved as its own recording. Calls got the same treatment.</div></div>
+      <div class="pair" style="--c:var(--b-sky)"><div class="say"><small>On the Family tab</small>“Put things into accordions so it’s neat. You won’t make an avatar daily.”</div><div class="then"><small>What changed</small>Rarely used settings fold away. The avatar shows as a small thumbnail until you open it.</div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="wrong">
+    <span class="kick">The honest part</span>
+    <h2 id="wrong">Where the AI got it wrong</h2>
+    <p style="margin-top:14px">It makes real mistakes, quietly and with confidence. Nothing here was caught by the AI trusting itself. Each one was caught by something outside it.</p>
+    <div class="table">
+      <div class="row"><span class="tag" style="--c:var(--b-honey)">Real-world check</span><div><h3>A retired AI model</h3><p>The lore feature called a model Cloudflare had retired. The unit tests passed because they used a stand-in. A single call to the real service failed straight away. Lesson: test against the real thing before you ship.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-leaf)">Test</span><div><h3>Audio saved too early</h3><p>The continuous recorder saved each answer before the browser had handed over the last piece of audio. A test with a fake recorder failed on exactly that, and the fix was one line of ordering.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-violet)">Code review</span><div><h3>Backups that lost data</h3><p>The reviewer noticed that restoring a backup silently dropped avatars. The AI then found it also dropped the whole people list, an older bug nobody had seen.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-violet)">Code review</span><div><h3>A way round the tester list</h3><p>Asking for a code in one mode and verifying it in another let an unlisted email create an account. The fix moved the check to the point where the account is created.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-violet)">Code review</span><div><h3>The wrong question for the person</h3><p>When someone had covered every topic, the app asked the next question using the previous person's relationship to you. A sibling could get a grandparent question.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-coral)">Deploy output</span><div><h3>An address that went dark</h3><p>Adding the custom domain turned off the old address, which broke shared links. The deploy output said so. The tooling then blocked a second, unapproved deploy, so the AI stopped and asked me.</p></div></div>
+      <div class="row"><span class="tag" style="--c:var(--b-sky)">User</span><div><h3>Sign-in that looked broken</h3><p>It worked, but showed no confirmation, so it looked like a refresh. Only a person trying it could see that. Now it says "You're in" and moves on.</p></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="rules">
+    <span class="kick">What kept it steady</span>
+    <h2 id="rules">Rules that did the boring work</h2>
+    <ul class="take" style="margin-top:20px">
+      <li style="--c:var(--b-coral)"><div><b>Write it down before building.</b> Plans live in the repo (<code>docs/plans/</code>). When I changed direction on the AI interviewer, the plan changed first, so later work followed the new decision.</div></li>
+      <li style="--c:var(--b-honey)"><div><b>Keep rules where the AI reads them.</b> The README and an instructions file hold the standing rules: no tracking tools without my decision, audio stays on the device, bump the privacy version when the notice changes.</div></li>
+      <li style="--c:var(--b-leaf)"><div><b>Turn taste into tests.</b> Copy rules, bank structure and the privacy promise are checked automatically, so a future change cannot quietly undo them.</div></li>
+      <li style="--c:var(--b-teal)"><div><b>One branch, one pull request, one purpose.</b> The main branch is protected, so every change gets a second look and can be undone cleanly.</div></li>
+      <li style="--c:var(--b-sky)"><div><b>Gate the irreversible step.</b> Deploys, merges and anything that touches money or accounts waits for an exact phrase from me.</div></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="prompts">
+    <span class="kick">Things worth copying</span>
+    <h2 id="prompts">Prompts that worked</h2>
+    <div class="prompts">
+      <div class="prompt"><b>Describe the feeling, not the fix</b><q>It looks naked.</q><span>The AI then proposed three concrete changes and I picked one. A specific order would have fixed the symptom and missed the cause.</span></div>
+      <div class="prompt"><b>Say what you refuse</b><q>I don’t want an AI interviewer.</q><span>One sentence of what you will not accept saves a week of building the wrong thing.</span></div>
+      <div class="prompt"><b>Name the tool, leave the method open</b><q>Invoke Blender or something.</q><span>I did not know how to model characters in code. I knew which program could. The AI wrote the script.</span></div>
+      <div class="prompt"><b>Think before you build</b><q>Let’s brainstorm a punchy name.</q><span>Asking for options and a recommendation first kept me from steering the build with an idea I had not examined.</span></div>
+      <div class="prompt"><b>Make it durable</b><q>Write this down.</q><span>A decision in a chat disappears. A decision in a file in the repo is there the next time.</span></div>
+      <div class="prompt"><b>Give permission in a fixed phrase</b><q>Merge and deploy.</q><span>The AI asks every time and ships only on those words. It stops it from treating "looks good" as a go-ahead.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="stack">
+    <span class="kick">Under the hood</span>
+    <h2 id="stack">What it is made of</h2>
+    <div class="stack">
+      <div><b>No build step</b>Plain HTML, CSS and JavaScript files. Easy for an AI to read whole, and easy for you to open.</div>
+      <div><b>Cloudflare Worker</b>Rooms for family games, call setup, sign-in, and a few small endpoints. Durable Objects hold live state.</div>
+      <div><b>Speech to text</b>Cloudflare's speech model turns recordings into editable text, after the person says yes.</div>
+      <div><b>A small language model</b>Reads a written story and lists people, places, years, foods and sayings. It suggests questions, and never speaks to the person being interviewed.</div>
+      <div><b>Blender, from a script</b>The 3D cast and the avatar layers are rendered by a Python script, no downloaded models.</div>
+      <div><b>Tests in Node</b>102 tests, many running the whole app in a simulated browser, plus real-browser checks for what a simulation cannot show.</div>
+    </div>
+  </section>
+
+  <section aria-labelledby="take">
+    <span class="kick">If you are starting</span>
+    <h2 id="take">Five things I would tell you</h2>
+    <ul class="take">
+      <li style="--c:var(--b-violet)"><div><b>You are the product owner, not the typist.</b> Your value is knowing what is wrong and what you refuse. Say it plainly and often.</div></li>
+      <li style="--c:var(--b-coral)"><div><b>Trust nothing the AI says about its own work.</b> Run the tests. Open the real screen. Call the real service.</div></li>
+      <li style="--c:var(--b-honey)"><div><b>Add a second reviewer.</b> An automated reviewer on every pull request found five real bugs that the AI and its tests had missed.</div></li>
+      <li style="--c:var(--b-leaf)"><div><b>Keep the work small and in writing.</b> Short branches, plans in the repo, rules in a file the AI loads each time.</div></li>
+      <li style="--c:var(--b-teal)"><div><b>Ship to people early.</b> Feedback was "great idea, we don't like the games". That one line shaped more than any feature I added.</div></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Tell Me Again is made by Settley Studio and lives at <a href="/">tellagain.app</a>. Built with Claude Code, November 2026.</p>
+  </footer>
+</main>
+</body>
+</html>

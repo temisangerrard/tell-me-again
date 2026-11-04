@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "node test/engines.test.mjs && node --test test/bots.test.mjs test/ui.test.mjs test/preservation.test.mjs test/online.test.mjs test/ludo-motion.test.mjs test/avatar.test.mjs test/lore.test.mjs test/questions.test.mjs test/interview.test.mjs test/segments.test.mjs test/account.test.mjs test/win-nudge.test.mjs test/sw.test.mjs test/sounds.test.mjs test/landing.test.mjs test/icons.test.mjs test/book.test.mjs test/sit-home.test.mjs",
+    "test": "node test/engines.test.mjs && node --test test/bots.test.mjs test/ui.test.mjs test/preservation.test.mjs test/online.test.mjs test/ludo-motion.test.mjs test/avatar.test.mjs test/lore.test.mjs test/questions.test.mjs test/interview.test.mjs test/segments.test.mjs test/account.test.mjs test/buildlog.test.mjs test/win-nudge.test.mjs test/sw.test.mjs test/sounds.test.mjs test/landing.test.mjs test/icons.test.mjs test/book.test.mjs test/sit-home.test.mjs",
     "test:browser": "node test/backup.browser.cjs && node test/voice.browser.cjs && node test/magazine.browser.cjs"
   },
   "devDependencies": {
