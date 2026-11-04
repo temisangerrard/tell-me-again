@@ -7,12 +7,14 @@
     "directory": ".",
     "run_worker_first": ["/api/*"]
   },
-  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }, { "name": "LIMITER", "class_name": "Limiter" }] },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }, { "tag": "v2", "new_sqlite_classes": ["Limiter"] }],
+  "durable_objects": { "bindings": [{ "name": "ROOMS", "class_name": "Room" }, { "name": "LIMITER", "class_name": "Limiter" }, { "name": "ACCOUNTS", "class_name": "Account" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }, { "tag": "v2", "new_sqlite_classes": ["Limiter"] }, { "tag": "v3", "new_sqlite_classes": ["Account"] }],
   "ratelimits": [
     { "name": "ROOM_JOIN", "namespace_id": "7732", "simple": { "limit": 120, "period": 60 } }
   ],
   "ai": { "binding": "AI" },
-  "vars": { "TURN_KEY_ID": "6f2acc8c095476ae510086fa27d1fef6" },
+  "send_email": [{ "name": "EMAIL" }],
+  "routes": [{ "pattern": "tellagain.app", "custom_domain": true }],
+  "vars": { "TURN_KEY_ID": "6f2acc8c095476ae510086fa27d1fef6", "MAIL_DOMAIN": "tellagain.app" },
   "observability": { "enabled": true }
 }

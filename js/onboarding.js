@@ -55,6 +55,13 @@ function welcome() {
   el.querySelector("#th").onclick = themePicker;
 }
 
+// The signed-in account, if there is one. Everything else still works without it; the account only holds an email address for now.
+let account = null;
+async function refreshAccount() { try { const r = await fetch("/api/me"); account = r.ok ? (await r.json()).user : null; } catch { /* offline: keep what we knew */ } return account; }
+async function signOut(wipe) { // true only when the server confirmed; otherwise the account stays and the caller says so
+  try { const r = await fetch(wipe ? "/api/account/delete" : "/api/auth/logout", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); if (!r.ok) return false; } catch { return false; }
+  account = null; return true;
+}
 // Sign in / create account. Email code first, passkey after that. The server answers "not yet" until accounts are switched on.
 function authScreen(mode = "up") {
   app.className = "app"; app.replaceChildren();
@@ -65,7 +72,6 @@ function authScreen(mode = "up") {
     <label class="field" id="ef"><span class="lbl">Email</span><input class="inp sm" id="em" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com"></label>
     <label class="field" id="cf" hidden><span class="lbl">Code</span><input class="inp" id="cd" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"></label>
     <button class="cta" id="go" type="button">Email me a code</button>
-    <button class="btn ghost" id="pk" type="button" disabled>Use a passkey</button>
     <button class="btn ghost" id="skip" type="button" style="color:var(--muted)">Continue without an account</button>
     <p class="msg" id="mg" role="status"></p>
     <p class="legal">By continuing you accept the <button type="button" id="pv">privacy notice</button>.</p></section>`);
@@ -88,7 +94,7 @@ function authScreen(mode = "up") {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) msg(j.error || "Something went wrong. Try again.", true);
       else if (step === "email") { step = "code"; paint(); msg("Code sent."); $e("#cd").focus(); }
-      else render();
+      else { account = j.user || null; render(); }
     } catch { msg("We couldn't reach the server. Check your connection.", true); }
     b.disabled = false;
   };

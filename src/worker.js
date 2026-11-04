@@ -3,6 +3,8 @@
 import { DurableObject } from "cloudflare:workers";
 export { Room } from "./room.js";
 import { lore } from "./lore.js";
+import { auth } from "./auth.js";
+export { Account } from "./account.js";
 
 // Exact, serialised counter for room creation (Cloudflare's built-in limiter is approximate across locations).
 // One instance per hashed address; it stores only timestamps and erases itself shortly after the window.
@@ -84,10 +86,7 @@ export default {
     if (origin && new URL(origin).host !== url.host) return json({ error: "Not allowed." }, 403);
 
     const ip = req.headers.get("cf-connecting-ip") || "unknown";
-    if (url.pathname === "/api/auth/start" || url.pathname === "/api/auth/verify") { // accounts aren't switched on yet; nothing is read or stored
-      if (req.method !== "POST") return json({ error: "Use POST." }, 405);
-      return json({ error: "Accounts open soon. You can start a family without one right now." }, 503);
-    }
+    if (url.pathname.startsWith("/api/auth/") || url.pathname === "/api/me" || url.pathname === "/api/account/delete") return auth(req, env, url, ip, strict, json);
     if (url.pathname === "/api/ice") return iceServers(req, env, ip);
     if (url.pathname === "/api/transcribe") return transcribe(req, env, url, ip);
     if (url.pathname === "/api/lore") return lore(req, env, ip, strict, json);
