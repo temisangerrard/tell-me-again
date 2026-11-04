@@ -1,0 +1,44 @@
+# Tell Me Again
+
+> Tell Me Again is a free web app that helps families record and keep the stories of their parents, grandparents, siblings and partners. It gives the person asking a good question to ask, records the answer on their phone, and turns the stories into a shared family history. It runs in the browser on any phone or computer and installs to the home screen. Made by Settley Studio.
+
+Website: https://tellagain.app
+
+## What it does
+
+- Suggests a good question for each person, written for how they are related to you: a grandparent, a parent, a sibling, a partner, a friend. There are 100+ hand-written questions in 13 topics, such as names, home, food, work, love, faith, big events, leaving home, things we kept, and being a parent.
+- Records the conversation in person, or over a voice call between two phones, as one continuous recording. A "Next question" button moves to the next question without stopping the recording, and each answer is saved with its question.
+- Turns a recording into editable text, only if the person agrees. Transcription is offered in English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili.
+- Builds a "family lore" on the device: the people, places, years, foods and sayings that come up across the stories, with ideas for what to ask next. An AI helper reads the written text to do this, only with permission. It never speaks to the person being interviewed.
+- Shows who in the family has been asked, which topics are covered, and who to sit with next.
+- Lets each person make a small illustrated avatar.
+- Includes family games (Ludo, Ayo and Whot) to play together, with bots when not enough people are online.
+- Makes a magazine from the recorded stories. A storybook, a family book with photographs, and a short film are planned.
+
+## Who it is for
+
+Adults who want to learn more about their parents, grandparents and siblings, and keep what they say before it is lost. It suits families spread across countries, where a voice call can be recorded as it happens. It is designed for relationships first: the questions are meant to bring two people closer, and the AI only helps the person asking choose what to ask.
+
+## Privacy
+
+- Recordings stay on the person's own device. Audio is not stored on our servers.
+- Audio is sent for transcription only after the person says yes, and is not kept.
+- Written text is sent to an AI helper for family lore only after a separate yes, and is not kept.
+- An account is optional. It only holds an email address, used for sign-in codes.
+- No advertising, no tracking tools and no analytics cookies.
+- Full notice inside the app under Family, then "Read the privacy notice".
+
+## Cost and platform
+
+- Free to use today. A paid way to add family photographs to a printed-quality book is planned.
+- No app store needed. Open https://tellagain.app in Safari or Chrome, and add it to the home screen.
+- Recordings and their text are stored on the device. Voice calls, transcription and family lore need an internet connection.
+
+## Pages
+
+- [Tell Me Again](https://tellagain.app/): the product, a sample family book, and the start of the app.
+- [How it was built](https://tellagain.app/building): a build log of how the app was made with an AI coding assistant, for people learning to build with AI.
+
+## About
+
+Tell Me Again is made by Settley Studio, run by Temisan Agbajoh. Contact: temisan@settley.co.
