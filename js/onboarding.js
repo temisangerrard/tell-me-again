@@ -9,7 +9,7 @@ const FAQ = `<div class="faq">
     </div>`;
 function welcome() {
   const el = $(`<section class="welcome">
-    <header class="wtop"><div class="mark"><img src="art/icons/mark.svg" alt="" width="34" height="34">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
+    <header class="wtop"><div class="mark"><img src="art/icons/mark.svg" alt="" width="34" height="34">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button>${account ? `<span class="signin signed" title="Signed in">${esc(account.email)}</span>` : `<button class="signin" type="button" id="si">Sign in</button>`}</div></header>
     <div class="landing-hero">
       <div class="hero2">
         <h1>Keep the stories only <mark>your family</mark> can tell.</h1>
@@ -51,7 +51,7 @@ function welcome() {
   el.querySelector("#restore-welcome").onclick = () => { const b = $(`<div><h2>Restore backup</h2></div>`); backupControls(b, false); const close = sheet("Restore backup", b); b.append(closeBtn(close)); };
   el.querySelector("#pvl").onclick = privacySheet;
   el.querySelector("#go").onclick = () => go(1); el.querySelector("#go2").onclick = () => go(1);
-  el.querySelector("#si").onclick = () => authScreen("in");
+  if (el.querySelector("#si")) el.querySelector("#si").onclick = () => authScreen("in");
   el.querySelector("#th").onclick = themePicker;
 }
 
@@ -67,7 +67,7 @@ function signedInScreen() {
   app.className = "app"; app.replaceChildren();
   const el = $(`<section class="authwrap"><h1>You're in.</h1><p class="sub">Signed in as <b>${esc(account && account.email || "")}</b>. Your family and recordings stay on this device. You can sign out or delete the account any time under Family.</p><button class="cta" id="ok" type="button">Continue</button></section>`);
   app.append(el); host = app;
-  el.querySelector("#ok").onclick = () => { render(); if (S.step === 7) { const f = document.querySelector('[data-t="family"]'); if (f) f.click(); } };
+  el.querySelector("#ok").onclick = () => { if (S.step === 0) { go(1); return; } /* no family on this device yet: carry on into making one */ render(); if (S.step === 7) { const f = document.querySelector('[data-t="family"]'); if (f) f.click(); } };
   el.querySelector("#ok").focus();
 }
 // Sign in / create account. Email code first, passkey after that. The server answers "not yet" until accounts are switched on.
