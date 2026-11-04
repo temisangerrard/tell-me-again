@@ -53,6 +53,17 @@ function renderSitHome(box, msg) {
     $(`<div class="season" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}" style="--c:${SEAS[i % SEAS.length]}"></i>`).join("")}</div>`));
   if (msg) box.append($(`<p class="hint" role="status" style="margin-top:10px">${esc(msg)}</p>`));
 
+  // Until the first recording exists, show the way: three steps, the current one open.
+  if (!clips.length) {
+    const has = (S.people || []).length > 0, sat = S.sittings.length > 0;
+    const steps = [["Add someone you want to hear from", "A parent, a grandparent, an aunt. Anyone whose stories you want to keep.", has], ["Ask them one question", "We pick a good one and give you follow-ups. You ask, they talk. Nobody has to prepare.", sat], ["Keep it", "The recording stays on your phone. Play it back, share it, or turn it into a page later.", false]];
+    const cur = steps.findIndex((x) => !x[2]);
+    const first = $(`<section class="first"><h2>Your first story, in three steps</h2><ol>${steps.map(([t, d, done], i) => `<li class="${done ? "done" : i === cur ? "now" : ""}"><span class="num" aria-hidden="true">${done ? "✓" : i + 1}</span><div><b>${t}</b><p>${d}</p>${i === 0 && !has ? `<div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Their name, e.g. Mum" aria-label="Their name"><button class="btn" type="button">Add</button></div>` : ""}</div></li>`).join("")}</ol></section>`);
+    const fin = first.querySelector(".padd input"), fadd = () => { const v = fin.value.trim(); if (!v) return; S.people ||= []; S.people.push({ n: v, born: "" }); save(); renderSitHome(box, msg); };
+    if (fin) { first.querySelector(".padd .btn").onclick = fadd; fin.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); fadd(); } }; }
+    box.append(first);
+  }
+
   // Next up: one person, one question.
   const top = order[0];
   if (top) {
