@@ -14,12 +14,9 @@ Written 2026-11-04. Small on purpose: an account is an email address you can sig
 
 Until the mail binding exists, every auth call answers "Accounts open soon" and nothing is stored. Deploying this code is safe.
 
-## To switch it on (owner)
+## Switched on
 
-1. Own a domain for the product (not settley.co) and put it on Cloudflare DNS.
-2. Cloudflare dashboard > Compute > Email Service > Email Sending > Onboard Domain.
-3. Workers Paid plan (needed to send to any recipient).
-4. Tell Claude the domain. It adds to `wrangler.jsonc`: `"send_email": [{ "name": "EMAIL" }]` and `"vars": { "MAIL_DOMAIN": "<domain>" }`, then deploys. Mail comes from `hello@<domain>`.
+Domain: tellagain.app (bought 2026-11-04, on Cloudflare). Email Sending was enabled with `npx wrangler email sending enable tellagain.app`, which added the DNS records (SPF, DKIM, DMARC, bounce MX). `wrangler.jsonc` has the `EMAIL` send_email binding, `MAIL_DOMAIN`, and a custom-domain route so the Worker also answers at https://tellagain.app. Mail comes from `hello@tellagain.app`. Sending to any address needs Workers Paid.
 
 Local testing without email: `npx wrangler dev --var MAIL_DRY:log` prints the code to the terminal. It only works on localhost.
 
