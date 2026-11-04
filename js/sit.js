@@ -4,9 +4,10 @@ const ROLES = ["Asker", "Storyteller", "Witness", "Witness"];
 const SEAT_CLS = ["s-ask", "s-st", "s-w1", "s-w2"];
 function nextQuestion() {
   if (typeof pinnedQ !== "undefined" && pinnedQ && !S.asked.includes(pinnedQ.q)) return pinnedQ; // the question "Next up" suggested
-  const pool = QUESTIONS.filter((q) => S.chapters.includes(q.c));
+  const who = Array.isArray(sitting) ? sitting[0] : S.elder && S.elder.name, pr = (S.people || []).find((x) => x.n === who);
+  const pool = questionsFor(pr && pr.rel).filter((q) => S.chapters.includes(q.c)); // questions written for how this person is related to you
   const n = S.asked.length, maxD = n < 2 ? 1 : n < 4 ? 2 : n < 6 ? 3 : 4; // ease in: warm-up first
-  const fresh = pool.filter((q) => !S.asked.includes(q.q) && q.d <= maxD).sort((a, b) => a.d - b.d);
+  const fresh = pool.filter((q) => !S.asked.includes(q.q) && q.d <= maxD).sort((a, b) => a.d - b.d || !!b.for - !!a.for);
   return fresh[0] || pool.find((q) => !S.asked.includes(q.q)) || null;
 }
 
@@ -119,6 +120,7 @@ function renderSitting(box, msg) {
     ${q ? `<small>${esc(ch ? ch.label : "")}</small>` : ""}
     <div class="q">${q ? esc(q.q) : "That's every question we have for these topics. Add more topics under Family."}</div>
     ${q && q.tip ? `<p class="tip">${esc(q.tip)}</p>` : ""}
+    ${q && q.photo ? `<p class="photoidea"><b>Photo to have to hand:</b> ${esc(q.photo)}</p>` : ""}
     ${q && q.sensitive ? `<p class="warn">This one can bring up hard memories. Check they're happy to go there, and let them skip it.</p>` : ""}
     ${q ? `<p class="hint" id="fuh">If they go quiet</p><div class="fus" role="group" aria-labelledby="fuh"></div>` : ""}
     <button class="cta" id="rec" type="button">Record the answer</button>
