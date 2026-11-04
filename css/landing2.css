@@ -39,7 +39,7 @@
 @keyframes bar { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
 
 /* 02 Play */
-.games { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); }
+.welcome .games { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); }
 .gcard { background: var(--surface); color: var(--text); border-radius: 24px; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .gcard h3 { font: 800 2.2rem/1 var(--num); text-transform: uppercase; margin-top: 8px; }
 .gcard p { color: var(--muted); font-size: .95rem; line-height: 1.4; }
@@ -124,7 +124,7 @@
 .welcome.js [data-reveal] { opacity: 0; transform: translateY(30px); transition: opacity .7s var(--ease-out), transform .7s var(--ease-out); }
 .welcome.js [data-reveal].shown { opacity: 1; transform: none; }
 .welcome.js .art[data-reveal].shown.mag { transform: rotate(-3deg); } .welcome.js .art[data-reveal].shown.book { transform: rotate(2deg); } .welcome.js .art[data-reveal].shown.film { transform: rotate(-1.5deg); }
-.games .gcard:nth-child(2) { transition-delay: .1s; } .games .gcard:nth-child(3) { transition-delay: .2s; }
+.welcome .games .gcard:nth-child(2) { transition-delay: .1s; } .welcome .games .gcard:nth-child(3) { transition-delay: .2s; }
 .arts .art:nth-child(2) { transition-delay: .1s; } .arts .art:nth-child(3) { transition-delay: .2s; }
 @media (prefers-reduced-motion: reduce) {
   .marquee .track, .bars rect, .scene .bubble, .roster.shown .fill { animation: none; }
