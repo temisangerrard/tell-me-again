@@ -27,6 +27,8 @@ function renderFamily(box) {
   const you = sec("You");
   field(you, "Your name", S.me.name, { max: 30, ph: "What do they call you?", on: (v) => { S.me.name = v; reseat(); lsSet("sitting-name", v); } });
 
+  avatarEditor(you, S.me.av, (c) => { if (c) S.me.av = c; else delete S.me.av; save(); });
+
   const fam = sec("The family");
   field(fam, "Family name", S.name, { max: 40, ph: "e.g. " + pick(SUR), on: (v) => { S.name = v; } });
   field(fam, "A saying your family lives by", S.saying, { max: 90, ph: "The one your mum always says", on: (v) => { S.saying = v; } });

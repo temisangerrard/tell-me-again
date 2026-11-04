@@ -166,3 +166,11 @@ npm run test:browser
 ```
 
 PDF export uses the browser's print dialog. The standalone magazine file also opens offline and can be printed later.
+
+## Avatar maker
+
+`js/avatar.js` draws avatars by stacking the white clay layers in `art/avatar/` on a canvas and tinting skin, hair and shirt with a multiply fill. The config (`{skin, hair, shirt, bg, style, extra}`) is saved on `S.me.av` and each person's `av`, so it rides along with backups and never leaves the device. Edit it in Family > You and on a person's page; it shows in the Sit list and People list. Regenerate the layers with:
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender/avatar_kit.py -- --no-main --out /tmp/avkit && python3 tools/blender/pack_avatar.py /tmp/avkit
+```

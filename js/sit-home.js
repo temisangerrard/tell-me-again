@@ -66,7 +66,8 @@ function renderSitHome(box, msg) {
   // The family, in the order they need a story.
   const fam = $(`<section><h2 class="sec">Family</h2><ul class="sitlist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></section>`);
   order.forEach(({ p, st: s }) => {
-    const li = $(`<li class="sitrow"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}"><span class="av" aria-hidden="true" style="--tint:${tintFor(p.n)}">${esc(initial(p.n))}</span><span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
+    const li = $(`<li class="sitrow"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}">${avHTML(p, p.n, 40)}<span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
+    avPaint(li);
     li.querySelector(".sitopen").onclick = () => { personView = p.n; renderSit(box); window.scrollTo(0, 0); };
     li.querySelector(".sitgo").onclick = () => beginSitting(box, [p.n], questionFor(p, s));
     fam.querySelector(".sitlist").append(li);
@@ -108,6 +109,7 @@ function renderPerson(box, name, msg) {
   const det = $(`<section><label class="field"><span class="lbl">Year born <small>(optional)</small></span><input class="inp sm" type="text" inputmode="numeric" maxlength="4" value="${esc(p.born || "")}"></label></section>`);
   det.querySelector("input").oninput = (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); p.born = e.target.value; save(); };
   box.append(det);
+  const avs = $(`<section><h2 class="sec">Avatar</h2></section>`); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); }); box.append(avs);
   const lib = $(`<section><h2 class="sec">Recorded <span class="cnt">${s.stories}</span></h2>${s.stories ? `<ul class="clips"></ul>` : `<p class="hint">Nothing recorded with ${esc(p.n)} yet.</p>`}</section>`);
   s.mine.forEach((c) => lib.querySelector(".clips").append(clipRow(c, box)));
   box.append(lib);

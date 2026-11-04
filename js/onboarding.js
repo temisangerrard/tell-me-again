@@ -180,7 +180,8 @@ function peopleEditor(parent, o = {}) {
   const wrap = $(`<div class="people"><ul class="plist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></div>`);
   const ul = wrap.querySelector("ul"), inp = wrap.querySelector("input");
   const draw = () => ul.replaceChildren(...S.people.map((p, i) => {
-    const li = $(`<li><span class="pn">${esc(p.n)}</span>${o.born ? `<input class="by" type="text" inputmode="numeric" maxlength="4" placeholder="Born" aria-label="Year ${esc(p.n)} was born" value="${esc(p.born || "")}">` : ""}<button class="x" type="button" aria-label="Remove ${esc(p.n)}">×</button></li>`);
+    const li = $(`<li>${avHTML(p, p.n, 32)}<span class="pn">${esc(p.n)}</span>${o.born ? `<input class="by" type="text" inputmode="numeric" maxlength="4" placeholder="Born" aria-label="Year ${esc(p.n)} was born" value="${esc(p.born || "")}">` : ""}<button class="x" type="button" aria-label="Remove ${esc(p.n)}">×</button></li>`);
+    avPaint(li);
     const by = li.querySelector(".by"); if (by) by.oninput = () => { by.value = by.value.replace(/\D/g, "").slice(0, 4); p.born = by.value; save(); };
     li.querySelector(".x").onclick = () => { S.people.splice(i, 1); save(); draw(); };
     return li;
