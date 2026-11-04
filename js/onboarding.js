@@ -1,12 +1,18 @@
 "use strict";
 // Landing, sign in, onboarding steps, people list
 /* ---------- onboarding ---------- */
+const FAQ = `<div class="faq">
+      <details><summary>Does my family need an account?</summary><p>No. Start your family on this device and share a room link. Guests enter their name to join. Account sign-in is still in development.</p></details>
+      <details><summary>Where do the recordings go?</summary><p>Recordings and transcripts stay on the device that saves them. Download a copy to keep a backup. If you choose transcription, that recording is sent to the speech service for processing.</p></details>
+      <details><summary>Can we speak our own language?</summary><p>You can record in any language. Transcription offers English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili; accuracy varies. Igbo and Nigerian Pidgin aren't supported yet.</p></details>
+      <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, back up your family archive, and make a magazine to print or save as PDF. Storybooks and films are previews.</p></details>
+    </div>`;
 function welcome() {
   const el = $(`<section class="welcome">
-    <header class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
+    <header class="wtop"><div class="mark"><img src="art/icons/mark.svg" alt="" width="34" height="34">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
     <div class="landing-hero">
       <div class="hero2">
-        <h1>Keep the stories only your family can tell.</h1>
+        <h1>Keep the stories only <mark>your family</mark> can tell.</h1>
         <p class="sub">Ask a good question. Record their voice. Save the names, recipes and memories you want the next generation to know.</p>
         <div class="row"><button class="cta" id="go" type="button">Start your family</button><a class="textlink" href="#product-example">See an example ↓</a></div>
         <p class="fine">Free to start. Your family can join by link.</p>
@@ -20,30 +26,16 @@ function welcome() {
         <div class="example-stage" id="example-stage"></div>
       </section>
     </div>
-    <section class="landing-how" aria-label="How Tell Me Again works">
-      <div><span class="number">01</span><h2>Bring someone you love.</h2><p>Sit together, or send a link for a one-to-one voice call.</p></div>
-      <div><span class="number">02</span><h2>Follow a good question.</h2><p>Choose a topic. Use the follow-ups to find the story behind the first answer.</p></div>
-      <div><span class="number">03</span><h2>Keep their own words.</h2><p>Save the recording. Turn it into text if you choose, then check and edit the words.</p></div>
-    </section>
-    <section class="landing-games"><div><h2 class="section-title">Play together</h2><p>Play Ludo, Ayo or Whot between questions. Invite family to an online game, or pass one phone around the table.</p></div>
-      <div class="game-sample"><svg viewBox="0 0 15 15" role="img" aria-label="Ludo board from Tell Me Again">${boardSVG()}</svg><div><b>Your family table</b><p>Ludo & Whot · 2–4 players<br>Ayo · 2 players</p><p class="fine">Voice calls currently support two people.</p></div></div>
-    </section>
-    <section class="future-note"><div><h2>Your family magazine</h2></div><p>Personalised magazine covers and book previews are here to try. Make a magazine from selected transcripts and save it as a PDF. Storybooks and films are still in development.</p></section>
-    <section aria-label="Common questions"><div class="faq">
-      <details><summary>Does my family need an account?</summary><p>No. Start your family on this device and share a room link. Guests enter their name to join. Account sign-in is still in development.</p></details>
-      <details><summary>Where do the recordings go?</summary><p>Recordings and transcripts stay on the device that saves them. Download a copy to keep a backup. If you choose transcription, that recording is sent to the speech service for processing.</p></details>
-      <details><summary>Can we speak our own language?</summary><p>You can record in any language. Transcription offers English, French, Portuguese, Arabic, Yoruba, Hausa and Swahili; accuracy varies. Igbo and Nigerian Pidgin aren't supported yet.</p></details>
-      <details><summary>What can we make today?</summary><p>Record and download audio, edit transcripts, back up your family archive, and make a magazine to print or save as PDF. Storybooks and films are previews.</p></details>
-    </div></section>
-    <div class="endcta"><button class="cta" id="go2" type="button">Start your family</button></div>
+    ${landingBody(FAQ)}
     <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="restore-welcome">Restore backup</button><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
   </section>`);
-  host.append(el);
+  host.append(el); wireLanding(el);
   let questionIndex = 0;
   const questions = QUESTIONS.filter(x => x.c === "food" && x.d <= 2);
   const stage = el.querySelector("#example-stage");
   const showExample = kind => {
     el.querySelectorAll("[data-example]").forEach(b => b.setAttribute("aria-pressed", b.dataset.example === kind));
+    stage.dataset.kind = kind; // each step of the example has its own colour
     if (kind === "ask") {
       const q = questions[questionIndex % questions.length];
       stage.innerHTML = `<span class="sample-label">Food & the table</span><h2 class="sample-question">${esc(q.q)}</h2><p class="fine">${esc(q.f[0])}</p><button class="btn" type="button">Try another question ↗</button><div class="sample-seats"><i>You</i><i>P</i></div>`;

@@ -57,7 +57,8 @@ for (const R of combos) for (const n of [2, 3, 4]) for (let g = 0; g < 12; g++) 
       const e = ok.length && E.rnd(10) ? E.whot.act(s, s.turn, { a: "play", i: pickR(ok) }) : E.whot.act(s, s.turn, { a: "draw" }); if (e) fail("whot err " + e + " " + JSON.stringify(R));
     }
     if (total() !== 54) { fail("whot cards " + total() + " " + JSON.stringify(R)); break; }
-    if (R.noPowerFinish && s.over !== null && E.whot.POWER.includes(s.top.n)) fail("whot finished on power card");
+    // only a win by emptying the hand counts; a game that ends because the market ran out can leave any card on top
+    if (R.noPowerFinish && s.over !== null && s.over !== "draw" && s.hands[s.over].length === 0 && E.whot.POWER.includes(s.top.n)) fail("whot finished on power card");
   }
   if (!hidden) fail("whot view leaked");
   if (s.over === null) fail("whot unfinished " + JSON.stringify(R) + " n=" + n);
