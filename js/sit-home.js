@@ -54,7 +54,7 @@ function renderSitHome(box, msg) {
   if (msg) box.append($(`<p class="hint" role="status" style="margin-top:10px">${esc(msg)}</p>`));
 
   // Until the first recording exists, show the way: three steps, the current one open.
-  if (!clips.length) {
+  if (!clips.length && !(S.lore && Object.keys(S.lore.clips || {}).length)) {
     const has = (S.people || []).length > 0, sat = S.sittings.length > 0;
     const steps = [["Add someone you want to hear from", "A parent, a grandparent, an aunt. Anyone whose stories you want to keep.", has], ["Ask them one question", "We pick a good one and give you follow-ups. You ask, they talk. Nobody has to prepare.", sat], ["Keep it", "The recording stays on your phone. Play it back, share it, or turn it into a page later.", false]];
     const cur = steps.findIndex((x) => !x[2]);
@@ -76,6 +76,7 @@ function renderSitHome(box, msg) {
   }
   const go = $(`<button class="btn wide" id="startsit" type="button" style="margin-top:12px">${top ? "Choose who's joining" : "Start a sitting"}</button>`);
   go.onclick = () => beginSitting(box); box.append(go);
+  const lorebox = loreSection(box, (m) => renderSitHome(box, m || msg)); if (lorebox) box.append(lorebox);
 
   // The family, in the order they need a story.
   const fam = $(`<section><h2 class="sec">Family</h2><ul class="sitlist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></section>`);

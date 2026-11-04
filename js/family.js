@@ -65,6 +65,9 @@ function renderFamily(box) {
   const at = $(`<div class="rule"><div class="t"><b>Turn each recording into text automatically</b><span>Sends the audio for transcription as soon as it's saved.</span></div><button class="tg" type="button" role="switch" aria-label="Turn each recording into text automatically" aria-checked="${S.autoTx && S.consent.transcribe}"></button></div>`);
   at.querySelector(".tg").onclick = async (e) => { const sw = e.currentTarget; if (!S.autoTx || !S.consent.transcribe) { if (!S.consent.transcribe && !(await askTxConsent())) return; S.autoTx = true; } else S.autoTx = false; save(); sw.setAttribute("aria-checked", S.autoTx); };
   trs.append(at);
+  const lr = $(`<div class="rule"><div class="t"><b>Build family lore from the words</b><span>An AI helper lists the people, places and years in each story and suggests what to ask next. Only text is sent.</span></div><button class="tg" type="button" role="switch" aria-label="Build family lore from the words" aria-checked="${loreOn()}"></button></div>`);
+  lr.querySelector(".tg").onclick = async (e) => { const sw = e.currentTarget; if (loreOn()) withdrawConsent("lore"); else if (!(await askLoreConsent())) return; save(); sw.setAttribute("aria-checked", loreOn()); };
+  trs.append(lr);
   if (S.consent.transcribe) { const wd = $(`<button class="btn" type="button" style="margin-top:12px">Stop sending audio for transcription</button>`);
     wd.onclick = () => { withdrawConsent("transcribe"); S.autoTx = false; save(); renderFamily(box); }; trs.append(wd); }
 

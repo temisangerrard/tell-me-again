@@ -15,7 +15,8 @@ No AI interviewer. A person always asks the questions; a person always answers. 
 ## Steps, in order
 
 1. **Guided Sit page.** A visible first-story path (add someone, ask a question, keep it) until the first recording exists. No AI. Shipped.
-2. **Lore.** After each story, pull out people, places, years, foods and sayings into a family wiki on the device. Use it to suggest what to ask next: gaps ("nobody has asked Dad about his first job"), overlaps ("Mum and Gran both mention the 1998 move"), sibling comparisons ("ask your sister the same question"). The book and magazine draw from it.
+2. **Lore (built, on PR #16 branch).** Worker `/api/lore` (src/lore.js, model `@cf/meta/llama-3.1-8b-instruct-fast`) extracts from a written-out story and suggests questions; js/lore.js keeps the lore in `S.lore`, finds ask-next gaps locally, and renders the Sit page section. Separate consent (`S.consent.lore`).
+   Original idea: After each story, pull out people, places, years, foods and sayings into a family wiki on the device. Use it to suggest what to ask next: gaps ("nobody has asked Dad about his first job"), overlaps ("Mum and Gran both mention the 1998 move"), sibling comparisons ("ask your sister the same question"). The book and magazine draw from it.
 3. **Question suggestions while you talk.** In short transcribed chunks, offer the asker a next follow-up from what was just said ("What did the house look like?"). The asker taps it, rewords it or ignores it. The AI never speaks to the interviewee.
 4. **Closeness prompts.** Things that grow the relationship, not the archive: "ask something you have never asked", "tell them one thing you learned about them", a short "what I heard" note the asker can send back after a sitting.
 
