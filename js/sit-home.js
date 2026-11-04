@@ -45,18 +45,21 @@ function ring(done, total, size = 34) {
   return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 34 34" role="img" aria-label="${done} of ${total} topics"><circle cx="17" cy="17" r="${r}" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="17" cy="17" r="${r}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(f * c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 17 17)"/></svg>`;
 }
 
+const NEXTCOL = ["#f0b232", "#e26b3f", "#2fa8a0", "#5aa9e6", "#6db56d"];
 function renderSitHome(box, msg) {
   const n = S.sittings.length, st = streak(), order = orderedFamily();
-  box.replaceChildren($(`<h1 class="title">Sit together</h1>`),
-    $(`<div class="smeta"><p>${n ? `${n} of ${SEASON} sittings done${st > 1 ? `, ${st} weeks running` : ""}` : `Season one`}</p>
-      <div class="ticks" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div></div>`));
+  const SEAS = ["#e26b3f", "#f0b232", "#6db56d", "#2fa8a0", "#5aa9e6", "#7c5ad6", "#e26b3f", "#f0b232"];
+  box.replaceChildren($(`<div class="sithead"><div><h1 class="title">Sit together</h1><p class="sub">${n ? `${n} of ${SEASON} sittings done${st > 1 ? `, ${st} weeks running` : ""}` : "Season one starts here"}</p></div>${cast("pebble", { size: 92 })}</div>`),
+    $(`<div class="season" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}" style="--c:${SEAS[i % SEAS.length]}"></i>`).join("")}</div>`));
   if (msg) box.append($(`<p class="hint" role="status" style="margin-top:10px">${esc(msg)}</p>`));
 
   // Next up: one person, one question.
   const top = order[0];
   if (top) {
     const q = questionFor(top.p, top.st), why = top.st.stories ? `Last recorded ${ago(top.st.last)}` : "No stories yet";
-    const card = $(`<section class="nextup"><small>Next up · ${esc(why)}</small><b>${esc(top.p.n)}</b>${q ? `<p>${esc(q.q)}</p>` : ""}<button class="cta" type="button">Sit with ${esc(top.p.n)}</button></section>`);
+    const hue = NEXTCOL[hashStr(top.p.n) % NEXTCOL.length];
+    const card = $(`<section class="nextup" style="--bk:${hue}"><div class="nutop">${avHTML(top.p, top.p.n, 72, "nuav")}<div><small>Next up · ${esc(why)}</small><b>${esc(top.p.n)}</b></div></div>${q ? `<p class="nuq">${esc(q.q)}</p>` : ""}<button class="cta" type="button">Sit with ${esc(top.p.n)}</button></section>`);
+    avPaint(card);
     card.querySelector("button").onclick = () => beginSitting(box, [top.p.n], q);
     box.append(card);
   }
@@ -66,7 +69,7 @@ function renderSitHome(box, msg) {
   // The family, in the order they need a story.
   const fam = $(`<section><h2 class="sec">Family</h2><ul class="sitlist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></section>`);
   order.forEach(({ p, st: s }) => {
-    const li = $(`<li class="sitrow"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}">${avHTML(p, p.n, 40)}<span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
+    const li = $(`<li class="sitrow" style="--tint:${tintFor(p.n)}"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}">${avHTML(p, p.n, 40)}<span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
     avPaint(li);
     li.querySelector(".sitopen").onclick = () => { personView = p.n; renderSit(box); window.scrollTo(0, 0); };
     li.querySelector(".sitgo").onclick = () => beginSitting(box, [p.n], questionFor(p, s));

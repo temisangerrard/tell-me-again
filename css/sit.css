@@ -67,3 +67,25 @@ select.inp { appearance:none; padding-right:28px; background:transparent; border
 .covs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
 .cov { padding:7px 12px; border-radius:999px; background:var(--soft); color:var(--muted); font-size:.85rem; }
 .cov.on { background:var(--accent); color:var(--on-accent); font-weight:600; }
+
+/* Sit home, in the landing page's colours */
+.sithead { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.sithead .title { margin-bottom:2px; } .sithead .sub { color:var(--muted); font-size:.98rem; }
+.sithead .ch3d { margin:0 4px -4px 0; }
+.season { display:flex; gap:6px; margin:14px 0 4px; }
+.season i { flex:1; height:10px; border-radius:99px; background:var(--line); }
+.season i.on { background:var(--c); }
+.nextup { margin-top:20px; padding:22px 20px 20px; border:0; border-radius:28px; background:var(--bk); color:#1d1d1f; }
+.nextup .nutop { display:flex; align-items:center; gap:14px; }
+.nextup .nuav { box-shadow:0 0 0 3px #1d1d1f1f; }
+.nextup .nuav.av { width:72px; height:72px; display:grid; place-items:center; border-radius:50%; font:800 2rem var(--display); background:#fff9; color:#1d1d1f; flex:none; }
+.nextup small { color:#1d1d1fb3; font:600 .8rem var(--sans); }
+.nextup b { font-size:1.9rem; margin-top:2px; }
+.nextup .nuq { margin:16px 0 18px; font:italic 500 1.35rem/1.25 "Fraunces", Georgia, serif; text-wrap:balance; }
+.nextup .cta { background:#1d1d1f; color:#fff; }
+#startsit { border-radius:999px; }
+.sitlist { display:grid; gap:10px; margin-top:14px; }
+.sitlist li { border:0; background:color-mix(in srgb, var(--tint, var(--soft)) 22%, var(--surface)); border-radius:20px; padding:2px 14px; }
+.sitrow .sitgo { border-radius:999px; }
+.feed { display:grid; gap:10px; }
+.feed li { border:0; border-left:5px solid var(--accent); background:var(--surface2); border-radius:14px; padding:12px 14px; }
