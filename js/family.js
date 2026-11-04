@@ -5,13 +5,13 @@ function renderFamily(box) {
   box.replaceChildren($(`<h1 class="title">Family</h1>`));
   const groups = new Map();
   const groupFor = title => ["You", "The family", "At the table"].includes(title) ? "Family profile" : ["This season", "Recordings"].includes(title) ? "Activity & recordings" : ["Turning recordings into text", "Look"].includes(title) ? "Preferences" : "Your information";
-  const sec = title => {
+  const sec = (title, fold) => { // fold: true makes the section its own accordion, closed until opened
     const group = groupFor(title);
     if (!groups.has(group)) {
       const details = $(`<details class="profile-settings" ${group === "Family profile" ? "open" : ""}><summary>${group}</summary></details>`);
       groups.set(group, details); box.append(details);
     }
-    const section = $(`<section class="fam">${title === group ? "" : `<h2 class="sec">${title}</h2>`}</section>`);
+    const section = fold ? $(`<details class="fold"><summary>${title}</summary></details>`) : $(`<section class="fam">${title === group ? "" : `<h2 class="sec">${title}</h2>`}</section>`);
     groups.get(group).append(section); return section;
   };
   const field = (parent, label, value, o) => {
@@ -27,9 +27,11 @@ function renderFamily(box) {
   const you = sec("You");
   field(you, "Your name", S.me.name, { max: 30, ph: "What do they call you?", on: (v) => { S.me.name = v; reseat(); lsSet("sitting-name", v); } });
 
-  avatarEditor(you, S.me.av, (c) => { if (c) S.me.av = c; else delete S.me.av; save(); });
+  const av = $(`<details class="fold avfold"><summary><span class="avthumb"></span>Avatar</summary></details>`), thumb = av.querySelector(".avthumb");
+  const paintThumb = () => { thumb.innerHTML = avHTML(S.me, meName(), 36); avPaint(thumb); }; paintThumb();
+  avatarEditor(av, S.me.av, (c) => { if (c) S.me.av = c; else delete S.me.av; save(); paintThumb(); }); you.append(av);
 
-  const fam = sec("The family");
+  const fam = sec("The family", true);
   field(fam, "Family name", S.name, { max: 40, ph: "e.g. " + pick(SUR), on: (v) => { S.name = v; } });
   field(fam, "A saying your family lives by", S.saying, { max: 90, ph: "The one your mum always says", on: (v) => { S.saying = v; } });
   field(fam, "Where your people come from", S.town, { ph: "Town or city", on: (v) => { S.town = v; } });
@@ -55,7 +57,7 @@ function renderFamily(box) {
     d.onclick = async () => { if (txBusy.size) return; if (!confirm(`Delete all ${clips.length} recordings from this device? This can't be undone.`)) return; await cancelClipEdits(); clips.forEach((c) => URL.revokeObjectURL(c.url)); clips = []; try { await idbDo("readwrite", (x) => x.clear()); } catch {} renderFamily(box); };
     recs.append(d); }
 
-  const trs = sec("Turning recordings into text");
+  const trs = sec("Turning recordings into text", true);
   const lang = $(`<label class="field"><span class="lbl">Language they speak</span><select class="inp sm" id="lang"></select></label>`);
   TX_LANGS.forEach(([v, l]) => lang.querySelector("select").append(new Option(l, v, false, S.lang === v)));
   lang.querySelector("select").onchange = (e) => { S.lang = e.target.value; save(); };
