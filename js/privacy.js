@@ -1,6 +1,6 @@
 "use strict";
 // Privacy notice, consent, recording permission
-const PRIVACY_V = "2026-11-03", PRIVACY_MAIL = "temisan@settley.co";
+const PRIVACY_V = "2026-11-04", PRIVACY_MAIL = "temisan@settley.co";
 function grantConsent(k) { S.consent[k] = true; S.consent[k + "At"] = Date.now(); S.consent.v = PRIVACY_V; delete S.consent[k + "Off"]; save(); }
 function withdrawConsent(k) { S.consent[k] = false; S.consent[k + "Off"] = Date.now(); save(); }
 function privacySheet() {

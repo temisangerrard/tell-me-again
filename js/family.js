@@ -79,9 +79,9 @@ function renderFamily(box) {
   const acct = sec("Account");
   if (account) {
     acct.append($(`<p class="para">Signed in as <b>${esc(account.email)}</b>. Your family and recordings still live on this device; the account keeps your email so we can sign you in.</p>`));
-    const out = $(`<button class="btn" type="button" style="margin-top:12px">Sign out</button>`); out.onclick = async () => { await signOut(false); renderFamily(box); };
-    const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete my account</button>`); del.onclick = async () => { if (confirm("Delete your account? We remove your email from our records. Your family and recordings on this device are not touched.")) { await signOut(true); renderFamily(box); } };
-    acct.append(out, $(`<br>`), del);
+    const out = $(`<button class="btn" type="button" style="margin-top:12px">Sign out</button>`); out.onclick = async () => { if (await signOut(false)) renderFamily(box); else note.textContent = "Couldn't reach the server, so you're still signed in. Try again when you're online."; };
+    const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete my account</button>`); del.onclick = async () => { if (confirm("Delete your account? We remove your email from our records. Your family and recordings on this device are not touched.")) { if (await signOut(true)) renderFamily(box); else note.textContent = "Couldn't reach the server, so your account has not been deleted. Try again when you're online."; } };
+    const note = $(`<p class="err" role="status"></p>`); acct.append(out, $(`<br>`), del, note);
   } else {
     acct.append($(`<p class="para">Optional. Everything works without one, and your family stays on this device. An account ties an email address to you so you can sign in again.</p>`));
     const mk = $(`<button class="btn" type="button" style="margin-top:12px">Create an account or sign in</button>`); mk.onclick = () => authScreen("up"); acct.append(mk);

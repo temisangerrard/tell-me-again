@@ -58,7 +58,10 @@ function welcome() {
 // The signed-in account, if there is one. Everything else still works without it; the account only holds an email address for now.
 let account = null;
 async function refreshAccount() { try { const r = await fetch("/api/me"); account = r.ok ? (await r.json()).user : null; } catch { /* offline: keep what we knew */ } return account; }
-async function signOut(wipe) { try { await fetch(wipe ? "/api/account/delete" : "/api/auth/logout", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {} account = null; }
+async function signOut(wipe) { // true only when the server confirmed; otherwise the account stays and the caller says so
+  try { const r = await fetch(wipe ? "/api/account/delete" : "/api/auth/logout", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); if (!r.ok) return false; } catch { return false; }
+  account = null; return true;
+}
 // Sign in / create account. Email code first, passkey after that. The server answers "not yet" until accounts are switched on.
 function authScreen(mode = "up") {
   app.className = "app"; app.replaceChildren();

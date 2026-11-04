@@ -41,7 +41,7 @@ test("emails are normalised and checked; the account is named by a hash", async 
 function world(extra = {}) {
   const stubs = new Map(), sent = [];
   const env = { MAIL_DOMAIN: "example.com", EMAIL: { send: async (m) => void sent.push(m) }, ...extra,
-    ACCOUNTS: { idFromName: (n) => n, get: (n) => { if (!stubs.has(n)) { const st = mem(); stubs.set(n, { start: (e) => startOtp(st, e, Date.now()), verify: (e, c, m) => verifyOtp(st, e, c, m, Date.now()), session: (t) => checkSession(st, t, Date.now()), logout: (t) => endSession(st, t), remove: () => wipeAccount(st) }); } return stubs.get(n); } } };
+    ACCOUNTS: { idFromName: (n) => n, get: (n) => { if (!stubs.has(n)) { const st = mem(); stubs.set(n, { start: (e) => startOtp(st, e, Date.now()), verify: (e, c, m, cc) => verifyOtp(st, e, c, m, Date.now(), cc), session: (t) => checkSession(st, t, Date.now()), logout: (t) => endSession(st, t), remove: () => wipeAccount(st) }); } return stubs.get(n); } } };
   const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
   const call = (path, body, cookie = "", method = "POST", origin = "https://x.test") => auth(new Request("https://x.test" + path, { method, headers: { "content-type": "application/json", cookie, origin }, body: method === "POST" ? JSON.stringify(body) : undefined }), env, new URL("https://x.test" + path), "1.1.1.1", async () => true, json);
   return { env, sent, call };
@@ -64,6 +64,12 @@ test("the tester list, bad addresses, other origins and a switched-off service a
   assert.equal((await w.call("/api/auth/start", { email: "nope" })).status, 400);
   assert.equal((await w.call("/api/auth/start", { email: "ada@example.com" }, "", "POST", "https://evil.test")).status, 403);
   const off = world({ EMAIL: undefined }); assert.equal((await off.call("/api/auth/start", { email: "ada@example.com" })).status, 503); assert.equal((await off.call("/api/me", null, "", "GET")).status, 401);
+});
+
+test("the tester list holds even when the code was asked for in the other mode", async () => {
+  const w = world({ ALLOW_EMAILS: "ada@example.com" });
+  await w.call("/api/auth/start", { email: "bob@example.com", mode: "in" }); const code = w.sent[0].text.match(/\d{6}/)[0];
+  assert.equal((await w.call("/api/auth/verify", { email: "bob@example.com", code, mode: "up" })).status, 403, "no account is made for an unlisted address");
 });
 
 test("the same answer whether or not an account exists", async () => {

@@ -17,14 +17,14 @@ export async function startOtp(st, email, now = Date.now()) {
   const code = newCode(); await st.put("otp", { h: await sha(code + ":" + email), at: now, exp: now + OTP_MS, tries: 0 });
   return { code };
 }
-export async function verifyOtp(st, email, code, mode, now = Date.now()) {
+export async function verifyOtp(st, email, code, mode, now = Date.now(), canCreate = true) {
   const o = await st.get("otp");
   if (!o || now > o.exp) return { error: "expired" };
   if (o.tries >= MAX_TRIES) { await st.delete("otp"); return { error: "locked" }; }
   if (!/^\d{6}$/.test(String(code || "")) || !same(await sha(code + ":" + email), o.h)) { o.tries++; await st.put("otp", o); return { error: "wrong" }; }
   await st.delete("otp");
   let user = await st.get("user");
-  if (!user) { if (mode === "in") return { error: "noaccount" }; user = { id: crypto.randomUUID(), email, created: now }; await st.put("user", user); }
+  if (!user) { if (mode === "in") return { error: "noaccount" }; if (!canCreate) return { error: "invite" }; user = { id: crypto.randomUUID(), email, created: now }; await st.put("user", user); }
   const token = randomHex(32), list = ((await st.get("sessions")) || []).filter((s) => s.exp > now).slice(-9);
   list.push({ h: await sha(token), exp: now + SESSION_MS }); await st.put("sessions", list);
   return { user: { id: user.id, email: user.email, created: user.created }, token };

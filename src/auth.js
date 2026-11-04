@@ -45,9 +45,9 @@ export async function auth(req, env, url, ip, strict, json) {
   }
   if (p === "/api/auth/verify") {
     if (!(await strict(env, "auth-verify", ip, 30, 3600e3))) return json({ error: "Too many tries. Wait a while and try again." }, 429);
-    const r = await (await stubFor(env, email)).verify(email, String(b.code || "").trim(), mode);
-    const msg = { expired: "That code has expired. Ask for a new one.", locked: "Too many wrong tries. Ask for a new code.", wrong: "That code isn't right.", noaccount: "No account with that email. Create one instead." };
-    if (r.error) return json({ error: msg[r.error] || "Something went wrong." }, r.error === "noaccount" ? 404 : 400);
+    const r = await (await stubFor(env, email)).verify(email, String(b.code || "").trim(), mode, allowed(env, email)); // the tester list is enforced where the account is made, whatever mode the code was asked for
+    const msg = { expired: "That code has expired. Ask for a new one.", locked: "Too many wrong tries. Ask for a new code.", wrong: "That code isn't right.", noaccount: "No account with that email. Create one instead.", invite: "Sign-ups are invite-only for now." };
+    if (r.error) return json({ error: msg[r.error] || "Something went wrong." }, r.error === "noaccount" ? 404 : r.error === "invite" ? 403 : 400);
     return new Response(JSON.stringify({ user: { email: r.user.email, created: r.user.created } }), { headers: { "content-type": "application/json", "cache-control": "no-store", "set-cookie": setCookie((await emailKey(email)) + "." + r.token, MAX_AGE) } });
   }
   return json({ error: "Not found." }, 404);
