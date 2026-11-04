@@ -125,7 +125,7 @@ function renderPerson(box, name, msg) {
   det.querySelector(".rel").onchange = (e) => { if (e.target.value) p.rel = e.target.value; else delete p.rel; save(); renderSit(box); };
   det.querySelector("input").oninput = (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); p.born = e.target.value; save(); };
   box.append(det);
-  const avs = $(`<section><h2 class="sec">Avatar</h2></section>`); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); }); box.append(avs);
+  const avs = $(`<details class="fold avfold"><summary><span class="avthumb">${avHTML(p, p.n, 36)}</span>Avatar</summary></details>`); avPaint(avs); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); const t = avs.querySelector(".avthumb"); t.innerHTML = avHTML(p, p.n, 36); avPaint(t); }); box.append(avs);
   const lib = $(`<section><h2 class="sec">Recorded <span class="cnt">${s.stories}</span></h2>${s.stories ? `<ul class="clips"></ul>` : `<p class="hint">Nothing recorded with ${esc(p.n)} yet.</p>`}</section>`);
   s.mine.forEach((c) => lib.querySelector(".clips").append(clipRow(c, box)));
   box.append(lib);
