@@ -76,6 +76,17 @@ function renderFamily(box) {
   const snd = sec("Sound"); // game sounds and the buzz on your turn
   chipGroup(snd, "Game sounds", [["on", "On"], ["off", "Off"]], (id) => (soundOn() ? "on" : "off") === id, (id) => { setSound(id === "on"); snd.querySelectorAll(".chip").forEach((c, i) => c.setAttribute("aria-pressed", ["on", "off"][i] === id)); if (id === "on") feel.yourTurn(); });
 
+  const acct = sec("Account");
+  if (account) {
+    acct.append($(`<p class="para">Signed in as <b>${esc(account.email)}</b>. Your family and recordings still live on this device; the account keeps your email so we can sign you in.</p>`));
+    const out = $(`<button class="btn" type="button" style="margin-top:12px">Sign out</button>`); out.onclick = async () => { await signOut(false); renderFamily(box); };
+    const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete my account</button>`); del.onclick = async () => { if (confirm("Delete your account? We remove your email from our records. Your family and recordings on this device are not touched.")) { await signOut(true); renderFamily(box); } };
+    acct.append(out, $(`<br>`), del);
+  } else {
+    acct.append($(`<p class="para">Optional. Everything works without one, and your family stays on this device. An account ties an email address to you so you can sign in again.</p>`));
+    const mk = $(`<button class="btn" type="button" style="margin-top:12px">Create an account or sign in</button>`); mk.onclick = () => authScreen("up"); acct.append(mk);
+  }
+
   const data = sec("Your information");
   backupControls(data);
   const del = $(`<button class="btn danger" type="button" style="margin-top:8px">Delete everything</button>`);
