@@ -38,3 +38,12 @@ test("the editor stores what you pick, and can go back to the initial", () => wi
   host.querySelector('[data-k="extra"][data-v="glasses"]').click(); assert.deepEqual([...saved.extra], []);
   host.querySelector('[data-a="clear"]').click(); assert.equal(saved, null);
 }));
+
+test("a backup brings back people, avatars and lore, and never grants consent to send text", () => withApp((w) => {
+  w.eval(`S.me.name = "Ada"; S.me.av = avDefault(); S.people = [{ n: "Papa", born: "1950", av: avDefault() }, { n: "Ini", born: "" }];
+    S.consent.lore = true; S.lore = { clips: { a: { who: "Papa", q: "House?", at: 5, tl: 30, people: [{ n: "Ekaette", rel: "sister" }], places: ["Uyo"], years: ["1974"], foods: [], sayings: [], themes: [] } } };`);
+  const text = w.eval(`JSON.stringify({ app: "Tell Me Again", version: 1, exportedAt: "x", family: structuredClone(S), theme: "white", recordings: [] })`);
+  const got = w.eval(`parseBackup(${JSON.stringify(text)})`).family;
+  assert.equal(got.people.length, 2); assert.ok(got.people[0].av && got.me.av, "avatars survive");
+  assert.equal(got.lore.clips.a.places[0], "Uyo"); assert.equal(got.consent.lore, undefined, "lore consent is never restored");
+}));
