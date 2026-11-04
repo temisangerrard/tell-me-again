@@ -52,6 +52,7 @@ npx wrangler deploy
 - Copy: if a string isn't needed, delete it. No taglines, helper text or captions that restate a label, defend a choice or calm a worry. Keep only a real consequence at the moment of choosing, a scope or compatibility fact, what an empty state means and what to do next, and units on bare values. If a screen needs explaining, fix the layout. Cut whole clauses, don't reword them. Target: Linear's site, Apple Notes.
 - Anti-slop: human copy, no illustrated faces, flat cards. White is the default theme; warm and night are options. Accent colours must pass contrast (`onAccent()`).
 - **No audio is stored on our servers.** Audio is sent for transcription and discarded; recordings and text live on the user's device. Cloud storage is a future *paid* feature, not a default.
+- No analytics, A/B-testing or visitor-tracking tools (RoutingCat, Google Analytics and the like) without the owner's decision. The landing page and privacy notice promise no tracking and no cookies; such a tool sets a long-lived visitor cookie and sends visitor data to a third party, so it needs the privacy notice, the landing copy, a consent step and a data processing agreement changed first.
 - Solo "Play a bot" is the one online feature that needs no consent step because it sends no personal data: only the neutral name "You", the bot's name and the moves. Keep it that way.
 - Anything that sends audio or data off the device needs explicit consent first (`grantConsent` / `withdrawConsent`, notice in `privacySheet`). Bump `PRIVACY_V` when the notice changes.
 - Controller: Settley Studio, run by Temisan Agbajoh. This is a separate product from Settley: don't send its email from `settley.co`.
@@ -118,6 +119,9 @@ Roughly in priority order.
 
 - [x] Sound design (`js/sounds.js`, `js/feel.js`): synthesised, no files. Dice rattle and knock, wooden token hops, card slide, clay seed drops, bell chimes for your turn and wins; routed through a compressor, limiter and soft clip; unlocks on the first touch; a Sound setting in Family. Levels were measured by rendering each sound offline (`buildChain` + `buildSounds` on an `OfflineAudioContext`): singles peak 0.5 to 0.8, worst-case overlaps stay under 0.9.
 - [ ] iPhone's silent switch mutes web audio. Fixing that means switching the page's audio session to playback, which would also interrupt the user's music, so decide before doing it. Optional: a soft background ambience, and different sound themes.
+
+- [x] Landing page as a scroll: colour blocks (`js/landing.js`, `css/landing2.css`) for Sit, Play, Make, Far away, Family and Private, a question marquee, a cast of animated characters, and Ludo, Ayo and Whot playing live (Ayo and Whot run the real engines, bot against bot; silent, and only while on screen).
+- [ ] Landing: real screenshots or short recordings in place of the illustrated Make artefacts once the storybook and film exist; translate the landing; measure whether it converts (needs a consent-respecting, privacy-preserving way to count).
 
 **Make tab**
 - [x] Magazine from selected, reviewed transcripts, with cover and contents; standalone HTML download and browser Print / Save PDF.
