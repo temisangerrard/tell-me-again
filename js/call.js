@@ -40,14 +40,14 @@ function callDock() {
 }
 function voiceSitting(box, relay, myName, note) {
   const dockEl = callDock();
-  let pc = null, local = null, ctx = null, mix = null, mr = null, chunks = [], t0 = 0, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
+  let pc = null, local = null, ctx = null, mix = null, q = null, mode = "idle", from = "", muted = false, pend = [], isCaller = false;
   let ice = [{ urls: "stun:stun.cloudflare.com:3478" }];
-  let control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, recordingQuestion = null, ending = false;
+  let seg = null, control = null, peerRecording = false, requesting = false, requestId = null, permissionReply = null, requestTimer, disconnectTimer, saving = null, resolveSaving = null, ending = false;
   const sendControl = data => { if (control && control.readyState === "open") { control.send(JSON.stringify(data)); return true; } return false; };
   function bindControl(channel) {
     control = channel;
     channel.onopen = render;
-    channel.onclose = () => { if (permissionReply) permissionReply(false); if (mr) stopRec(); peerRecording = false; render(); };
+    channel.onclose = () => { if (permissionReply) permissionReply(false); if (seg && seg.active) stopRec(); peerRecording = false; render(); };
     channel.onmessage = async e => {
       let m; try { m = JSON.parse(e.data); } catch { return; }
       if (m.k === "record-request" && !isCaller && !requesting && mode === "live" && typeof m.id === "string") {
@@ -58,7 +58,7 @@ function voiceSitting(box, relay, myName, note) {
         if (pc === samePeer && channel === control && mode === "live") sendControl({ k: "record-answer", id: m.id, allowed });
       } else if (m.k === "record-answer" && isCaller && m.id === requestId && permissionReply) permissionReply(m.allowed === true);
       else if (m.k === "record-state" && !isCaller) { peerRecording = m.recording === true; render(); }
-      else if (m.k === "record-stop" && isCaller && mr) stopRec();
+      else if (m.k === "record-stop" && isCaller && seg && seg.active) stopRec();
     };
   }
   const sig = (o) => relay({ t: "sig", d: JSON.stringify(o) });
@@ -69,17 +69,17 @@ function voiceSitting(box, relay, myName, note) {
     const root = () => (mode === "idle" ? box : dockEl);
     if (mode === "idle") { paint($(`<div class="voice"><h2>Voice call</h2>${inAppBrowser() ? `<p class="err">${esc(micMessage())}</p>` : ""}<div class="vrow"><button class="btn" id="vs" type="button">Start a voice call</button></div></div>`)); box.querySelector("#vs").onclick = start; if (onCallChange) onCallChange(); return; }
     if (mode === "ringing") { paint($(`<div class="voice"><h2>${esc(from)} is calling</h2><div class="vrow"><button class="cta" id="vj" type="button" style="width:auto">Join</button><button class="btn" id="vn" type="button">Not now</button></div></div>`)); dockEl.querySelector("#vj").onclick = join; dockEl.querySelector("#vn").onclick = () => { mode = "idle"; render(); }; return; }
-    const rec = !!mr;
+    const rec = !!(seg && seg.active);
     const recording = rec || peerRecording;
     paint($(`<div class="voice"><h2>${mode === "calling" ? "Waiting for them to join" : mode === "connecting" ? "Connecting…" : "On the call"}</h2>
       ${q ? `<p class="vq">${esc(q)}</p>` : `<p class="hint">${isCaller ? "" : "Listening"}</p>`}
       ${recording ? `<p class="hint" role="status"><i class="live"></i>Recording on the caller's device</p>` : ""}
       <div class="vrow">
-        ${isCaller ? `<button class="btn" id="vq" type="button" ${rec ? "disabled" : ""}>Skip question</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Stop and save" : requesting ? "Waiting for permission…" : "Record the answer"}</button>` : ""}
+        ${isCaller ? `<button class="btn" id="vq" type="button">${rec ? "Next question" : "Skip question"}</button><button class="cta" id="vr" type="button" style="width:auto" ${!rec && (mode !== "live" || control?.readyState !== "open" || requesting || saving) ? "disabled" : ""}>${rec ? "Finish and save" : requesting ? "Waiting for permission…" : "Start the interview"}</button>` : ""}
         ${!isCaller && peerRecording ? `<button class="btn" id="stop-peer" type="button">Stop recording</button>` : ""}
         <button class="btn" id="vm" type="button" aria-pressed="${muted}">${muted ? "Unmute" : "Mute"}</button><button class="btn danger" id="vh" type="button">Hang up</button></div></div>`));
     const g = (i) => root().querySelector(i);
-    if (g("#vq")) g("#vq").onclick = () => { if (onCallSkip) onCallSkip(); };
+    if (g("#vq")) g("#vq").onclick = () => { if (seg && seg.active) advance(); else if (onCallSkip) onCallSkip(); }; // while recording, Next question carries on without stopping
     if (g("#vr")) g("#vr").onclick = rec ? stopRec : startRec;
     if (g("#stop-peer")) g("#stop-peer").onclick = () => sendControl({ k: "record-stop" });
     g("#vm").onclick = () => { muted = !muted; if (local) local.getAudioTracks().forEach((t) => t.enabled = !muted); render(); };
@@ -158,33 +158,37 @@ function voiceSitting(box, relay, myName, note) {
       ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume(); mix = ctx.createMediaStreamDestination();
       if (pc !== samePeer || mode !== "live" || ending || control?.readyState !== "open") { await ctx.close(); ctx = null; return; }
       ctx.createMediaStreamSource(local).connect(mix); ctx.createMediaStreamSource(remote).connect(mix);
-      chunks = []; mr = new MediaRecorder(mix.stream); mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-      mr.onstop = saveRec; mr.onerror = () => { note("Recording was interrupted. Saving what was captured."); stopRec(); };
-      recordingQuestion = q || "Free story"; t0 = Date.now(); activeVoiceRecording = true;
+      activeVoiceRecording = true;
       saving = new Promise(resolve => { resolveSaving = resolve; });
-      mr.start(1000); sendControl({ k: "record-state", recording: true }); render();
-    } catch { mr = null; activeVoiceRecording = false; try { ctx && ctx.close(); } catch {} ctx = null; saving = null; note("Recording couldn't start. Your call is still connected."); render(); }
+      seg = segmentRecorder(mix.stream, { who: () => S.seats[1] || "", method: "remote", onSaved: () => { if (onClipSaved) onClipSaved(); }, onError: () => { note("Recording was interrupted. Saving what was captured."); stopRec(); } });
+      if (!q && isCaller) { const first = nextQuestion(); if (first) { q = first.q; sig({ k: "q", q }); } } // never start an interview on a blank screen
+      seg.start(q || "Free story"); sendControl({ k: "record-state", recording: true }); render();
+    } catch { seg = null; activeVoiceRecording = false; try { ctx && ctx.close(); } catch {} ctx = null; saving = null; note("Recording couldn't start. Your call is still connected."); render(); }
+  }
+  // One continuous recording of both voices, one clip per question (js/segments.js). The other person sees one unbroken recording.
+  function advance() { // Next question: close this answer, open the next, never stop recording
+    if (!seg || !seg.active || ending) return;
+    const oldQ = seg.question; if (oldQ && oldQ !== "Free story") S.asked.push(oldQ);
+    const nq = nextQuestion(); seg.cut(nq ? nq.q : "Free story");
+    q = nq ? nq.q : null; if (isCaller) sig({ k: "q", q: q || "" });
+    save(); if (onClipSaved) onClipSaved(); render();
   }
   function stopRec() {
-    if (mr && mr.state !== "inactive") { mr.stop(); sendControl({ k: "record-state", recording: false }); }
+    if (seg && seg.active) { const s = seg, lq = s.question; if (lq && lq !== "Free story" && !S.asked.includes(lq)) S.asked.push(lq); sendControl({ k: "record-state", recording: false }); s.stop().then(finishRec); }
     return saving;
   }
-  async function saveRec() {
-    const recorder = mr;
-    const blob = new Blob(chunks, { type: recorder.mimeType }), clip = { id: crypto.randomUUID(), q: recordingQuestion, who: S.seats[1] || "", at: t0, dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "remote", at: t0 } };
-    mr = null; try { await ctx.close(); } catch {} ctx = null;
-    let kept = true;
-    if (!DEV.has("data")) { try { await idbDo("readwrite", st => st.put(clip)); } catch { kept = false; } }
-    clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept }); S.told++; if (recordingQuestion !== "Free story") S.asked.push(recordingQuestion); save(); q = null;
-    activeVoiceRecording = false;
+  async function finishRec(r) {
+    if (!saving) return;
+    seg = null; save();
+    try { ctx && await ctx.close(); } catch {} ctx = null; q = null; activeVoiceRecording = false;
     const finish = resolveSaving; resolveSaving = null; saving = null; if (finish) finish(); if (onClipSaved) onClipSaved();
-    note(kept ? "Saved on this device." : "Storage is full or unavailable. Keep this page open and download a backup to save the recording.", 0); render();
+    note(!r || r.keptAll ? "Saved on this device." : "Storage is full or unavailable. Keep this page open and download a backup to save the recording.", 0); render();
   }
   async function end() {
     if (ending) return;
     ending = true; epoch++; clearTimeout(disconnectTimer); clearTimeout(requestTimer);
     if (permissionReply) permissionReply(false);
-    if (mr || saving) await stopRec();
+    if ((seg && seg.active) || saving) await stopRec();
     try { ctx && ctx.close(); } catch {} ctx = null;
     try { control && control.close(); } catch {} control = null;
     try { pc && pc.close(); } catch {} pc = null;
@@ -195,8 +199,8 @@ function voiceSitting(box, relay, myName, note) {
   let announced = -1;
   const api = {
     onSig, end, start, join,
-    mode: () => mode, live: () => mode === "live" && isCaller, calling: () => mode === "calling", recording: () => !!mr || requesting,
-    toggleRec: () => (mr ? stopRec() : startRec()),
+    mode: () => mode, live: () => mode === "live" && isCaller, calling: () => mode === "calling", recording: () => !!(seg && seg.active) || requesting,
+    toggleRec: () => (seg && seg.active ? stopRec() : startRec()),
     setQuestion: (t) => { if (!isCaller || mode === "idle") return; const v = t || null; if (v === q) return; q = v; sig({ k: "q", q: v || "" }); render(); },
     announce: (n) => { if (mode === "calling" && n !== announced) { announced = n; sig({ k: "call", n: myName() }); } }
   };
