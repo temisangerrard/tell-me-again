@@ -31,28 +31,6 @@ function wrapUp(after) {
   sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); sitting = null; pinnedQ = null; save(); close(); after(); };
 }
 // 3-2-1, then a full-screen run screen: the family colour, a huge timer, one big stop button. Resolves with the overlay or null if cancelled.
-function countdown() {
-  return new Promise((res) => {
-    const ov = $(`<div class="rov" role="dialog" aria-modal="true" aria-label="Recording starts soon"><div class="cd" aria-live="assertive">3</div><button class="quiet" type="button">Cancel</button></div>`);
-    document.body.append(ov); document.body.classList.add("lock");
-    const cd = ov.querySelector(".cd"); let n = 3, t;
-    const tick = () => { if (n === 0) { res(ov); return; } cd.textContent = n; if (!reduceMotion()) cd.animate([{ transform: "scale(.7)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 260, easing: "cubic-bezier(.23,1,.32,1)" }); n--; t = setTimeout(tick, 900); };
-    ov.querySelector(".quiet").onclick = () => { clearTimeout(t); ov.remove(); document.body.classList.remove("lock"); res(null); };
-    ov.querySelector(".quiet").focus(); tick();
-  });
-}
-function runScreen(ov, who, q, onStop) {
-  ov.setAttribute("aria-label", "Recording");
-  ov.innerHTML = `<div class="rtop"><div class="av" aria-hidden="true">${esc(initial(who))}</div><div><span>Recording</span><b>${esc(who)}</b></div></div>
-    <div class="timer" role="timer" aria-label="Elapsed time">0:00</div>
-    <p class="rq">${q ? esc(q) : "Tell it your way."}</p>
-    <button class="stop" type="button" aria-label="Stop recording"><i></i></button>`;
-  const tm = ov.querySelector(".timer"), t0 = Date.now();
-  const iv = setInterval(() => { const sec = Math.floor((Date.now() - t0) / 1000); tm.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; }, 250);
-  const stop = ov.querySelector(".stop"); stop.onclick = onStop; stop.focus();
-  return () => { clearInterval(iv); ov.remove(); document.body.classList.remove("lock"); };
-}
-
 // One recording: the audio, then its words (or the way to get them), then Save and Delete.
 function clipRow(c, box) {
   const li = $(`<li><div class="cq">${esc(c.q)}</div><audio controls preload="metadata" src="${c.url}"></audio>${c._unsaved ? `<p class="err save-warning">Not saved to this device. Save the audio or download a backup before leaving.</p>` : ""}<div class="tx"></div>
@@ -123,7 +101,7 @@ function renderSitting(box, msg) {
     ${q && q.photo ? `<p class="photoidea"><b>Photo to have to hand:</b> ${esc(q.photo)}</p>` : ""}
     ${q && q.sensitive ? `<p class="warn">This one can bring up hard memories. Check they're happy to go there, and let them skip it.</p>` : ""}
     ${q ? `<p class="hint" id="fuh">If they go quiet</p><div class="fus" role="group" aria-labelledby="fuh"></div>` : ""}
-    <button class="cta" id="rec" type="button">Record the answer</button>
+    <button class="cta" id="rec" type="button">Start the interview</button>
     <p class="rs" id="rs" role="status"></p>
     <button class="btn skip" id="skip" type="button"${q ? "" : " disabled"}>Skip this question</button></div>`);
   fu.forEach((t) => { const c = $(`<button class="fu" type="button" aria-pressed="false">${esc(t)}</button>`); c.onclick = () => c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") !== "true"); w.querySelector(".fus").append(c); });
@@ -133,7 +111,7 @@ function renderSitting(box, msg) {
   const rec = w.querySelector("#rec"), rs = w.querySelector("#rs"), skip = w.querySelector("#skip"), role = seatEls[1].querySelector(".role");
   rs.textContent = msg || "";
   // The ring means "someone is speaking", so it follows the recording.
-  const setLive = (on) => { seatEls[1].classList.toggle("speaking", on); role.textContent = on ? "Speaking" : ROLES[1]; rec.textContent = on ? "Stop" : "Record the answer"; skip.disabled = on || !q; };
+  const setLive = (on) => { seatEls[1].classList.toggle("speaking", on); role.textContent = on ? "Speaking" : ROLES[1]; rec.textContent = on ? "Stop" : "Start the interview"; skip.disabled = on || !q; };
   if (live) { setLive(true); rs.textContent = "Recording…"; }
   // While a call is live, Record goes through the call (both voices) and the current question is pushed to the other phone.
   onClipSaved = () => { if (box.isConnected && !box.hidden) renderSit(box); };
@@ -153,24 +131,11 @@ function renderSitting(box, msg) {
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
     catch (e) { rec.disabled = false; let state = null; if (e && e.name === "NotAllowedError") { try { state = (await navigator.permissions.query({ name: "microphone" })).state; } catch {} } rs.textContent = micMessage(e, state); return; }
     if (!box.isConnected || box.hidden || restoring) { stream.getTracks().forEach(t => t.stop()); rec.disabled = false; return; }
-    const ov = await countdown();
-    if (!ov) { stream.getTracks().forEach((t) => t.stop()); rec.disabled = false; return; }
-    const mr = new MediaRecorder(stream), chunks = [], who = S.seats[1] || "Storyteller";
-    mr.ondataavailable = (e) => chunks.push(e.data);
-    const closeRun = runScreen(ov, who, q && q.q, () => mr.stop());
-    let t0 = Date.now();
-    mr.onstop = async () => {
-      stream.getTracks().forEach((t) => t.stop()); live = null; closeRun();
-      const blob = new Blob(chunks, { type: mr.mimeType }), clip = { id: Date.now() + "-" + Math.random().toString(36).slice(2, 6), q: q ? q.q : "Free story", who, at: Date.now(), dur: Math.max(1, Math.round((Date.now() - t0) / 1000)), blob, recordingConsent: { method: "in-person", at: t0 } };
-      let kept = true;
-      if (!DEV.has("data")) { try { await idbDo("readwrite", (st2) => st2.put(clip)); } catch { kept = false; } }
-      clips.unshift({ ...clip, url: URL.createObjectURL(blob), _unsaved: !kept });
-      S.told++; if (q) S.asked.push(q.q); save();
-      if (box.isConnected) renderSitting(box, kept ? "Saved on this device. You'll find it under Recorded." : "Recorded, but this browser wouldn't keep it. It's here until you leave the page.");
-      if (S.consent.transcribe && S.autoTx) { const li = [...document.querySelectorAll(".clips li")].find((x) => x.querySelector(".cq") && x.querySelector("audio").src === clips[0].url); if (li && li._run) li._run(); }
-    };
-    t0 = Date.now(); live = { mr, stream }; mr.start(1000); rec.disabled = false; setLive(true);
-    rs.textContent = `Recording. Let ${who} take their time.`;
+    rec.disabled = false;
+    const who = S.seats[1] || "Storyteller", made = await runInterview(stream, who, q);
+    if (!box.isConnected) return;
+    renderSitting(box, made.length ? `Saved ${made.length} ${made.length === 1 ? "recording" : "recordings"} on this device. You'll find them under Recorded.` : "Nothing was kept. Answers under a few seconds are treated as skips.");
+    if (S.consent.transcribe && S.autoTx) made.forEach((id) => { const c = clips.find((x) => x.id === id), li = c && [...document.querySelectorAll(".clips li")].find((x) => x.querySelector("audio") && x.querySelector("audio").src === c.url); if (li && li._run) li._run(); });
   };
 
   if (clips.length) {
