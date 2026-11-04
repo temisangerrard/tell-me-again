@@ -27,7 +27,7 @@ function welcome() {
       </section>
     </div>
     ${landingBody(FAQ)}
-    <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="restore-welcome">Restore backup</button><button type="button" id="pvl">Privacy</button><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
+    <footer class="foot"><span>Made by Settley Studio</span><button type="button" id="restore-welcome">Restore backup</button><button type="button" id="pvl">Privacy</button><a href="/building">How it was built</a><a href="mailto:${PRIVACY_MAIL}">Contact</a></footer>
   </section>`);
   host.append(el); wireLanding(el);
   let questionIndex = 0;
