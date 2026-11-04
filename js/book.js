@@ -51,7 +51,7 @@ const BOOK_PAGES = [
     <div class="node d">${portrait("mum", 15, BK.coral)}<b>Claire</b><span>Mum</span></div>
     <div class="node e">${portrait("kid", 13, "#5aa9e6")}<b>Ife</b><span>9, the asker</span></div>${folio(10, "l")}</div>`,
   // 10 · sayings
-  `<div class="pg say" style="--c:${BK.violet}"><span class="eyebrow">05 · Sayings we live by</span><h4>Said at the table, repeated for years</h4>
+  `<div class="pg say" style="--c:${BK.violet}"><span class="eyebrow">05 · Sayings we live by</span><h4>Things we always say</h4>
     <div class="notes"><p style="--r:-3deg;--b:${BK.honey}">“Eat first, then talk.”<b>Folake</b></p><p style="--r:2.5deg;--b:#fff">“A guest is a gift.”<b>Tunde</b></p><p style="--r:-1.5deg;--b:${BK.coral}">“Ask it twice.”<b>Ngozi</b></p><p style="--r:3deg;--b:${BK.leaf}">“Write it down before it leaves.”<b>Ife, 9</b></p></div>${folio(11, "r")}</div>`,
   // 11 · back cover
   `<div class="pg bc"><img src="art/icons/mark-mono.svg" alt="" width="96" height="96"><p>23 stories. 6 voices. 3 generations.<br>2 hours and 14 minutes of people you love.</p><button class="cta" id="go3" type="button">Start your family's book</button><small>Made with Tell Me Again</small></div>`

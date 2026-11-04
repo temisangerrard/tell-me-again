@@ -196,18 +196,22 @@ CAST = {
 def clear():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
-for name, spec in CAST.items():
-    if ONLY and name not in ONLY: continue
-    clear(); setup_render(); stage()
-    c = pebble() if spec is None else person(spec)
-    animate(c, N, name); sc = bpy.context.scene
-    d = os.path.join(OUT, name); os.makedirs(d, exist_ok=True)
-    if "--debug" in argv:
-        sc.frame_set(1)
-        for o in sc.objects:
-            if o.name.startswith(("hand", "shoulder", "skull")): print("DBG", o.name, tuple(round(v, 2) for v in o.matrix_world.translation), tuple(round(v, 2) for v in o.rotation_euler))
-    if STILL:
-        sc.frame_set(1); sc.render.filepath = os.path.join(d, "still.png"); bpy.ops.render.render(write_still=True)
-    else:
-        sc.render.filepath = os.path.join(d, "f_"); bpy.ops.render.render(animation=True)
-    print("rendered", name)
+def main():
+    for name, spec in CAST.items():
+        if ONLY and name not in ONLY: continue
+        clear(); setup_render(); stage()
+        c = pebble() if spec is None else person(spec)
+        animate(c, N, name); sc = bpy.context.scene
+        d = os.path.join(OUT, name); os.makedirs(d, exist_ok=True)
+        if "--debug" in argv:
+            sc.frame_set(1)
+            for o in sc.objects:
+                if o.name.startswith(("hand", "shoulder", "skull")): print("DBG", o.name, tuple(round(v, 2) for v in o.matrix_world.translation), tuple(round(v, 2) for v in o.rotation_euler))
+        if STILL:
+            sc.frame_set(1); sc.render.filepath = os.path.join(d, "still.png"); bpy.ops.render.render(write_still=True)
+        else:
+            sc.render.filepath = os.path.join(d, "f_"); bpy.ops.render.render(animation=True)
+        print("rendered", name)
+
+if "--no-main" not in argv:   # avatar_kit.py imports this file for its helpers and skips the cast
+    main()
