@@ -28,4 +28,5 @@ async function transcribeClip(c) {
   let r; try { r = await fetch("/api/transcribe?" + q, { method: "POST", headers: { "content-type": c.blob.type || "audio/webm" }, body: c.blob }); } catch { throw new Error("Couldn't reach the speech service. Check your connection and try again."); }
   const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || "Couldn't turn that into text. Please try again.");
   c.text = j.text || ""; c.tx = "ai"; c.txAt = Date.now(); await saveClip(c);
+  if (loreOn()) extractLore(c).catch(() => {}); // lore is a bonus; a failure here never loses the words
 }

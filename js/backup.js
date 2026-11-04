@@ -46,7 +46,18 @@ function parseBackup(text) {
     if (key === "hand" ? ![0,4,5,6,7].includes(f.whotRules[key]) : typeof f.whotRules[key] !== "boolean") return bad();
     family.whotRules[key] = f.whotRules[key];
   }
-  Object.assign(family, { me: { name: f.me.name }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings, told: f.told, step: f.step });
+  // People, avatars and lore ride along. Each is checked and rebuilt field by field, never copied across as it came.
+  const short = (v, n) => typeof v === "string" ? v.slice(0, n) : "", list = (v, n, k) => Array.isArray(v) ? v.map((x) => short(x, k)).filter(Boolean).slice(0, n) : [];
+  if (f.people !== undefined) {
+    if (!Array.isArray(f.people) || f.people.length > 200) return bad();
+    family.people = f.people.map((p) => object(p) && short(p.n, 40).trim() ? { n: short(p.n, 40).trim(), born: /^\d{0,4}$/.test(p.born || "") ? p.born || "" : "", ...(object(p.av) ? { av: avClean(p.av) } : {}) } : null).filter(Boolean);
+  }
+  if (object(f.lore) && object(f.lore.clips)) {
+    family.lore = { clips: {} };
+    for (const [id, e] of Object.entries(f.lore.clips).slice(0, 2000)) if (object(e)) family.lore.clips[short(id, 80)] = { who: short(e.who, 40), q: short(e.q, 200), at: Number(e.at) || 0, tl: Number(e.tl) || 0,
+      people: (Array.isArray(e.people) ? e.people : []).map((p) => ({ n: short(p && p.n, 40), rel: short(p && p.rel, 30) })).filter((p) => p.n).slice(0, 12), places: list(e.places, 10, 50), years: list(e.years, 8, 4), foods: list(e.foods, 10, 40), sayings: list(e.sayings, 5, 140), themes: list(e.themes, 3, 30) };
+  }
+  Object.assign(family, { me: { name: f.me.name, ...(object(f.me.av) ? { av: avClean(f.me.av) } : {}) }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings, told: f.told, step: f.step });
   // A restored archive never grants permission to send audio from this device.
   family.consent = { transcribe: false }; family.autoTx = false;
   if (b.theme !== undefined && !THEMES.some(([k]) => k === b.theme)) return bad();

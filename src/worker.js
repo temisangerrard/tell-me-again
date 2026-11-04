@@ -2,6 +2,7 @@
 // Each family room is one Durable Object, addressed by its code.
 import { DurableObject } from "cloudflare:workers";
 export { Room } from "./room.js";
+import { lore } from "./lore.js";
 
 // Exact, serialised counter for room creation (Cloudflare's built-in limiter is approximate across locations).
 // One instance per hashed address; it stores only timestamps and erases itself shortly after the window.
@@ -89,6 +90,7 @@ export default {
     }
     if (url.pathname === "/api/ice") return iceServers(req, env, ip);
     if (url.pathname === "/api/transcribe") return transcribe(req, env, url, ip);
+    if (url.pathname === "/api/lore") return lore(req, env, ip, strict, json);
     if (url.pathname === "/api/rooms" && req.method === "POST") {
       if (!(await strict(env, "create", ip, 20, 60000))) return tooMany(); // 20 new rooms a minute per address
       for (let i = 0; i < 6; i++) {

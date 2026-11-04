@@ -45,28 +45,44 @@ function ring(done, total, size = 34) {
   return `<svg class="ring" width="${size}" height="${size}" viewBox="0 0 34 34" role="img" aria-label="${done} of ${total} topics"><circle cx="17" cy="17" r="${r}" fill="none" stroke="var(--line)" stroke-width="4"/><circle cx="17" cy="17" r="${r}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(f * c).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 17 17)"/></svg>`;
 }
 
+const NEXTCOL = ["#f0b232", "#e26b3f", "#2fa8a0", "#5aa9e6", "#6db56d"];
 function renderSitHome(box, msg) {
   const n = S.sittings.length, st = streak(), order = orderedFamily();
-  box.replaceChildren($(`<h1 class="title">Sit together</h1>`),
-    $(`<div class="smeta"><p>${n ? `${n} of ${SEASON} sittings done${st > 1 ? `, ${st} weeks running` : ""}` : `Season one`}</p>
-      <div class="ticks" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}</div></div>`));
+  const SEAS = ["#e26b3f", "#f0b232", "#6db56d", "#2fa8a0", "#5aa9e6", "#7c5ad6", "#e26b3f", "#f0b232"];
+  box.replaceChildren($(`<div class="sithead"><div><h1 class="title">Sit together</h1><p class="sub">${n ? `${n} of ${SEASON} sittings done${st > 1 ? `, ${st} weeks running` : ""}` : "Season one starts here"}</p></div>${cast("pebble", { size: 92 })}</div>`),
+    $(`<div class="season" role="img" aria-label="${Math.min(n, SEASON)} of ${SEASON} sittings done">${[...Array(SEASON)].map((_, i) => `<i class="${i < n ? "on" : ""}" style="--c:${SEAS[i % SEAS.length]}"></i>`).join("")}</div>`));
   if (msg) box.append($(`<p class="hint" role="status" style="margin-top:10px">${esc(msg)}</p>`));
+
+  // Until the first recording exists, show the way: three steps, the current one open.
+  if (!clips.length && !(S.lore && Object.keys(S.lore.clips || {}).length)) {
+    const has = (S.people || []).length > 0, sat = S.sittings.length > 0;
+    const steps = [["Add someone you want to hear from", "A parent, a grandparent, an aunt. Anyone whose stories you want to keep.", has], ["Ask them one question", "We pick a good one and give you follow-ups. You ask, they talk. Nobody has to prepare.", sat], ["Keep it", "The recording stays on your phone. Play it back, share it, or turn it into a page later.", false]];
+    const cur = steps.findIndex((x) => !x[2]);
+    const first = $(`<section class="first"><h2>Your first story, in three steps</h2><ol>${steps.map(([t, d, done], i) => `<li class="${done ? "done" : i === cur ? "now" : ""}"><span class="num" aria-hidden="true">${done ? "✓" : i + 1}</span><div><b>${t}</b><p>${d}</p>${i === 0 && !has ? `<div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Their name, e.g. Mum" aria-label="Their name"><button class="btn" type="button">Add</button></div>` : ""}</div></li>`).join("")}</ol></section>`);
+    const fin = first.querySelector(".padd input"), fadd = () => { const v = fin.value.trim(); if (!v) return; S.people ||= []; S.people.push({ n: v, born: "" }); save(); renderSitHome(box, msg); };
+    if (fin) { first.querySelector(".padd .btn").onclick = fadd; fin.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); fadd(); } }; }
+    box.append(first);
+  }
 
   // Next up: one person, one question.
   const top = order[0];
   if (top) {
     const q = questionFor(top.p, top.st), why = top.st.stories ? `Last recorded ${ago(top.st.last)}` : "No stories yet";
-    const card = $(`<section class="nextup"><small>Next up · ${esc(why)}</small><b>${esc(top.p.n)}</b>${q ? `<p>${esc(q.q)}</p>` : ""}<button class="cta" type="button">Sit with ${esc(top.p.n)}</button></section>`);
+    const hue = NEXTCOL[hashStr(top.p.n) % NEXTCOL.length];
+    const card = $(`<section class="nextup" style="--bk:${hue}"><div class="nutop">${avHTML(top.p, top.p.n, 72, "nuav")}<div><small>Next up · ${esc(why)}</small><b>${esc(top.p.n)}</b></div></div>${q ? `<p class="nuq">${esc(q.q)}</p>` : ""}<button class="cta" type="button">Sit with ${esc(top.p.n)}</button></section>`);
+    avPaint(card);
     card.querySelector("button").onclick = () => beginSitting(box, [top.p.n], q);
     box.append(card);
   }
   const go = $(`<button class="btn wide" id="startsit" type="button" style="margin-top:12px">${top ? "Choose who's joining" : "Start a sitting"}</button>`);
   go.onclick = () => beginSitting(box); box.append(go);
+  const lorebox = loreSection(box, (m) => renderSitHome(box, m || msg)); if (lorebox) box.append(lorebox);
 
   // The family, in the order they need a story.
   const fam = $(`<section><h2 class="sec">Family</h2><ul class="sitlist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></section>`);
   order.forEach(({ p, st: s }) => {
-    const li = $(`<li class="sitrow"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}"><span class="av" aria-hidden="true" style="--tint:${tintFor(p.n)}">${esc(initial(p.n))}</span><span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
+    const li = $(`<li class="sitrow" style="--tint:${tintFor(p.n)}"><button class="sitopen" type="button" aria-label="Open ${esc(p.n)}">${avHTML(p, p.n, 40)}<span class="who"><b>${esc(p.n)}</b><em>${s.stories ? `${s.stories} ${s.stories === 1 ? "story" : "stories"} · ${ago(s.last)}` : "No stories yet"}</em></span>${ring(s.covered.size, s.total)}</button><button class="btn sitgo" type="button" aria-label="Sit with ${esc(p.n)}">Sit</button></li>`);
+    avPaint(li);
     li.querySelector(".sitopen").onclick = () => { personView = p.n; renderSit(box); window.scrollTo(0, 0); };
     li.querySelector(".sitgo").onclick = () => beginSitting(box, [p.n], questionFor(p, s));
     fam.querySelector(".sitlist").append(li);
@@ -108,6 +124,7 @@ function renderPerson(box, name, msg) {
   const det = $(`<section><label class="field"><span class="lbl">Year born <small>(optional)</small></span><input class="inp sm" type="text" inputmode="numeric" maxlength="4" value="${esc(p.born || "")}"></label></section>`);
   det.querySelector("input").oninput = (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); p.born = e.target.value; save(); };
   box.append(det);
+  const avs = $(`<section><h2 class="sec">Avatar</h2></section>`); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); }); box.append(avs);
   const lib = $(`<section><h2 class="sec">Recorded <span class="cnt">${s.stories}</span></h2>${s.stories ? `<ul class="clips"></ul>` : `<p class="hint">Nothing recorded with ${esc(p.n)} yet.</p>`}</section>`);
   s.mine.forEach((c) => lib.querySelector(".clips").append(clipRow(c, box)));
   box.append(lib);
