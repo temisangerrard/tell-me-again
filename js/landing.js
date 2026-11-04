@@ -18,7 +18,7 @@ function landingBody(faqHTML) {
 
     <section class="blk honey sit" aria-labelledby="h-sit">
       <div class="in"><div class="copy" data-reveal><span class="kick">01 Sit</span><h2 id="h-sit">Ask one good question.</h2>
-        <p>We hand you a question that gets a story, not a yes or a no. Press record, then stay quiet: the pause does the work. If they go quiet, the follow-ups written for that question are right there.</p>
+        <p>Each question is written to get a story. Press record, then stay quiet: the pause does the work. If they go quiet, the follow-ups written for that question are right there.</p>
         <ul class="tick"><li>A question for every topic: names, home, food, work, love, faith</li><li>Follow-ups and a coaching line for whoever is asking</li><li>Recorded on your phone, and it stays there</li></ul></div>
         <div class="scene" data-reveal>
           <div class="talkers">${cast("gran", { size: 230 })}${cast("kid", { size: 170 })}</div>
@@ -59,7 +59,7 @@ function landingBody(faqHTML) {
 
     <section class="blk sky far" aria-labelledby="h-far">
       <div class="in"><div class="copy" data-reveal><span class="kick">04 Far away</span><h2 id="h-far">Far away? Pull up a chair anyway.</h2>
-        <p>Send a link. They tap it and you're on a voice call inside the app, with the question on both screens. Your phone records the answer. No account and no extra app. Open the link in Safari or Chrome, not inside another app.</p>
+        <p>Send a link. They tap it and you're on a voice call inside the app, with the question on both screens. Your phone records the answer. No account and no extra app. Open the link in Safari or Chrome.</p>
         <ol class="steps"><li>Pick who's joining</li><li>Send each of them a link</li><li>Start the call and ask</li></ol></div>
         <div class="scene calls" data-reveal>
           <div class="phone">${cast("aunty", { size: 240 })}</div>
@@ -77,7 +77,7 @@ function landingBody(faqHTML) {
     </section>
 
     <section class="blk ink private" aria-labelledby="h-pri">
-      <div class="in"><div class="copy" data-reveal><span class="kick">Private by design</span><h2 id="h-pri">Yours, not ours.</h2>
+      <div class="in"><div class="copy" data-reveal><span class="kick">Private by design</span><h2 id="h-pri">Your recordings stay with you.</h2>
         <p>These are voices and memories. We built it so the recordings stay with you.</p></div>
         <ul class="pri" data-reveal><li><b>Recordings stay on your phone</b><span>We don't keep a copy on our servers.</span></li><li><b>Speech to text only if you ask</b><span>The audio is sent, the words come back, and it isn't kept.</span></li><li><b>No ads</b><span>Nobody is paying to be in front of your family.</span></li><li><b>Delete or download it all</b><span>One tap each, under Family.</span></li></ul></div>
     </section>
