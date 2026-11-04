@@ -2,9 +2,9 @@
 // Sit tab: questions, recording, clips
 const ROLES = ["Asker", "Storyteller", "Witness", "Witness"];
 const SEAT_CLS = ["s-ask", "s-st", "s-w1", "s-w2"];
-function nextQuestion() {
-  if (typeof pinnedQ !== "undefined" && pinnedQ && !S.asked.includes(pinnedQ.q)) return pinnedQ; // the question "Next up" suggested
-  const who = Array.isArray(sitting) ? sitting[0] : S.elder && S.elder.name, pr = (S.people || []).find((x) => x.n === who);
+function nextQuestion(forName) { // forName: ask for this person's relationship, not the current storyteller's
+  if (!forName && typeof pinnedQ !== "undefined" && pinnedQ && !S.asked.includes(pinnedQ.q)) return pinnedQ; // the question "Next up" suggested
+  const who = forName || (Array.isArray(sitting) ? sitting[0] : S.elder && S.elder.name), pr = (S.people || []).find((x) => x.n === who);
   const pool = questionsFor(pr && pr.rel).filter((q) => S.chapters.includes(q.c)); // questions written for how this person is related to you
   const n = S.asked.length, maxD = n < 2 ? 1 : n < 4 ? 2 : n < 6 ? 3 : 4; // ease in: warm-up first
   const fresh = pool.filter((q) => !S.asked.includes(q.q) && q.d <= maxD).sort((a, b) => a.d - b.d || !!b.for - !!a.for);

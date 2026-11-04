@@ -41,3 +41,9 @@ test("pause holds the recorder, and Finish needs a second tap", () => withApp(as
   ov.querySelector(".ivend").click(); assert.ok(d.querySelector(".iv"), "one tap does not end it"); assert.match(ov.querySelector(".ivend").textContent, /again/);
   ov.querySelector(".ivend").click(); await done; assert.ok(!d.querySelector(".iv"));
 }));
+
+test("when someone has covered every topic, the fallback question still suits their relationship", () => withApp((w) => {
+  w.eval(`S.chapters = ["us", "parent"]; S.asked = []; S.people = [{ n: "Gran", rel: "grandparent" }, { n: "Sis", rel: "sibling" }]; sitting = ["Gran"]; S.elder = { name: "Gran", born: "" };`);
+  const q = w.eval(`nextQuestion("Sis")`); assert.ok(!q.for || q.for.includes("sibling"), "the question is one a sibling can be asked");
+  assert.equal(w.eval(`questionFor(S.people[1], { covered: new Set(["us", "parent"]) })`).for === undefined || w.eval(`questionFor(S.people[1], { covered: new Set(["us", "parent"]) }).for.includes("sibling")`), true);
+}));

@@ -38,7 +38,7 @@ const orderedFamily = () => (S.people || []).map((p) => ({ p, st: personStats(p)
 function questionFor(p, st) {
   const asked = new Set(clips.map((c) => c.q)), topics = topicsOn();
   const open = questionsFor(p.rel).filter((q) => topics.includes(q.c) && !asked.has(q.q) && !S.asked.includes(q.q) && !st.covered.has(q.c)).sort((a, b) => a.d - b.d || !!b.for - !!a.for); // at the same depth, questions written for this relationship come first
-  return open[0] || nextQuestion();
+  return open[0] || nextQuestion(p.n);
 }
 function ring(done, total, size = 34) {
   const r = 14, c = 2 * Math.PI * r, f = total ? Math.min(1, done / total) : 0;
