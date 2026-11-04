@@ -22,16 +22,10 @@
 .marquee i { font-style: normal; font-size: .6em; opacity: .7; }
 @keyframes marq { to { transform: translateX(-50%); } }
 
-/* the cast */
-.ch { display: block; overflow: visible; flex: none; }
-.ch-bob { animation: bob 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); transform-box: fill-box; transform-origin: 50% 100%; }
-@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-.ch-eyes { animation: blink 5s infinite; animation-delay: var(--d, 0s); transform-box: fill-box; transform-origin: center; }
-@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-.ch.wave .ch-arm.r { animation: wave 1.6s ease-in-out infinite; animation-delay: var(--d, 0s); transform-box: fill-box; transform-origin: 50% 8%; }
-@keyframes wave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-40deg); } 55% { transform: rotate(16deg); } }
-.ch.talk .ch-mouth { animation: talk .5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes talk { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
+/* the cast: 3D characters rendered in Blender, so just pictures here */
+.ch3d { display: block; position: relative; flex: none; }
+.ch3d img { width: 100%; height: auto; display: block; }
+.ch3d::after { content: ""; position: absolute; left: 24%; right: 24%; bottom: 4%; height: 5%; border-radius: 50%; background: rgba(0, 0, 0, .2); filter: blur(5px); z-index: -1; }
 
 /* 01 Sit */
 .scene { position: relative; display: grid; gap: 14px; justify-items: start; }
@@ -77,6 +71,7 @@
 /* 04 Far away */
 .calls { display: flex; align-items: center; justify-content: center; }
 .phone { width: 150px; height: 250px; border-radius: 28px; border: 5px solid #1d1d1f; background: #fff; display: grid; align-items: end; justify-items: center; overflow: hidden; flex: none; }
+.phone .ch3d { margin-bottom: -26px; }
 .link { width: 92px; flex: none; margin: 0 -6px; }
 .steps { list-style: none; counter-reset: s; padding: 0; margin: 22px 0 0; max-width: 420px; }
 .steps li { counter-increment: s; display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-top: 2px solid rgba(29, 29, 31, .25); font: 600 1.05rem var(--sans); }
@@ -132,7 +127,7 @@
 .games .gcard:nth-child(2) { transition-delay: .1s; } .games .gcard:nth-child(3) { transition-delay: .2s; }
 .arts .art:nth-child(2) { transition-delay: .1s; } .arts .art:nth-child(3) { transition-delay: .2s; }
 @media (prefers-reduced-motion: reduce) {
-  .marquee .track, .ch-bob, .ch-eyes, .ch.wave .ch-arm.r, .ch.talk .ch-mouth, .bars rect, .scene .bubble, .roster.shown .fill { animation: none; }
+  .marquee .track, .bars rect, .scene .bubble, .roster.shown .fill { animation: none; }
   .scene .bubble.a { display: none; }
   .welcome.js [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
