@@ -175,13 +175,14 @@ function inviteStep() {
 }
 
 // A plain list of the people you'll record or play with. Birth year is optional and only used for era prompts.
+const relSel = (v, label = "Who they are to you") => `<select class="rel" aria-label="${label}"><option value="">Who are they to you?</option>${RELATIONS.map(([k, t]) => `<option value="${k}"${k === v ? " selected" : ""}>${t}</option>`).join("")}</select>`;
 function peopleEditor(parent, o = {}) {
   S.people ||= [];
   const wrap = $(`<div class="people"><ul class="plist"></ul><div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Add a name" aria-label="Add a name"><button class="btn" type="button">Add</button></div></div>`);
   const ul = wrap.querySelector("ul"), inp = wrap.querySelector("input");
   const draw = () => ul.replaceChildren(...S.people.map((p, i) => {
-    const li = $(`<li>${avHTML(p, p.n, 32)}<span class="pn">${esc(p.n)}</span>${o.born ? `<input class="by" type="text" inputmode="numeric" maxlength="4" placeholder="Born" aria-label="Year ${esc(p.n)} was born" value="${esc(p.born || "")}">` : ""}<button class="x" type="button" aria-label="Remove ${esc(p.n)}">×</button></li>`);
-    avPaint(li);
+    const li = $(`<li>${avHTML(p, p.n, 32)}<span class="pn">${esc(p.n)}</span>${relSel(p.rel, `Who ${esc(p.n)} is to you`)}${o.born ? `<input class="by" type="text" inputmode="numeric" maxlength="4" placeholder="Born" aria-label="Year ${esc(p.n)} was born" value="${esc(p.born || "")}">` : ""}<button class="x" type="button" aria-label="Remove ${esc(p.n)}">×</button></li>`);
+    avPaint(li); li.querySelector(".rel").onchange = (e) => { if (e.target.value) p.rel = e.target.value; else delete p.rel; save(); };
     const by = li.querySelector(".by"); if (by) by.oninput = () => { by.value = by.value.replace(/\D/g, "").slice(0, 4); p.born = by.value; save(); };
     li.querySelector(".x").onclick = () => { S.people.splice(i, 1); save(); draw(); };
     return li;

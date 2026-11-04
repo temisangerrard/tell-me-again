@@ -50,7 +50,7 @@ function parseBackup(text) {
   const short = (v, n) => typeof v === "string" ? v.slice(0, n) : "", list = (v, n, k) => Array.isArray(v) ? v.map((x) => short(x, k)).filter(Boolean).slice(0, n) : [];
   if (f.people !== undefined) {
     if (!Array.isArray(f.people) || f.people.length > 200) return bad();
-    family.people = f.people.map((p) => object(p) && short(p.n, 40).trim() ? { n: short(p.n, 40).trim(), born: /^\d{0,4}$/.test(p.born || "") ? p.born || "" : "", ...(object(p.av) ? { av: avClean(p.av) } : {}) } : null).filter(Boolean);
+    family.people = f.people.map((p) => object(p) && short(p.n, 40).trim() ? { n: short(p.n, 40).trim(), born: /^\d{0,4}$/.test(p.born || "") ? p.born || "" : "", ...(RELATIONS.some(([k]) => k === p.rel) ? { rel: p.rel } : {}), ...(object(p.av) ? { av: avClean(p.av) } : {}) } : null).filter(Boolean);
   }
   if (object(f.lore) && object(f.lore.clips)) {
     family.lore = { clips: {} };

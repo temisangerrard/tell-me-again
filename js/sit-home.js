@@ -37,8 +37,8 @@ const orderedFamily = () => (S.people || []).map((p) => ({ p, st: personStats(p)
 // A question this person hasn't been asked about yet: a topic they haven't covered, else the next one in line.
 function questionFor(p, st) {
   const asked = new Set(clips.map((c) => c.q)), topics = topicsOn();
-  const open = QUESTIONS.filter((q) => topics.includes(q.c) && !asked.has(q.q) && !S.asked.includes(q.q) && !st.covered.has(q.c)).sort((a, b) => a.d - b.d);
-  return open[0] || nextQuestion();
+  const open = questionsFor(p.rel).filter((q) => topics.includes(q.c) && !asked.has(q.q) && !S.asked.includes(q.q) && !st.covered.has(q.c)).sort((a, b) => a.d - b.d || !!b.for - !!a.for); // at the same depth, questions written for this relationship come first
+  return open[0] || nextQuestion(p.n);
 }
 function ring(done, total, size = 34) {
   const r = 14, c = 2 * Math.PI * r, f = total ? Math.min(1, done / total) : 0;
@@ -58,8 +58,8 @@ function renderSitHome(box, msg) {
     const has = (S.people || []).length > 0, sat = S.sittings.length > 0;
     const steps = [["Add someone you want to hear from", "A parent, a grandparent, an aunt. Anyone whose stories you want to keep.", has], ["Ask them one question", "We pick a good one and give you follow-ups. You ask, they talk. Nobody has to prepare.", sat], ["Keep it", "The recording stays on your phone. Play it back, share it, or turn it into a page later.", false]];
     const cur = steps.findIndex((x) => !x[2]);
-    const first = $(`<section class="first"><h2>Your first story, in three steps</h2><ol>${steps.map(([t, d, done], i) => `<li class="${done ? "done" : i === cur ? "now" : ""}"><span class="num" aria-hidden="true">${done ? "✓" : i + 1}</span><div><b>${t}</b><p>${d}</p>${i === 0 && !has ? `<div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Their name, e.g. Mum" aria-label="Their name"><button class="btn" type="button">Add</button></div>` : ""}</div></li>`).join("")}</ol></section>`);
-    const fin = first.querySelector(".padd input"), fadd = () => { const v = fin.value.trim(); if (!v) return; S.people ||= []; S.people.push({ n: v, born: "" }); save(); renderSitHome(box, msg); };
+    const first = $(`<section class="first"><h2>Your first story, in three steps</h2><ol>${steps.map(([t, d, done], i) => `<li class="${done ? "done" : i === cur ? "now" : ""}"><span class="num" aria-hidden="true">${done ? "✓" : i + 1}</span><div><b>${t}</b><p>${d}</p>${i === 0 && !has ? `<div class="padd"><input class="inp sm" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Their name, e.g. Mum" aria-label="Their name"></div><div class="padd">${relSel("")}<button class="btn" type="button">Add</button></div>` : ""}</div></li>`).join("")}</ol></section>`);
+    const fin = first.querySelector(".padd input"), fadd = () => { const v = fin.value.trim(); if (!v) return; S.people ||= []; S.people.push({ n: v, born: "", ...(first.querySelector(".rel").value ? { rel: first.querySelector(".rel").value } : {}) }); save(); renderSitHome(box, msg); };
     if (fin) { first.querySelector(".padd .btn").onclick = fadd; fin.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); fadd(); } }; }
     box.append(first);
   }
@@ -121,7 +121,8 @@ function renderPerson(box, name, msg) {
   const cov = $(`<section><h2 class="sec">Topics <span class="cnt">${s.covered.size} of ${topics.length}</span></h2><div class="covs"></div></section>`);
   topics.forEach((id) => { const ch = CHAPTERS.find((c) => c.id === id); if (ch) cov.querySelector(".covs").append($(`<span class="cov ${s.covered.has(id) ? "on" : ""}">${esc(ch.label)}</span>`)); });
   box.append(cov);
-  const det = $(`<section><label class="field"><span class="lbl">Year born <small>(optional)</small></span><input class="inp sm" type="text" inputmode="numeric" maxlength="4" value="${esc(p.born || "")}"></label></section>`);
+  const det = $(`<section><div class="field"><span class="lbl">Who they are to you</span>${relSel(p.rel)}</div><label class="field"><span class="lbl">Year born <small>(optional)</small></span><input class="inp sm" type="text" inputmode="numeric" maxlength="4" value="${esc(p.born || "")}"></label></section>`);
+  det.querySelector(".rel").onchange = (e) => { if (e.target.value) p.rel = e.target.value; else delete p.rel; save(); renderSit(box); };
   det.querySelector("input").oninput = (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); p.born = e.target.value; save(); };
   box.append(det);
   const avs = $(`<section><h2 class="sec">Avatar</h2></section>`); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); }); box.append(avs);

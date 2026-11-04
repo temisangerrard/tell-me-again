@@ -7,7 +7,7 @@ const OLD_COLORS = { "#ff5b2e": "#e26b3f", "#ffc62e": "#f0b232", "#b6f23a": "#6d
 const lum = (hex) => { const c = [1, 3, 5].map((i) => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
 const contrast = (a, b) => (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
 const onAccent = (hex) => contrast(lum(hex), lum("#2b1a12")) >= contrast(lum(hex), 1) ? "#2b1a12" : "#ffffff"; // whichever of dark or white reads better on this accent
-const blank = { step: 0, me: { name: "" }, people: [], consent: { transcribe: false }, autoTx: false, lang: "", hints: "", name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
+const blank = { step: 0, me: { name: "" }, people: [], consent: { transcribe: false }, autoTx: false, lang: "", hints: "", name: "", saying: "", color: "#e26b3f", town: "", heritage: [], makes: [], chapters: ["names", "home", "food", "us", "parent", "things"], elder: { name: "", born: "" }, seats: [], asked: [], told: 0, wins: [], sittings: [], whotRules: { stack: false, pickSkips: true, marketAgain: true, noPowerFinish: false, whotBlock: false, passSuspend: false, lastCard: false, hand: 0 } };
 const fresh = () => structuredClone(blank);
 // Dev only (localhost): ?data=worst|empty|one|demo swaps in a fixture (never saved). &step=N picks the screen.
 const QS = new URLSearchParams(location.search);
@@ -27,6 +27,7 @@ try {
   const saved = DEV.has("data") ? (FIXTURES[DEV.get("data")] || FIXTURES.demo) : JSON.parse(localStorage.getItem(KEY) || "{}");
   S = Object.assign(fresh(), saved); S.elder = { ...blank.elder, ...saved.elder }; S.me = { ...blank.me, ...saved.me }; S.consent = { ...blank.consent, ...saved.consent }; if (!Array.isArray(saved.people)) S.people = [saved.elder && saved.elder.name ? { n: saved.elder.name, born: saved.elder.born || "" } : null, ...((saved.seats || []).slice(2).map((n) => ({ n, born: "" })))].filter(Boolean); S.whotRules = { ...blank.whotRules, ...saved.whotRules };
   S.color = OLD_COLORS[S.color] || S.color;
+  if (!S.chapNew) { S.chapNew = 1; if (S.chapters && S.chapters.length) for (const id of ["us", "parent", "things"]) if (!S.chapters.includes(id)) S.chapters.push(id); } // topics added later reach families made earlier, once
   if (DEV.has("step")) S.step = +DEV.get("step");
   if (!(S.step >= 0 && S.step <= 7)) S.step = 0;
 } catch { S = fresh(); }

@@ -19,7 +19,10 @@ window.CHAPTERS = [
   { id: "faith",   label: "Faith & celebrations", blurb: "What was marked, what was believed" },
   { id: "nation",  label: "Big events",          blurb: "Where you were when history happened" },
   { id: "journey", label: "Leaving & arriving",  blurb: "Moving to a new town, a new country" },
-  { id: "wisdom",  label: "Advice & sayings",    blurb: "What you'd pass on" }
+  { id: "wisdom",  label: "Advice & sayings",    blurb: "What you'd pass on" },
+  { id: "us",      label: "Between us",          blurb: "Siblings, partners, friends: what we were like together" },
+  { id: "parent",  label: "Being a parent",      blurb: "Raising us, and what it taught you" },
+  { id: "things",  label: "Things we kept",      blurb: "Photographs, objects, cloth and handwriting, and why they stayed" }
 ];
 
 window.QUESTIONS = [
@@ -224,7 +227,132 @@ window.QUESTIONS = [
     tip: "This is often the one families replay. Let them finish, and thank them." },
   { c: "wisdom", d: 4, q: "What do you hope we never forget?",
     f: ["Who should we pass it to?", "How do you want us to remember it?"],
-    tip: "End here when you can. Say thank you, and mean it." }
+    tip: "End here when you can. Say thank you, and mean it." },
+  // ---- Between us (siblings, partners, friends: the people who were there with you)
+  { id: "us-room", c: "us", d: 1, for: ["sibling"], page: "story", q: "What do you remember about sharing a room or a house with me?",
+    f: ["Who was messier?", "What did we fight about?", "What did we do after the lights went off?"],
+    tip: "Siblings remember the same year differently. Let them be wrong, and laugh at it." },
+  { id: "us-first", c: "us", d: 1, for: ["sibling", "friend", "partner"], page: "story", photo: "Any photo of the two of you when you were younger", q: "What's the earliest thing you remember us doing together?",
+    f: ["Where were we?", "How old were we?", "Who else was there?"],
+    tip: "Put a photo of the two of you in front of them if you have one." },
+  { id: "us-funny", c: "us", d: 1, for: ["sibling", "friend", "partner", "relative"], page: "story", q: "What is the funniest thing that ever happened to the two of us?",
+    f: ["Who laughed first?", "Do we tell it the same way?", "Who still brings it up?"],
+    tip: "Let both versions come out. The disagreement is part of the story." },
+  { id: "us-tease", c: "us", d: 1, for: ["sibling", "child", "friend"], page: "saying", q: "What is something I did when I was small that you still tease me about?",
+    f: ["How old was I?", "How did everyone react?", "Should I be embarrassed?"],
+    tip: "Keep it light. This one is a gift." },
+  { id: "us-secret", c: "us", d: 2, for: ["sibling", "friend"], page: "story", q: "Did we have a secret, a code or a game that only the two of us understood?",
+    f: ["How did it start?", "Do you still remember how it went?", "Who else found out?"],
+    tip: "Ask them to show you if they can." },
+  { id: "us-stood", c: "us", d: 2, for: ["sibling", "friend", "partner"], page: "story", q: "Was there a time you stood up for me, or I stood up for you?",
+    f: ["What happened?", "What did it cost?", "Did we ever talk about it afterwards?"],
+    tip: "Take your time with this one. People remember being protected." },
+  { id: "us-position", c: "us", d: 2, for: ["sibling"], page: "story", q: "What was it like to be the oldest, the youngest or the one in the middle in our house?",
+    f: ["What did you get that the rest of us didn't?", "What was expected of you?", "Would you swap?"],
+    tip: "Ask each sibling the same question. The answers sit well side by side in a book." },
+  { id: "us-impression", c: "us", d: 2, for: ["partner", "friend"], page: "story", q: "What was your first impression of me?",
+    f: ["What were you wearing, and what was I?", "When did that impression change?", "Who did you tell?"],
+    tip: "You'll hear it differently to how you remember it. That is the point." },
+  { id: "us-knew", c: "us", d: 2, for: ["partner"], page: "story", q: "When did you know?",
+    f: ["Where were we?", "What was said, or not said?", "Who did you tell first?"],
+    tip: "Let the pause run. This is a love story, and it is worth the wait." },
+  { id: "us-small", c: "us", d: 2, for: ["partner", "sibling", "child", "parent"], page: "saying", q: "What is a small thing I do that you would miss?",
+    f: ["When did you first notice it?", "Does it annoy you too?", "Would you want it to change?"],
+    tip: "The small things are the ones people forget to say." },
+  { id: "us-ask", c: "us", d: 2, for: ["parent", "grandparent", "sibling", "partner", "relative", "friend"], page: "story", q: "Is there something you've always wanted to ask me and never have?",
+    f: ["What stopped you?", "Do you want to ask it now?", "What do you think I'd say?"],
+    tip: "Go second. Answer it yourself after they have asked." },
+  { id: "us-surprise", c: "us", d: 2, for: ["parent", "grandparent", "sibling", "partner", "relative", "friend"], page: "story", q: "What do you think would surprise me about you?",
+    f: ["Where did that come from?", "Who knows it besides you?", "Do you want me to know it?"],
+    tip: "Receive it. You don't have to match it." },
+  { id: "us-parents", c: "us", d: 3, for: ["sibling"], page: "story", q: "Which of our parents' habits do you see in yourself, and which in me?",
+    f: ["Which one do you try to hide?", "Which one are you glad of?", "Who spotted it first?"],
+    tip: "Siblings see each other's inheritance more clearly than anyone." },
+  { id: "us-hard", c: "us", d: 3, for: ["partner", "sibling"], page: "story", sensitive: true, q: "What was our hardest year, and what got us through it?",
+    f: ["What did you need that you didn't ask for?", "What did I do that helped?", "What would you do differently?"],
+    tip: "Check they are comfortable first. They can skip it. Thank them for the honest answer.", },
+  { id: "us-more", c: "us", d: 3, for: ["sibling", "partner", "friend", "parent", "child"], page: "story", q: "What do you wish we did more of together?",
+    f: ["When did we last do it?", "What's in the way?", "Could we do it this month?"],
+    tip: "Write down what they say and then do one of them." },
+  { id: "us-unsaid", c: "us", d: 4, for: ["sibling", "partner", "parent", "child", "friend"], page: "saying", sensitive: true, q: "Is there something about me you have never told me?",
+    f: ["Why now?", "Is it easier to say out loud than I thought?", "Is there something you'd like me to say back?"],
+    tip: "End a sitting here when you can. Say thank you, and mean it." },
+
+  // ---- Being a parent (asked of parents and grandparents, or of anyone about raising children)
+  { id: "par-news", c: "parent", d: 1, for: ["parent", "grandparent"], page: "story", photo: "A photo from the first year of a child's life", q: "Do you remember the day you found out you would be a parent? Who did you tell first?",
+    f: ["Where were you?", "What did you think?", "What did your own parents say?"],
+    tip: "Name the child if they're in the room. It changes how it lands." },
+  { id: "par-day", c: "parent", d: 1, for: ["parent", "grandparent"], page: "timeline", q: "What was an ordinary weekday like when we were small?",
+    f: ["What time did the day start?", "Who did what?", "What was the best part of the day?"],
+    tip: "Ordinary days are what people forget first, and miss most." },
+  { id: "par-name", c: "parent", d: 1, for: ["parent", "grandparent"], page: "story", q: "How did you choose my name?",
+    f: ["Were there other names on the list?", "Did anyone disagree?", "Has it suited me?"],
+    tip: "Ask this when the person whose name it is can hear the answer." },
+  { id: "par-worry", c: "parent", d: 2, for: ["parent", "grandparent"], page: "story", q: "What did you worry about most when we were small?",
+    f: ["Did you tell anyone?", "Did the worry turn out to be right?", "What do you worry about now?"],
+    tip: "Children rarely know what their parents carried. Let them listen." },
+  { id: "par-live", c: "parent", d: 2, for: ["parent", "grandparent"], page: "story", q: "Is there a moment with us that you would live again?",
+    f: ["Where were we?", "How old was everybody?", "What made it that good?"],
+    tip: "Ask for the smallest detail they can give you." },
+  { id: "par-grand", c: "parent", d: 2, for: ["grandparent"], page: "story", q: "What is different about being a grandparent?",
+    f: ["What do you do now that you couldn't then?", "Who in the family do the grandchildren remind you of?", "What do you want them to remember?"],
+    tip: "Let the grandchildren ask this one themselves if they're old enough." },
+  { id: "par-promise", c: "parent", d: 3, for: ["parent", "grandparent"], page: "story", sensitive: true, q: "What did you promise yourself you would do differently from your own parents?",
+    f: ["Did you manage it?", "What did you keep the same?", "What did you understand about them later?"],
+    tip: "Check they are comfortable first. They can skip it." },
+  { id: "par-wrong", c: "parent", d: 3, for: ["parent", "grandparent"], page: "story", q: "What were you sure was right then, and aren't now?",
+    f: ["What changed your mind?", "Did you ever say sorry for it?", "Would you tell a new parent?"],
+    tip: "Say thank you for honesty. It's hard to give." },
+  { id: "par-proud", c: "parent", d: 3, for: ["parent", "grandparent"], page: "saying", q: "Is there something I did as a child that made you proud and you never said?",
+    f: ["How old was I?", "Why didn't you say it?", "Would you say it now?"],
+    tip: "Be quiet and take it in. This is one of the best answers a family can give." },
+  { id: "par-gave", c: "parent", d: 3, for: ["parent", "grandparent"], page: "story", sensitive: true, q: "What did you give up for the family that we may never have known about?",
+    f: ["Did you miss it?", "Would you do it again?", "Who knew?"],
+    tip: "Check they are comfortable first. Thank them for telling it." },
+  { id: "par-want", c: "parent", d: 4, for: ["parent", "grandparent"], page: "saying", q: "What did you want for us, and how close did it get?",
+    f: ["What surprised you?", "What do you want for the next generation?", "What would you say to us now?"],
+    tip: "End here when you can." },
+
+  // ---- Things we kept (objects, clothes, photographs and why they stayed)
+  { id: "thg-old", c: "things", d: 1, for: ["grandparent", "parent", "relative"], page: "object", photo: "The object, on a table, in good light", q: "Is there an object in the house that is older than you? Where did it come from?",
+    f: ["Who owned it before?", "What was it used for?", "Who should have it next?"],
+    tip: "Ask to hold it, and ask them to hold it too. They'll say more." },
+  { id: "thg-photo", c: "things", d: 1, for: ["grandparent", "parent", "relative", "sibling"], page: "story", photo: "The oldest photograph you have", q: "What is the oldest photograph you have? Who is in it?",
+    f: ["Who took it?", "What was the occasion?", "Does anyone know who all of them are?"],
+    tip: "Photograph the photograph, front and back. Names are often written on the back." },
+  { id: "thg-frame", c: "things", d: 1, for: ["grandparent", "parent", "relative", "sibling", "partner"], page: "story", photo: "A photo you love", q: "Pick a photograph. What was happening just outside the frame?",
+    f: ["Who took it?", "What happened right after?", "What was the mood that day?"],
+    tip: "This one works with any photo. Let them choose." },
+  { id: "thg-wall", c: "things", d: 1, for: ["grandparent", "parent", "relative"], page: "story", photo: "A wall of the house with pictures on it", q: "What is on the walls at home, and why those?",
+    f: ["Which one was hung first?", "Is there an empty space that used to hold something?", "Who chose them?"],
+    tip: "Walk the room with them if you can." },
+  { id: "thg-kept", c: "things", d: 2, for: ["grandparent", "parent", "relative", "sibling", "partner"], page: "object", photo: "The thing they've kept", q: "What is something you have kept for years that no one else would understand?",
+    f: ["Where did you get it?", "Why couldn't you throw it away?", "Who should know about it?"],
+    tip: "Don't say what you think it is. Ask them to explain." },
+  { id: "thg-cloth", c: "things", d: 2, for: ["grandparent", "parent", "relative", "sibling"], page: "object", photo: "The cloth, outfit or jewellery", q: "Is there a piece of cloth, clothing or jewellery with a story? Who wore it first?",
+    f: ["What occasion was it for?", "Who has worn it since?", "Who will wear it next?"],
+    tip: "A photo of someone wearing it is the best companion to this one." },
+  { id: "thg-hands", c: "things", d: 2, for: ["grandparent", "parent", "relative"], page: "portrait", q: "What did your parents make with their hands?",
+    f: ["Did they teach you?", "Is any of it still around?", "What did their hands look like?"],
+    tip: "Hands are a good way into a person." },
+  { id: "thg-letter", c: "things", d: 2, for: ["grandparent", "parent", "relative", "sibling"], page: "object", photo: "A letter, note or recipe in someone's handwriting", q: "Do you keep a letter, a note or a recipe in someone's handwriting? Whose is it?",
+    f: ["When was it written?", "What does it say?", "Who else has a copy?"],
+    tip: "Handwriting disappears. Photograph it before you do anything else." },
+  { id: "thg-stranger", c: "things", d: 2, for: ["grandparent", "parent", "relative"], page: "tree", photo: "A photo with someone nobody can name", q: "Is there someone in an old photograph that nobody can name any more? What do you know?",
+    f: ["Where was it taken?", "Who might know?", "Who do they look like?"],
+    tip: "Every guess is worth writing down. Someone else may fill the gap." },
+  { id: "thg-party", c: "things", d: 2, for: ["grandparent", "parent", "relative", "sibling"], page: "story", photo: "A photo from a wedding, a naming or a big party", q: "What is the story behind the biggest family party photograph you have?",
+    f: ["Who is missing from it?", "Who is in it that you'd not expect?", "What was said that day?"],
+    tip: "Ask them to point at everyone, and write the names down." },
+  { id: "thg-gift", c: "things", d: 2, for: ["grandparent", "parent", "relative", "sibling", "partner", "friend"], page: "story", q: "What is a gift you were given that you still think about?",
+    f: ["Who gave it?", "Where is it now?", "What was the best gift you ever gave?"],
+    tip: "It might not be an object. Let them decide." },
+  { id: "thg-pocket", c: "things", d: 1, for: ["grandparent", "parent", "relative", "sibling", "friend"], page: "story", q: "What was in your pockets or your bag every day when you were fifteen?",
+    f: ["Where did you get it?", "Did you ever lose it?", "What would be in it now?"],
+    tip: "A small question that opens a whole decade." },
+  { id: "thg-save", c: "things", d: 3, for: ["grandparent", "parent", "relative", "sibling", "partner"], page: "object", q: "If you could only save one thing from the house, what would it be?",
+    f: ["Why that one?", "Who would you give it to?", "What would you leave behind?"],
+    tip: "Listen for the reason more than the object." }
 ];
 
 // Generic follow-ups, used only when a question has none of its own.
@@ -264,3 +392,18 @@ window.ERAS = [
   { y: 1999, t: "Return to civilian rule in Nigeria" },
   { y: 2010, t: "The first World Cup on African soil" }
 ];
+
+// ---- Structure (see docs/plans/question-bank-and-book.md)
+// Every question carries:  id (stable, never reuse)   c (chapter)   d (depth 1 warm-up to 4 legacy)   q   f (follow-ups)   tip (for the asker)
+// and optionally:  for (who is answering, in relation to the asker: any of RELATIONS; omit for anyone)   photo (the picture to have to hand; in the
+// paid book a place to attach it)   page (the book page this answer becomes: story, recipe, timeline, tree, saying, portrait, object)   sensitive.
+window.RELATIONS = [
+  ["grandparent", "Grandparent"], ["parent", "Parent"], ["sibling", "Sibling"], ["partner", "Partner"], ["child", "Child"], ["relative", "Aunt, uncle or cousin"], ["friend", "Friend"], ["other", "Someone else"]
+];
+window.CHAPTER_PAGE = { names: "story", home: "story", food: "recipe", fun: "story", work: "story", love: "story", faith: "story", nation: "timeline", journey: "timeline", wisdom: "saying", us: "story", parent: "story", things: "object" };
+(() => { // ids for the older questions, derived once from the chapter and wording; give a question an explicit id before editing its text
+  const h = (t) => { let x = 5381; for (const ch of t) x = ((x << 5) + x + ch.charCodeAt(0)) >>> 0; return x.toString(36); };
+  QUESTIONS.forEach((q) => { q.id ||= q.c + "-" + h(q.q); q.page ||= CHAPTER_PAGE[q.c] || "story"; });
+})();
+// The questions that suit this person: anyone-questions plus those written for their relationship to you.
+window.questionsFor = (rel) => QUESTIONS.filter((q) => !q.for || !rel || rel === "other" || q.for.includes(rel));
