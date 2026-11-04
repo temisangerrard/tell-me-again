@@ -9,7 +9,7 @@ const FAQ = `<div class="faq">
     </div>`;
 function welcome() {
   const el = $(`<section class="welcome">
-    <header class="wtop"><div class="mark">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
+    <header class="wtop"><div class="mark"><img src="art/icons/mark.svg" alt="" width="34" height="34">Tell me again</div><div class="acts"><button class="themebtn" type="button" id="th"><i></i>Theme</button><button class="signin" type="button" id="si">Sign in</button></div></header>
     <div class="landing-hero">
       <div class="hero2">
         <h1>Keep the stories only <mark>your family</mark> can tell.</h1>

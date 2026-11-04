@@ -4,7 +4,8 @@
 .app.landing { --shell:1200px; }
 .welcome { flex:1; padding:20px 24px 40px; }
 .wtop { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; }
-.mark { font:800 1.15rem var(--display); letter-spacing:-.04em; }
+.mark { font:800 1.15rem var(--display); letter-spacing:-.04em; display:inline-flex; align-items:center; gap:10px; }
+.mark img { display:block; flex:none; }
 .wtop .acts { display:flex; align-items:center; gap:8px; }
 .themebtn { min-height:44px; padding:8px 12px; border-radius:999px; border:0; background:var(--soft); color:var(--text); font:500 .85rem var(--sans); cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
 .themebtn i { width:16px; height:16px; border-radius:50%; background:conic-gradient(var(--bg) 0 50%,var(--text) 0); box-shadow:0 0 0 1.5px var(--text); }

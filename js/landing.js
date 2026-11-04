@@ -40,6 +40,13 @@ function landingBody(faqHTML) {
       </div>
     </section>
 
+    <section class="blk ink bookblk" aria-labelledby="h-book">
+      <div class="in col"><div class="copy wide" data-reveal><span class="kick">What you get</span><h2 id="h-book">A book made of their own words.</h2>
+        <p>This is a made-up family, to show you. Every page is built from things you record: the voices, the questions, the recipes and the sayings. Turn the pages.</p></div>
+        <div class="book" id="sample-book" data-reveal></div>
+        <div class="bookfacts" data-reveal><div><b>Their words</b><span>Quotes come straight from the recording, checked and fixed by you.</span></div><div><b>Their voices</b><span>Every story keeps its recording, so you can hear it again.</span></div><div><b>Your pick</b><span>Choose which stories go in. Print it or save it as a PDF.</span></div></div></div>
+    </section>
+
     <section class="blk violet make" aria-labelledby="h-make">
       <div class="in col"><div class="copy wide" data-reveal><span class="kick">03 Make</span><h2 id="h-make">Turn the answers into something to keep.</h2>
         <p>Everything they say becomes material. Pick the stories you want and make a magazine to print or save as a PDF. Storybooks and short films are previews for now.</p></div>
@@ -100,9 +107,10 @@ function wireLanding(root) {
     if (!root.isConnected) { window.removeEventListener("scroll", sweep); window.removeEventListener("resize", sweep); return; }
     const vh = window.innerHeight || 800;
     root.querySelectorAll("[data-reveal]:not(.shown)").forEach((n) => { if (n.getBoundingClientRect().top < vh * 0.92) n.classList.add("shown"); });
-    root.querySelectorAll(".demo").forEach((n) => { const r = n.getBoundingClientRect(); if (!n.__run || (r.width === 0 && r.height === 0)) return; /* no layout: can't tell, leave it as it is */ n.__run(r.bottom > 0 && r.top < vh); });
+    root.querySelectorAll(".demo, #sample-book").forEach((n) => { const r = n.getBoundingClientRect(); if (!n.__run || (r.width === 0 && r.height === 0)) return; /* no layout: can't tell, leave it as it is */ n.__run(r.bottom > 0 && r.top < vh); });
   };
   setTimeout(() => { if (!reported && root.isConnected) { window.addEventListener("scroll", sweep, { passive: true }); window.addEventListener("resize", sweep); sweep(); } }, 1200);
+  const book = root.querySelector("#sample-book"); if (book) { wireBook(root); if (lp) lp.observe(book); else if (book.__run) book.__run(true); }
   loop(root.querySelector("#demo-ludo"), ludoDemo);
   loop(root.querySelector("#demo-ayo"), ayoDemo);
   loop(root.querySelector("#demo-whot"), whotDemo);

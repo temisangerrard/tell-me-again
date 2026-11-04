@@ -1,0 +1,90 @@
+/* The sample book on the landing page. Pages scale with their own width (container units), so the type stays in proportion at any size. */
+.bookblk { --serif: "Fraunces", Georgia, "Times New Roman", serif; --hand: "Caveat", "Bradley Hand", cursive; }
+.book { width: 100%; max-width: 1000px; margin: 8px auto 0; }
+.bkstage { perspective: 2200px; display: grid; place-items: center; padding: 8px 0 14px; }
+.leaves { display: flex; width: min(100%, 410px); filter: drop-shadow(0 28px 34px rgba(0, 0, 0, .45)); }
+.leaves.n2 { width: min(100%, 860px); } .leaves.closed { width: min(100%, 410px); }
+.pgw { container-type: inline-size; position: relative; flex: 1 1 0; min-width: 0; aspect-ratio: 3 / 4; perspective: 2200px; }
+.leaves .pg { display: block; width: 100%; height: 100%; --serif: "Fraunces", Georgia, "Times New Roman", serif; --hand: "Caveat", "Bradley Hand", cursive; position: absolute; inset: 0; background: #fbf8f1; color: #1d1d1f; padding: 8cqw; overflow: hidden; font: 400 3.8cqw/1.5 var(--serif); }
+.leaves .pg.l { border-radius: 8px 0 0 8px; box-shadow: inset -9cqw 0 9cqw -9cqw rgba(60, 40, 20, .32); transform-origin: right center; }
+.leaves .pg.r { border-radius: 0 8px 8px 0; box-shadow: inset 9cqw 0 9cqw -9cqw rgba(60, 40, 20, .32); transform-origin: left center; }
+.leaves.n1 .pg { border-radius: 8px; }
+.leaves .pg .folio { position: absolute; bottom: 4.4cqw; font: 700 3.2cqw var(--num); letter-spacing: .1em; opacity: .55; } .leaves .pg .folio.l { left: 8cqw; } .leaves .pg .folio.r { right: 8cqw; }
+.leaves .eyebrow { display: block; font: 700 2.9cqw var(--sans); letter-spacing: .16em; text-transform: uppercase; opacity: .75; margin-bottom: 3cqw; }
+.leaves .pg h4 { font: 800 10.5cqw/.94 var(--num); text-transform: uppercase; letter-spacing: -.005em; margin: 0 0 4cqw; }
+.leaves .pg p { margin: 0; }
+.leaves .pg .script, .leaves .pg .jot { font: 600 6.2cqw/1.15 var(--hand); }
+.leaves .pt { display: block; flex: none; position: relative; width: var(--s, 22cqw); height: var(--s, 22cqw); border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 .9cqw #fbf8f1, 0 0 0 1.5cqw rgba(0, 0, 0, .12); }
+.leaves .pt img { position: absolute; max-width: none; }
+.leaves .listen { display: flex; align-items: center; gap: 2.4cqw; background: #1d1d1f; color: #fbf8f1; border-radius: 99px; padding: 2.2cqw 3.4cqw; font: 600 3.2cqw var(--sans); }
+.leaves .listen .play { width: 6cqw; height: 6cqw; border-radius: 50%; background: #f0b232; color: #1d1d1f; display: grid; place-items: center; font-size: 2.4cqw; flex: none; }
+.leaves .listen .wv { flex: 1; height: 5cqw; min-width: 0; } .leaves .listen .wv rect { fill: #f0b232; transform-box: fill-box; transform-origin: center; animation: bar 1.2s ease-in-out infinite; animation-delay: calc(var(--i) * -70ms); }
+.leaves .listen em { font-style: normal; opacity: .75; } .leaves .listen.small { align-self: flex-start; padding: 1.6cqw 3cqw; }
+
+/* cover and back */
+.leaves .pg.cv, .leaves .pg.bc { background: #f0b232; color: #1d1d1f; display: flex; flex-direction: column; justify-content: space-between; padding: 9cqw 9cqw 8cqw 13cqw; border-radius: 6px 12px 12px 6px; box-shadow: inset 3cqw 0 5cqw -3cqw rgba(0, 0, 0, .22); }
+.leaves .cv .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4.4cqw; display: flex; flex-direction: column; } .leaves .cv .stripe b { flex: 1; }
+.leaves .cv small { font: 700 2.9cqw var(--sans); letter-spacing: .18em; text-transform: uppercase; opacity: .7; }
+.leaves .cv h3 { font: 800 15.5cqw/.9 var(--num); text-transform: uppercase; margin: 6cqw 0 3cqw; }
+.leaves .cv p { font: italic 400 4.4cqw/1.3 var(--serif); opacity: .85; }
+.leaves .cv .seal { width: 26cqw; height: auto; margin-top: auto; } .leaves .cv em { font: 600 3cqw var(--sans); font-style: normal; opacity: .65; margin-top: 3cqw; }
+.leaves .pg.bc { align-items: center; justify-content: center; text-align: center; gap: 6cqw; padding: 10cqw; border-radius: 12px 6px 6px 12px; }
+.leaves .pg.bc { background: #e26b3f; } .leaves .bc p { font: italic 400 4.6cqw/1.45 var(--serif); } .leaves .bc .cta { background: #1d1d1f; color: #fff7ea; font-size: 3.8cqw; padding: 0 6cqw; min-height: 11cqw; } .leaves .bc small { font: 600 2.8cqw var(--sans); letter-spacing: .14em; text-transform: uppercase; opacity: .55; }
+
+/* dedication, contents */
+.leaves .ded { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 7cqw; }
+.leaves .ded .dd { font: italic 400 5.4cqw/1.35 var(--serif); } .leaves .ded .script { color: #e26b3f; transform: rotate(-2deg); }
+.leaves .toc ol { list-style: none; padding: 0; margin: 4cqw 0 0; } .leaves .toc li { display: grid; grid-template-columns: 5cqw 1fr auto; align-items: center; gap: 3cqw; padding: 3cqw 0; border-top: 1px solid rgba(0, 0, 0, .14); }
+.leaves .toc li i { width: 3.6cqw; height: 3.6cqw; border-radius: 50%; background: var(--c); } .leaves .toc li b { font: 600 4.4cqw var(--serif); } .leaves .toc li span { font: 700 3.6cqw var(--num); opacity: .6; }
+.leaves .toc .stats { display: flex; gap: 4cqw; margin-top: 7cqw; } .leaves .toc .stats div { flex: 1; background: #f1ebdd; border-radius: 2.6cqw; padding: 3cqw; } .leaves .toc .stats b { display: block; font: 800 9cqw/1 var(--num); } .leaves .toc .stats span { font: 600 2.8cqw var(--sans); opacity: .7; }
+
+/* chapter openers */
+.leaves .opener { background: var(--c); color: var(--t); display: flex; flex-direction: column; justify-content: flex-end; }
+.leaves .opener .numeral { position: absolute; right: -3cqw; top: -4cqw; font: 800 62cqw/.8 var(--num); opacity: .16; letter-spacing: -.04em; }
+.leaves .opener .tt { position: relative; } .leaves .opener h4 { font-size: 17cqw; margin-bottom: 5cqw; } .leaves .opener .qq { font: italic 400 5.2cqw/1.3 var(--serif); max-width: 22ch; color: var(--t); opacity: 1; }
+.leaves .opener .route { position: absolute; left: 6cqw; right: 6cqw; top: 14cqw; width: auto; }
+.leaves .opener .route path { stroke-dashoffset: 120; animation: draw 3.4s ease-out forwards; } @keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* a story */
+.leaves .story { display: flex; flex-direction: column; gap: 4cqw; }
+.leaves .story .byline { font: 600 3.6cqw var(--sans); margin-top: -2cqw; } .leaves .story blockquote { margin: 0; font: italic 400 7.2cqw/1.16 var(--serif); letter-spacing: -.01em; }
+.leaves .story .qa { margin-top: auto; padding-top: 3cqw; border-top: 1px solid rgba(0, 0, 0, .14); font-size: 3.4cqw; } .leaves .story .qa p + p { margin-top: 1.6cqw; } .leaves .qa i { font: 700 2.6cqw var(--sans); font-style: normal; letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-right: 1.6cqw; }
+.leaves .kit h4 { font-size: 11cqw; } .leaves .kit p { font-size: 3.9cqw; }
+.leaves .polas { display: flex; justify-content: center; gap: 4cqw; margin-top: 7cqw; }
+.leaves .polas figure { margin: 0; background: #fff; padding: 3cqw 3cqw 2cqw; box-shadow: 0 1.4cqw 3cqw rgba(0, 0, 0, .22); transform: rotate(var(--r)); display: grid; gap: 1.6cqw; justify-items: center; } .leaves .polas figcaption { font: 600 5cqw/1 var(--hand); }
+.leaves .polas .pt { border-radius: 1cqw; box-shadow: none; --s: 30cqw !important; }
+.leaves .recipe { background: #f6f0e2; display: flex; flex-direction: column; gap: 3cqw; } .leaves .recipe h4 { font-size: 8.2cqw; margin-bottom: 1cqw; }
+.leaves .recipe li b { font-size: 4.1cqw; }
+.leaves .recipe ul { list-style: none; padding: 0; margin: 0; } .leaves .recipe li { padding: 1.4cqw 0; border-bottom: 1px dashed rgba(0, 0, 0, .25); font-size: 3.3cqw; } .leaves .recipe u { text-decoration: none; background: linear-gradient(transparent 62%, #f0b23288 62%); }
+.leaves .recipe .jot { color: #e26b3f; transform: rotate(-1.5deg); margin-top: 0; font-size: 5.2cqw; }
+
+/* timeline, tree, sayings */
+.leaves .tl ol { list-style: none; padding: 0 0 0 9cqw; margin: 4cqw 0 0; position: relative; } .leaves .tl ol::before { content: ""; position: absolute; left: 2.6cqw; top: 2cqw; bottom: 2cqw; border-left: 1.2cqw dotted #2fa8a0; }
+.leaves .tl li { display: grid; grid-template-columns: 19cqw 1fr; gap: 3cqw; padding: 2.6cqw 0; position: relative; } .leaves .tl li b { font: 800 6.2cqw/1 var(--num); } .leaves .tl li h5 { font: 700 4.4cqw var(--serif); margin: 0 0 .6cqw; } .leaves .tl li p { font-size: 3.4cqw; opacity: .85; }
+.leaves .tl li::before { content: ""; position: absolute; left: -9cqw; top: 3.2cqw; width: 5.2cqw; height: 5.2cqw; border-radius: 50%; background: #2fa8a0; box-shadow: 0 0 0 1.2cqw #fbf8f1; } .leaves .tl li.now::before { background: #e26b3f; }
+.leaves .ftree { background: #eaf3e4; } .leaves .ftree h4 { font-size: 9cqw; }
+.leaves .ftree .lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+.leaves .node { position: absolute; display: grid; justify-items: center; gap: .6cqw; text-align: center; transform: translate(-50%, 0); } .leaves .node b { font: 700 3.6cqw var(--serif); } .leaves .node span { font: 600 2.5cqw var(--sans); opacity: .65; }
+.leaves .node.a { left: 50%; top: 20%; } .leaves .node.b { left: 24%; top: 50%; } .leaves .node.c { left: 76%; top: 50%; } .leaves .node.d { left: 76%; top: 74%; } .leaves .node.e { left: 50%; top: 74%; }
+.leaves .say { background: var(--c); color: #fff; } .leaves .say h4 { font-size: 8.4cqw; max-width: 12ch; }
+.leaves .notes { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; margin-top: 5cqw; }
+.leaves .notes p { background: var(--b); color: #1d1d1f; padding: 4cqw; font: italic 400 4.4cqw/1.2 var(--serif); transform: rotate(var(--r)); box-shadow: 0 1.2cqw 2.4cqw rgba(0, 0, 0, .25); min-height: 26cqw; display: flex; flex-direction: column; justify-content: space-between; } .leaves .notes p b { font: 700 2.8cqw var(--sans); font-style: normal; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+
+/* turning */
+.leaves .pg.turn-n { animation: turnN .75s cubic-bezier(.3, .7, .2, 1) both; } .leaves .pg.turn-p { animation: turnP .75s cubic-bezier(.3, .7, .2, 1) both; }
+@keyframes turnN { from { transform: rotateY(-84deg); filter: brightness(.7); } to { transform: none; filter: none; } }
+@keyframes turnP { from { transform: rotateY(84deg); filter: brightness(.7); } to { transform: none; filter: none; } }
+.bkbar { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; }
+.bkbar > button { width: 48px; height: 48px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .14); color: #f4f1ea; font: 400 1.9rem/1 var(--sans); cursor: pointer; } .bkbar > button:disabled { opacity: .3; cursor: default; } .bkbar > button:not(:disabled):hover { background: rgba(255, 255, 255, .26); }
+.bkdots { display: flex; gap: 2px; align-items: center; } .bkdots button { width: 26px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; } .bkdots button::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgba(255, 255, 255, .32); transition: all .2s; } .bkdots button[aria-selected=true]::before { background: #f0b232; width: 22px; border-radius: 6px; }
+.bookfacts { display: grid; gap: 18px; margin-top: 30px; max-width: 900px; margin-inline: auto; } .bookfacts div { border-top: 1px solid rgba(255, 255, 255, .24); padding-top: 14px; display: grid; gap: 4px; } .bookfacts b { font: 800 1.5rem var(--num); text-transform: uppercase; letter-spacing: .02em; } .bookfacts span { opacity: .78; }
+@media (min-width: 860px) { .bookfacts { grid-template-columns: repeat(3, 1fr); gap: 32px; } }
+
+@media (prefers-reduced-motion: reduce) { .leaves .pg.turn-n, .leaves .pg.turn-p, .leaves .listen .wv rect, .leaves .opener .route path { animation: none; } .leaves .opener .route path { stroke-dashoffset: 0; } }
+
+/* small screens: the page dots must never be wider than the screen */
+.bookblk .in > * { min-width: 0; } .bookblk .book, .bookblk .bkstage { min-width: 0; max-width: 100%; }
+@media (max-width: 640px) {
+  .bkbar { gap: 6px; } .bkbar > button { width: 44px; height: 44px; flex: none; }
+  .bkdots { gap: 0; min-width: 0; } .bkdots button { width: 17px; } .bkdots button::before { width: 7px; height: 7px; } .bkdots button[aria-selected=true]::before { width: 16px; }
+}
