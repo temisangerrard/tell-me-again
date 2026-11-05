@@ -3,6 +3,11 @@
 /* ---------- Family: profile, family details, season, recordings, look, data ---------- */
 function renderFamily(box) {
   box.replaceChildren($(`<h1 class="title">Family</h1>`));
+  if (account) { // signing out is one tap from the top, not buried in a section
+    const bar = $(`<div class="acctbar"><span>Signed in as <b>${esc(account.email)}</b></span><button class="btn" type="button">Sign out</button></div>`);
+    bar.querySelector("button").onclick = async (e) => { const b = e.currentTarget; if (await signOut(false)) renderFamily(box); else b.textContent = "Offline, try again"; };
+    box.append(bar);
+  }
   const groups = new Map();
   const groupFor = title => ["You", "The family", "At the table"].includes(title) ? "Family profile" : ["This season", "Recordings"].includes(title) ? "Activity & recordings" : ["Turning recordings into text", "Look"].includes(title) ? "Preferences" : "Your information";
   const sec = (title, fold) => { // fold: true makes the section its own accordion, closed until opened
