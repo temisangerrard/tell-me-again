@@ -26,7 +26,7 @@ async function shareHeard(who, text) { // the person's own share sheet or clipbo
   try { await navigator.clipboard.writeText(msg); return "Copied. Paste it into a message."; } catch { return "Couldn't copy. Select the text and copy it yourself."; }
 }
 function wrapUp(after) {
-  let r = null; const tags = [], who = S.seats[1] || "";
+  let r = null; const tags = [], who = S.elder.name || ""; // the chosen storyteller; "Storyteller" in the seats is only a placeholder
   const tell = who ? tellPrompt(who, S.sittings.length) : "";
   const body = $(`<div><h2>How did that sitting go?</h2>
     <div class="thumbs"><button class="thumb" type="button" data-r="up" aria-pressed="false">Good one</button><button class="thumb" type="button" data-r="down" aria-pressed="false">Tough one</button></div>

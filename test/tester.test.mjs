@@ -47,7 +47,7 @@ test("signing out leaves an open room so its Leave button can't point at a remov
 }));
 
 test("wrap-up: what I heard and the tell-them nudge are kept with the sitting, shown on the person's page, and survive a backup", () => withApp(async (w, d) => {
-  w.eval(`S.step = 7; S.name = "Etim"; S.seats = ["You", "Papa Etim"]; S.people = [{ n: "Papa Etim", born: "1950" }]; S.sittings = [];`);
+  w.eval(`S.step = 7; S.name = "Etim"; S.seats = ["You", "Papa Etim"]; S.elder = { name: "Papa Etim", born: "1950" }; S.people = [{ n: "Papa Etim", born: "1950" }]; S.sittings = [];`);
   let after = 0; w.eval("wrapUp")(() => { after++; });
   const sheetEl = d.querySelector(".sheet, [role=dialog]") || d.body;
   assert.match(sheetEl.textContent, /Tell Papa Etim one thing you learned/, "the first nudge names the person");
@@ -64,7 +64,7 @@ test("wrap-up: what I heard and the tell-them nudge are kept with the sitting, s
 }));
 
 test("a sitting with nobody named still wraps up, and the nudge changes from sitting to sitting", () => withApp((w, d) => {
-  w.eval(`S.seats = []; S.sittings = [];`);
+  w.eval(`S.seats = ["You", "Storyteller"]; S.elder = { name: "", born: "" }; S.sittings = [];`);
   w.eval("wrapUp")(() => {}); assert.equal(d.querySelector("#hd"), null, "no one to hear from");
   assert.notEqual(w.eval("tellPrompt('A', 0)"), w.eval("tellPrompt('A', 1)"));
 }));
