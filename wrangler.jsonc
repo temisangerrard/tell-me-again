@@ -16,5 +16,5 @@
   "send_email": [{ "name": "EMAIL" }],
   "routes": [{ "pattern": "tellagain.app", "custom_domain": true }],
   "vars": { "TURN_KEY_ID": "6f2acc8c095476ae510086fa27d1fef6", "MAIL_DOMAIN": "tellagain.app" },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } }
 }

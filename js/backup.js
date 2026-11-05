@@ -108,15 +108,18 @@ function backupControls(parent, allowDownload = true) {
   const restore = $(`<label class="field"><span class="lbl">Restore backup</span><input type="file" accept=".json,application/json" style="display:block;max-width:100%;margin-top:12px"></label>`);
   const status = $(`<p class="err" role="status"></p>`);
   download.onclick = async () => {
+    const pass = await askSeal(true); if (pass === null) return; // cancelled
     download.disabled = true; status.textContent = "Preparing backup…";
-    try { const text = await createBackup(); downloadFile(new Blob([text], { type: "application/json" }), "tell-me-again-backup.json"); status.textContent = "Backup downloaded."; }
+    try { let text = await createBackup(); if (pass) text = await sealBackup(text, pass); downloadFile(new Blob([text], { type: "application/json" }), pass ? "tell-me-again-backup-protected.json" : "tell-me-again-backup.json"); status.textContent = pass ? "Protected backup downloaded. Keep the passphrase safe: nobody can recover it." : "Backup downloaded. Anyone with the file can read it, so keep it private."; }
     catch (e) { status.textContent = e.message; } finally { download.disabled = false; }
   };
   restore.querySelector("input").onchange = async e => {
     const file = e.target.files[0]; if (!file) return; e.target.value = ""; status.textContent = "";
     try {
       if (file.size > BACKUP_LIMIT) throw new Error("Choose a backup smaller than 128 MB.");
-      const backup = parseBackup(await file.text());
+      let text = await file.text();
+      if (isSealed(text)) { for (;;) { const pass = await askSeal(false); if (pass === null) return; try { text = await openBackup(text, pass); break; } catch (e) { status.textContent = e.message; } } status.textContent = ""; }
+      const backup = parseBackup(text);
       const b = $(`<div><h2>Restore ${esc(backup.family.name || "family")}?</h2><p class="para" style="margin:16px 0">${backup.recordings.length} recordings. Replaces the family details and recordings on this device. Download a backup first if you want to keep them.</p><button class="cta" type="button">Replace and restore</button><p role="status" class="err"></p></div>`);
       const close = sheet("Restore family backup", b); b.append(closeBtn(close));
       b.querySelector(".cta").onclick = async e => {
