@@ -74,3 +74,6 @@ body.lock { overflow:hidden; }
 @keyframes life { 0% { opacity:0; transform:scale(.96); } 14%,78% { opacity:1; transform:none; } 100% { opacity:0; transform:scale(1.02); } }
 
 
+.heard { margin-top:20px; } .heardrow { margin-top:8px; } .heard .txt { width:100%; }
+.tellme { display:flex; gap:12px; align-items:flex-start; margin-top:18px; line-height:1.4; cursor:pointer; } .tellme input { margin-top:4px; width:20px; height:20px; flex:none; accent-color:var(--accent, currentColor); }
+.heardlist { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:12px; } .heardlist li { padding:14px 16px; border-radius:16px; background:var(--surface2); } .heardlist p { margin:0 0 6px; } .heardlist span { color:var(--muted); font-size:.88rem; margin-right:12px; }

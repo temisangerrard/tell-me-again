@@ -40,7 +40,7 @@ function parseBackup(text) {
   if (!f.chapters.every(k => CHAPTERS.some(c => c.id === k)) || !f.makes.every(k => MAKES.some(([id]) => id === k))) return bad();
   if (!Number.isInteger(f.told) || !number(f.told, 10000000) || !Number.isInteger(f.step) || !number(f.step, 7)) return bad();
   if (!Array.isArray(f.wins) || f.wins.length > 1000 || !f.wins.every(w => object(w) && string(w.n, 120) && Number.isInteger(w.c) && number(w.c, 10000000))) return bad();
-  if (!Array.isArray(f.sittings) || f.sittings.length > 10000 || !f.sittings.every(s => object(s) && string(s.d, 40) && Number.isFinite(Date.parse(s.d)) && ["up", "down"].includes(s.r) && strings(s.t, 30, 120))) return bad();
+  if (!Array.isArray(f.sittings) || f.sittings.length > 10000 || !f.sittings.every(s => object(s) && string(s.d, 40) && Number.isFinite(Date.parse(s.d)) && ["up", "down"].includes(s.r) && strings(s.t, 30, 120) && (s.p === undefined || string(s.p, 80)) && (s.heard === undefined || string(s.heard, 400)) && (s.told === undefined || s.told === true))) return bad();
   if (!object(f.whotRules)) return bad();
   for (const key of Object.keys(family.whotRules)) {
     if (key === "hand" ? ![0,4,5,6,7].includes(f.whotRules[key]) : typeof f.whotRules[key] !== "boolean") return bad();
@@ -57,7 +57,7 @@ function parseBackup(text) {
     for (const [id, e] of Object.entries(f.lore.clips).slice(0, 2000)) if (object(e)) family.lore.clips[short(id, 80)] = { who: short(e.who, 40), q: short(e.q, 200), at: Number(e.at) || 0, tl: Number(e.tl) || 0,
       people: (Array.isArray(e.people) ? e.people : []).map((p) => ({ n: short(p && p.n, 40), rel: short(p && p.rel, 30) })).filter((p) => p.n).slice(0, 12), places: list(e.places, 10, 50), years: list(e.years, 8, 4), foods: list(e.foods, 10, 40), sayings: list(e.sayings, 5, 140), themes: list(e.themes, 3, 30) };
   }
-  Object.assign(family, { me: { name: f.me.name, ...(object(f.me.av) ? { av: avClean(f.me.av) } : {}) }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings, told: f.told, step: f.step });
+  Object.assign(family, { me: { name: f.me.name, ...(object(f.me.av) ? { av: avClean(f.me.av) } : {}) }, elder: { name: f.elder.name, born: f.elder.born }, seats: f.seats, heritage: f.heritage, asked: f.asked, chapters: f.chapters, makes: f.makes, wins: f.wins, sittings: f.sittings.map((s) => ({ d: s.d, r: s.r, t: s.t, ...(s.p ? { p: s.p } : {}), ...(s.heard ? { heard: s.heard } : {}), ...(s.told ? { told: true } : {}) })), told: f.told, step: f.step });
   // A restored archive never grants permission to send audio from this device.
   family.consent = { transcribe: false }; family.autoTx = false;
   if (b.theme !== undefined && !THEMES.some(([k]) => k === b.theme)) return bad();

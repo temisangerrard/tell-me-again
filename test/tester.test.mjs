@@ -45,3 +45,26 @@ test("signing out leaves an open room so its Leave button can't point at a remov
   w.eval("currentRoom = { close: () => { window.__closed = (window.__closed || 0) + 1; currentRoom = null; }, el: document.createElement('div') }");
   w.eval("toLanding")(); assert.equal(w.__closed, 1); assert.equal(w.eval("currentRoom"), null);
 }));
+
+test("wrap-up: what I heard and the tell-them nudge are kept with the sitting, shown on the person's page, and survive a backup", () => withApp(async (w, d) => {
+  w.eval(`S.step = 7; S.name = "Etim"; S.seats = ["You", "Papa Etim"]; S.people = [{ n: "Papa Etim", born: "1950" }]; S.sittings = [];`);
+  let after = 0; w.eval("wrapUp")(() => { after++; });
+  const sheetEl = d.querySelector(".sheet, [role=dialog]") || d.body;
+  assert.match(sheetEl.textContent, /Tell Papa Etim one thing you learned/, "the first nudge names the person");
+  const hd = d.querySelector("#hd"), send = d.querySelector("#hs"); assert.ok(send.disabled, "nothing to send yet");
+  hd.value = "He walked to school barefoot."; hd.dispatchEvent(new w.Event("input", { bubbles: true })); assert.ok(!send.disabled);
+  d.querySelector("#tl").checked = true; d.querySelector(".thumb").click(); d.querySelector("#sv").click();
+  const s = w.eval("S.sittings")[0]; assert.equal(s.p, "Papa Etim"); assert.equal(s.heard, "He walked to school barefoot."); assert.equal(s.told, true); assert.equal(after, 1);
+  const box = d.createElement("div"); d.body.append(box); w.eval("renderPerson").call(w, box, "Papa Etim");
+  assert.match(box.textContent, /What you heard/); assert.match(box.textContent, /barefoot/);
+  const text = w.eval(`JSON.stringify({ app: "Tell Me Again", version: 1, exportedAt: "x", family: structuredClone(S), theme: "white", recordings: [] })`);
+  assert.equal(w.eval(`parseBackup(${JSON.stringify(text)})`).family.sittings[0].heard, "He walked to school barefoot.");
+  const bad = JSON.parse(text); bad.family.sittings[0].heard = 7;
+  assert.throws(() => w.eval(`parseBackup(${JSON.stringify(JSON.stringify(bad))})`));
+}));
+
+test("a sitting with nobody named still wraps up, and the nudge changes from sitting to sitting", () => withApp((w, d) => {
+  w.eval(`S.seats = []; S.sittings = [];`);
+  w.eval("wrapUp")(() => {}); assert.equal(d.querySelector("#hd"), null, "no one to hear from");
+  assert.notEqual(w.eval("tellPrompt('A', 0)"), w.eval("tellPrompt('A', 1)"));
+}));

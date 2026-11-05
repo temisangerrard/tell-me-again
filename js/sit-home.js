@@ -126,6 +126,12 @@ function renderPerson(box, name, msg) {
   det.querySelector("input").oninput = (e) => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4); p.born = e.target.value; save(); };
   box.append(det);
   const avs = $(`<details class="fold avfold"><summary><span class="avthumb">${avHTML(p, p.n, 36)}</span>Avatar</summary></details>`); avPaint(avs); avatarEditor(avs, p.av, (c) => { if (c) p.av = c; else delete p.av; save(); const t = avs.querySelector(".avthumb"); t.innerHTML = avHTML(p, p.n, 36); avPaint(t); }); box.append(avs);
+  const heard = S.sittings.filter((x) => x.p === p.n && x.heard).slice(-5).reverse();
+  if (heard.length) {
+    const hh = $(`<section><h2 class="sec">What you heard</h2><ul class="heardlist"></ul></section>`);
+    heard.forEach((x) => { const li = $(`<li><p>${esc(x.heard)}</p><span>${ago(Date.parse(x.d) || 0)}${x.told ? " · you told them" : ""}</span><button class="lnk" type="button">Send again</button></li>`); li.querySelector("button").onclick = async (e) => { const b = e.currentTarget; b.textContent = (await shareHeard(p.n, x.heard)) || "Send again"; }; hh.querySelector("ul").append(li); });
+    box.append(hh);
+  }
   const lib = $(`<section><h2 class="sec">Recorded <span class="cnt">${s.stories}</span></h2>${s.stories ? `<ul class="clips"></ul>` : `<p class="hint">Nothing recorded with ${esc(p.n)} yet.</p>`}</section>`);
   s.mine.forEach((c) => lib.querySelector(".clips").append(clipRow(c, box)));
   box.append(lib);
