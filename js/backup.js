@@ -110,7 +110,7 @@ function backupControls(parent, allowDownload = true) {
   download.onclick = async () => {
     const pass = await askSeal(true); if (pass === null) return; // cancelled
     download.disabled = true; status.textContent = "Preparing backup…";
-    try { let text = await createBackup(); if (pass) text = await sealBackup(text, pass); downloadFile(new Blob([text], { type: "application/json" }), pass ? "tell-me-again-backup-protected.json" : "tell-me-again-backup.json"); status.textContent = pass ? "Protected backup downloaded. Keep the passphrase safe: nobody can recover it." : "Backup downloaded. Anyone with the file can read it, so keep it private."; }
+    try { let text = await createBackup(); if (pass) text = await sealBackup(text, pass); downloadFile(new Blob([text], { type: "application/json" }), pass ? "tell-me-again-backup-protected.json" : "tell-me-again-backup.json"); try { localStorage.setItem("sitting-lastbackup", String(Date.now())); } catch {} status.textContent = pass ? "Protected backup downloaded. Keep the passphrase safe: nobody can recover it." : "Backup downloaded. Anyone with the file can read it, so keep it private."; }
     catch (e) { status.textContent = e.message; } finally { download.disabled = false; }
   };
   restore.querySelector("input").onchange = async e => {
