@@ -53,3 +53,10 @@ test("after a good sign-in code the screen says so, and Continue opens the Famil
   assert.match(d.querySelector(".authwrap").textContent, /You're in[\s\S]*ada@example\.com/); d.querySelector("#ok").click();
   assert.ok(d.querySelector('[data-t="family"]'), "the tab bar is back");
 }));
+
+test("Sign out is at the top of Family and in the landing header when signed in, and only there when signed in", () => withApp((w, d) => {
+  w.eval(`account = { email: "ada@example.com" }; S.step = 7;`); const box = d.createElement("div"); d.body.append(box); w.eval("renderFamily").call(w, box);
+  assert.match(box.querySelector(".acctbar").textContent, /ada@example\.com[\s\S]*Sign out/);
+  w.eval(`account = null`); const b2 = d.createElement("div"); d.body.append(b2); w.eval("renderFamily").call(w, b2); assert.equal(b2.querySelector(".acctbar"), null, "nothing to sign out of");
+  w.eval(`S.step = 0; account = { email: "ada@example.com" }; render()`); assert.ok(d.querySelector("#so"), "the landing header has it too");
+}));
