@@ -11,16 +11,34 @@ function nextQuestion(forName) { // forName: ask for this person's relationship,
   return fresh[0] || pool.find((q) => !S.asked.includes(q.q)) || null;
 }
 
-// Sit down together, then wrap up: a ten-second note on how it went. This is what counts as a sitting.
+// Sit down together, then wrap up: a ten-second note on how it went, and two small things that carry the sitting back to the person.
+// Closeness prompts: "what I heard" is one line the asker writes and can send back; "tell them" is a nudge to say one thing out loud.
+const TELL_THEM = [
+  (n) => `Tell ${n} one thing you learned about them today.`,
+  (n) => `Tell ${n} which answer you'll remember longest.`,
+  (n) => `Tell ${n} what surprised you.`,
+  (n) => `Ask ${n} what they enjoyed telling.`
+];
+function tellPrompt(n, i) { return TELL_THEM[i % TELL_THEM.length](n); }
+async function shareHeard(who, text) { // the person's own share sheet or clipboard; nothing goes through us
+  const msg = `Something I heard from you, ${who}: ${text}`;
+  try { if (navigator.share) { await navigator.share({ text: msg }); return "Shared."; } } catch (e) { if (e && e.name === "AbortError") return ""; }
+  try { await navigator.clipboard.writeText(msg); return "Copied. Paste it into a message."; } catch { return "Couldn't copy. Select the text and copy it yourself."; }
+}
 function wrapUp(after) {
-  let r = null; const tags = [];
+  let r = null; const tags = [], who = S.elder.name || ""; // the chosen storyteller; "Storyteller" in the seats is only a placeholder
+  const tell = who ? tellPrompt(who, S.sittings.length) : "";
   const body = $(`<div><h2>How did that sitting go?</h2>
     <div class="thumbs"><button class="thumb" type="button" data-r="up" aria-pressed="false">Good one</button><button class="thumb" type="button" data-r="down" aria-pressed="false">Tough one</button></div>
     <div class="chips" role="group" aria-label="What was it like?"></div>
+    ${who ? `<label class="field heard"><span class="lbl">What I heard <small>(optional)</small></span><textarea class="txt" rows="2" maxlength="400" placeholder="One thing that stayed with you from ${esc(who)}" id="hd"></textarea></label>
+    <div class="row2 heardrow"><button class="btn" id="hs" type="button" disabled>Send it to ${esc(who)}</button></div><p class="hint" id="hm" role="status"></p>
+    <label class="tellme"><input type="checkbox" id="tl"><span>${esc(tell)}</span></label>` : ""}
     <button class="cta" id="sv" type="button" style="margin-top:24px" disabled>Save this sitting</button>
     <button class="btn" id="cl" type="button" style="width:100%;margin-top:8px;background:transparent;color:var(--muted)">Not now</button></div>`);
-  const sv = body.querySelector("#sv");
+  const sv = body.querySelector("#sv"), hd = body.querySelector("#hd"), hs = body.querySelector("#hs"), hm = body.querySelector("#hm");
   body.querySelectorAll(".thumb").forEach((b) => b.onclick = () => { r = b.dataset.r; body.querySelectorAll(".thumb").forEach((x) => x.setAttribute("aria-pressed", x === b)); sv.disabled = false; });
+  if (hd) { hd.oninput = () => { hs.disabled = !hd.value.trim(); }; hs.onclick = async () => { hm.textContent = await shareHeard(who, hd.value.trim()); }; }
   ["Easy to talk", "Got emotional", "Lots of laughs", "Learned something", "Ran out of time"].forEach((t) => {
     const c = $(`<button class="chip" type="button" aria-pressed="false">${t}</button>`);
     c.onclick = () => { const i = tags.indexOf(t); if (i < 0) tags.push(t); else tags.splice(i, 1); c.setAttribute("aria-pressed", i < 0); };
@@ -28,7 +46,11 @@ function wrapUp(after) {
   });
   const close = sheet("Wrap up this sitting", body);
   body.querySelector("#cl").onclick = close;
-  sv.onclick = () => { S.sittings.push({ d: new Date().toISOString(), r, t: [...tags] }); sitting = null; pinnedQ = null; save(); close(); after(); };
+  sv.onclick = () => {
+    const heard = hd ? hd.value.trim().slice(0, 400) : "";
+    S.sittings.push({ d: new Date().toISOString(), r, t: [...tags], ...(who ? { p: who } : {}), ...(heard ? { heard } : {}), ...(body.querySelector("#tl") && body.querySelector("#tl").checked ? { told: true } : {}) });
+    sitting = null; pinnedQ = null; save(); close(); after();
+  };
 }
 // 3-2-1, then a full-screen run screen: the family colour, a huge timer, one big stop button. Resolves with the overlay or null if cancelled.
 // One recording: the audio, then its words (or the way to get them), then Save and Delete.
