@@ -4,3 +4,4 @@
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), geolocation=(), payment=(), usb=(), microphone=(self)
   Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-GphGwyPWZXyLW2W8IHbdoRjM0PDtt1ZGLJ+pUZ0pZSM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self' wss://tellagain.app; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
