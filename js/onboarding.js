@@ -66,7 +66,7 @@ async function signOut(wipe) { // true only when the server confirmed; otherwise
   account = null; return true;
 }
 // After signing out of the Family tab: back to the landing page. The family stays on the device; "Open my family" returns to it.
-function toLanding() { app.className = "app landing"; app.replaceChildren(); host = app; welcome(); window.scrollTo(0, 0); }
+function toLanding() { if (currentRoom) currentRoom.close(); /* a room can't outlive the panel that holds it */ app.className = "app landing"; app.replaceChildren(); host = app; welcome(); window.scrollTo(0, 0); }
 // After a good code: say so, then carry on (to the Family tab if there is a family, where the account is shown).
 function signedInScreen() {
   app.className = "app"; app.replaceChildren();

@@ -39,3 +39,9 @@ test("signing out from the Family tab lands on the landing page, and Open my fam
   go.click(); assert.equal(w.eval("app").className, "app room", "back in the app");
   assert.equal(w.eval("S.step"), 7, "the family was never touched");
 }));
+
+test("signing out leaves an open room so its Leave button can't point at a removed panel", () => withApp(async (w, d) => {
+  let closed = 0; w.eval("account = { email: 'a@b.co' }; S.step = 7"); w.fetch = async () => ({ ok: true }); w.eval("fetch = window.fetch");
+  w.eval("currentRoom = { close: () => { window.__closed = (window.__closed || 0) + 1; currentRoom = null; }, el: document.createElement('div') }");
+  w.eval("toLanding")(); assert.equal(w.__closed, 1); assert.equal(w.eval("currentRoom"), null);
+}));
