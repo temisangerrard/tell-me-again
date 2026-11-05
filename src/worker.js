@@ -46,7 +46,7 @@ async function transcribe(req, env, url, ip) {
   const buf = await req.arrayBuffer();
   if (!buf.byteLength) return json({ error: "No audio came through." }, 400);
   if (buf.byteLength > MAX_AUDIO) return json({ error: "That recording is too long to turn into text in one go. Try a shorter answer." }, 413);
-  const lang = (url.searchParams.get("lang") || "").toLowerCase(), names = (url.searchParams.get("names") || "").replace(/[\u0000-\u001f<>]/g, "").slice(0, 180).trim();
+  const lang = (url.searchParams.get("lang") || "").toLowerCase(), names = (() => { try { return decodeURIComponent(req.headers.get("x-names") || ""); } catch { return ""; } })().replace(/[\u0000-\u001f<>]/g, "").slice(0, 180).trim();  // from a header; older cached pages may still send them in the query, which is simply ignored now
   try {
     const r = await env.AI.run("@cf/openai/whisper-large-v3-turbo", {
       audio: b64(buf), task: "transcribe", vad_filter: true,

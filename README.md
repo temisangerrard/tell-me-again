@@ -174,3 +174,12 @@ PDF export uses the browser's print dialog. The standalone magazine file also op
 ```bash
 /Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender/avatar_kit.py -- --no-main --out /tmp/avkit && python3 tools/blender/pack_avatar.py /tmp/avkit
 ```
+
+## Privacy checklist (2026-11-05)
+
+- Pages load nothing from other companies. Fonts are self-hosted in `fonts/` (`css/fonts.css`); a test fails if a Google or tracking host appears.
+- Personal names for transcription travel in the `x-names` header, never in a URL. Worker request logs are off (`invocation_logs: false`); only error messages are logged and they carry no content.
+- Cookies: one HttpOnly login cookie (`tma_s`) when signed in, nothing else. The notice says so.
+- Security headers for every page are in `_headers`. A Content-Security-Policy is not set yet: the app uses inline scripts and styles, so it needs a report-only trial first.
+- Bump `PRIVACY_V` when the notice changes. Last: 2026-11-05.
+- Known gaps: data on the device and in backup files is not encrypted (a passphrase-protected backup would fix the file); there is no data-processing agreement beyond Cloudflare's standard terms; the notice is plain language, not reviewed by a lawyer.
