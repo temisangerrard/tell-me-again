@@ -43,3 +43,5 @@
 .fold .avthumb { display:inline-flex; width:36px; height:36px; flex:none; }
 .fold .avthumb .pic, .fold .avthumb .av { width:36px; height:36px; }
 .avfold .avmk { margin-top:4px; }
+.acctbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; margin:8px 0 0; border-radius:16px; background:var(--surface2); font-size:.92rem; }
+.acctbar span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .acctbar .btn { flex:none; border-radius:999px; }
