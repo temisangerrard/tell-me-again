@@ -27,3 +27,15 @@ test("Tell us what's wrong opens an email with device details and no personal on
   assert.ok(!/ada/i.test(body), "no name or email in the report");
   assert.ok([...fam(w, d).querySelectorAll("button")].some((b) => b.textContent === "Tell us what's wrong"));
 }));
+
+test("signing out from the Family tab lands on the landing page, and Open my family returns to the app", () => withApp(async (w, d) => {
+  w.eval(`account = { email: "ada@example.com" }; S.step = 7;`);
+  w.fetch = async () => ({ ok: true }); w.eval("fetch = window.fetch");
+  const box = fam(w, d); box.querySelector(".acctbar button").click();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(w.eval("account"), null);
+  assert.ok(w.eval("app").classList.contains("landing"), "landing page shown");
+  const go = w.eval("app").querySelector("#go"); assert.equal(go.textContent, "Open my family");
+  go.click(); assert.equal(w.eval("app").className, "app room", "back in the app");
+  assert.equal(w.eval("S.step"), 7, "the family was never touched");
+}));
