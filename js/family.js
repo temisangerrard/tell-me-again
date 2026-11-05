@@ -8,6 +8,8 @@ function renderFamily(box) {
     bar.querySelector("button").onclick = async (e) => { const b = e.currentTarget; if (await signOut(false)) renderFamily(box); else b.textContent = "Offline, try again"; };
     box.append(bar);
   }
+  const nudge = backupNudge(box);
+  if (nudge) box.append(nudge);
   const groups = new Map();
   const groupFor = title => ["You", "The family", "At the table"].includes(title) ? "Family profile" : ["This season", "Recordings"].includes(title) ? "Activity & recordings" : ["Turning recordings into text", "Look"].includes(title) ? "Preferences" : "Your information";
   const sec = (title, fold) => { // fold: true makes the section its own accordion, closed until opened
@@ -103,6 +105,34 @@ function renderFamily(box) {
 
   const about = sec("About");
   const about_p = $(`<p class="para">Tell Me Again by Settley Studio</p>`); about.append(about_p);
+  const fb = $(`<button class="btn" type="button" style="margin-top:8px">Tell us what's wrong</button>`);
+  fb.onclick = sendFeedback; about.append(fb);
   if (window.caches) caches.keys().then((k) => { const v = (k.find((x) => /^sitting-v\d+$/.test(x)) || "").replace("sitting-", ""); if (v && about_p.isConnected) about_p.textContent += ` · ${v}`; }).catch(() => {});
 }
 
+
+// Testers: a recording lives only on this phone, so say so once there is something worth losing.
+const BACKUP_NUDGE_DAYS = 14;
+function backupNudge(box) {
+  let last = 0; try { last = Number(localStorage.getItem("sitting-lastbackup")) || 0; } catch {}
+  let snoozed = 0; try { snoozed = Number(localStorage.getItem("sitting-nudge-snooze")) || 0; } catch {}
+  const now = Date.now();
+  if (!clips.length || now - last < BACKUP_NUDGE_DAYS * 864e5 || now < snoozed) return null;
+  const el = $(`<div class="acctbar nudge"><span>${last ? "It's been a while since your last backup." : "Your stories live only on this phone."} Save a copy so they can't be lost.</span><button class="btn" type="button">Back up</button></div>`);
+  el.querySelector("button").onclick = () => { const sec = [...box.querySelectorAll("button.btn")].find((x) => x.textContent === "Download full backup"); const acc = sec && sec.closest("details"); if (acc) acc.open = true; (sec || el).scrollIntoView({ behavior: "smooth", block: "center" }); };
+  const later = $(`<button class="btn" type="button" aria-label="Remind me in a week">Later</button>`);
+  later.onclick = () => { try { localStorage.setItem("sitting-nudge-snooze", String(now + 7 * 864e5)); } catch {} el.remove(); };
+  el.append(later);
+  return el;
+}
+
+// Opens the person's own mail app with the device details filled in. Nothing is sent by us, and no name or email is included.
+async function feedbackBody() {
+  let v = ""; try { v = ((await caches.keys()).find((x) => /^sitting-v\d+$/.test(x)) || "").replace("sitting-", ""); } catch {}
+  const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  return `What happened:\n\n\n\nWhat you expected:\n\n\n\n---\nApp version: ${v || "unknown"}\nInstalled to home screen: ${standalone ? "yes" : "no"}\nScreen: ${innerWidth}x${innerHeight}\nDevice: ${navigator.userAgent}\n`;
+}
+async function sendFeedback() {
+  const body = await feedbackBody();
+  location.href = "mailto:temisan@settley.co?subject=" + encodeURIComponent("Tell Me Again: something's wrong") + "&body=" + encodeURIComponent(body);
+}
